@@ -2,16 +2,19 @@ import { SMTPServer } from 'smtp-server'
 import { User } from './models/users.js'
 import mongoose from 'mongoose'
 import { simpleParser } from 'mailparser'
-import { Email } from './models/email.js'
+import Email from './models/emailSchema.js'
+import env from 'dotenv'
+import Mailbox from './models/mailboxSchema.js'
 
-await mongoose.connect('mongodb://127.0.0.1:27017/mailserver')
+env.config()
+
+await mongoose.connect(process.env.MONGO_DB_URL)
 
 const server = new SMTPServer({
   allowInsecureAuth: true,
   authOptional: true,
-  banner: 'Welcome to neerajan mail server',
+  banner: 'Welcome to ' + process.env.DOMAIN_NAME,
   onConnect(session, cb) {
-    console.log('Onconnect', session)
     cb()
   },
 
@@ -19,47 +22,53 @@ const server = new SMTPServer({
     if (!address.address.endsWith(session.hostNameAppearsAs)) {
       return cb(new Error('Address doesnot belong to the domain as introduced'))
     }
-    console.log('OnMailFrom', session, address)
     cb()
   },
 
   async onRcptTo(address, session, cb) {
-    if (!address.address.endsWith('inboxify.app')) {
+    const domain = process.env.DOMAIN_NAME
+    const domainEmailPattern = new RegExp(
+      `^[a-zA-Z0-9.]+@${domain.replace('.', '\\.')}$`
+    )
+
+    if (!domainEmailPattern.test(address.address)) {
       return cb(new Error('Doesnot belong to this domain'))
     }
-    const user = await User.findOne({
-      email: address.address,
-    })
+    const user = await User.findOne(
+      {
+        emailAddress: address.address,
+      },
+      { _id: 1 }
+    )
+
     if (!user) {
-      console.log('Email not found:', address)
       return cb(new Error('User doesnot exist'))
     }
-    console.log('OnRcptTo:', address, session)
     cb()
   },
 
   async onData(stream, session, cb) {
     try {
       const parsedMail = await simpleParser(stream)
-      console.log(parsedMail)
-      const userId = await User.findOne({
-        email: parsedMail.to.text,
-      })
-      const mail = new Email({
-        userId: userId._id,
+      const user = await User.findOne(
+        {
+          emailAddress: parsedMail.to.text,
+        },
+        { _id: 1 }
+      )
+      const email = await Email.create({
         to: parsedMail.to?.text,
         from: parsedMail.from?.text,
         subject: parsedMail.subject,
-        body: {
-          text: parsedMail.text,
-          html: parsedMail.textAsHtml,
-        },
-        flags: {
-          seen: false,
-        },
-        receivedAt: new Date(),
+        body: parsedMail.text,
       })
-      await mail.save()
+
+      await Mailbox.create({
+        userId: user._id,
+        emailId: email._id,
+        labels: ['INBOX'],
+      })
+
       cb()
     } catch (error) {
       console.log(error)
@@ -67,4 +76,5 @@ const server = new SMTPServer({
     }
   },
 })
+
 server.listen(25, () => console.log('Server listening on port 25'))
