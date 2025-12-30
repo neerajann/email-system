@@ -53,13 +53,11 @@ const deliverMail = async (userId, sender, recipient, subject, body) => {
     labels: ['SENT'],
   })
 
-  const recipentDomain = recipient.split('@')[1]
   const transporter = nodemailer.createTransport({
     name: process.env.DOMAIN_NAME,
-    host: recipentDomain,
-    port: 25,
-    secure: false,
-    ignoreTLS: true,
+    direct: true,
+    logger: true,
+    debug: true,
   })
   try {
     await transporter.sendMail({
