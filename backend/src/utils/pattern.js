@@ -4,7 +4,6 @@ const domainEmailPattern = new RegExp(
 )
 
 const emailPattern = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/
-
 const passwordPattern =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/
 

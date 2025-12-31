@@ -3,7 +3,7 @@ import handleMailError from '../utils/handleMailError.js'
 
 const getInbox = async (req, res) => {
   try {
-    const emails = await mailService.getMailService(req.userId, 'INBOX')
+    const emails = await mailService.getMails(req.userId, 'INBOX')
     if (!emails)
       return res.status(200).json({ message: 'No emails at the moment' })
     return res.json(emails)
@@ -15,7 +15,7 @@ const getInbox = async (req, res) => {
 
 const getSent = async (req, res) => {
   try {
-    const emails = await mailService.getMailService(req.userId, 'SENT')
+    const emails = await mailService.getMails(req.userId, 'SENT')
     if (!emails)
       return res
         .status(200)
@@ -29,7 +29,7 @@ const getSent = async (req, res) => {
 
 const getTrash = async (req, res) => {
   try {
-    const emails = await mailService.getMailService(req.userId, 'TRASH')
+    const emails = await mailService.getMails(req.userId, 'TRASH')
     if (!emails)
       return res.status(200).json({ message: 'No conversations in Trash.' })
     return res.json(emails)
@@ -59,4 +59,51 @@ const sendMail = async (req, res) => {
   }
 }
 
-export default { getInbox, getSent, getTrash, sendMail }
+const trashMail = async (req, res) => {
+  try {
+    const mailboxId = req.params.id
+    if (!mailboxId) {
+      return res.status(401).send({ error: 'Missing id' })
+    }
+    await mailService.moveToTrash(mailboxId, req.userId)
+    return res
+      .status(200)
+      .json({ success: 'The email has been moved to trash successfully' })
+  } catch (error) {
+    handleMailError(res, error)
+  }
+}
+
+const restoreMail = async (req, res) => {
+  try {
+    const mailboxId = req.params.id
+    if (!mailboxId) {
+      return res.status(401).send({ error: 'Missing id' })
+    }
+    await mailService.restoreMail(mailboxId, req.userId)
+    return res
+      .status(200)
+      .json({ success: 'The email has been restored successfully' })
+  } catch (error) {
+    handleMailError(res, error)
+  }
+}
+
+const getMail = async (req, res) => {
+  try {
+    const mail = await mailService.getMail(req.userId, req.mailboxId)
+    return res.json(mail)
+  } catch (error) {
+    handleMailError(res, error)
+  }
+}
+
+export default {
+  getInbox,
+  getSent,
+  getTrash,
+  sendMail,
+  trashMail,
+  restoreMail,
+  getMail,
+}

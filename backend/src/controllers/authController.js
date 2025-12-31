@@ -1,5 +1,6 @@
 import authService from '../services/authService.js'
 import handleAuthError from '../utils/handleAuthError.js'
+import jwt from 'jsonwebtoken'
 
 const registerUser = async (req, res) => {
   try {
@@ -40,4 +41,21 @@ const logoutUser = (req, res) => {
   res.clearCookie(process.env.JWT_COOKIE_NAME)
   return res.status(200).json({ sucess: 'Logged out successfully' })
 }
-export default { registerUser, loginUser, logoutUser }
+
+const checkUser = (req, res) => {
+  const jwtToken = req.cookies?.[process.env.JWT_COOKIE_NAME]
+  if (!jwtToken) return res.json([])
+
+  try {
+    const decoded = jwt.verify(jwtToken, process.env.JWT_SECRET)
+    if (decoded.emailAddress && decoded._id) {
+      return res.json({ emailAddress: decoded.emailAddress, id: decoded._id })
+    }
+    res.clearCookie(process.env.JWT_COOKIE_NAME)
+    return res.json([])
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: 'Something went wrong' })
+  }
+}
+export default { registerUser, loginUser, logoutUser, checkUser }

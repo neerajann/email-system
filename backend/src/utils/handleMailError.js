@@ -10,6 +10,11 @@ const handleMailError = (res, err) => {
       console.error(err)
       return res.status(502).json({ error: 'Mail delivery failed.' })
 
+    case 'EMAIL_NOT_FOUND':
+      return res
+        .status(404)
+        .json({ error: "Couldn't find email with the given id." })
+
     default:
       console.error(err)
       return res.status(500).json({ error: 'Something went wrong.' })
