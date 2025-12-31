@@ -1,5 +1,8 @@
 import mailService from '../services/mailService.js'
 import handleMailError from '../utils/handleMailError.js'
+import upload from '../config/multerConfig.js'
+import multer from 'multer'
+import handleUploadError from '../utils/handleUploadError.js'
 
 const getInbox = async (req, res) => {
   try {
@@ -44,6 +47,7 @@ const sendMail = async (req, res) => {
     const recipient = req.body?.recipient?.trim()?.toLowerCase()
     const subject = req.body?.subject
     const body = req.body?.body
+    const attachments = req.body?.attachments
     if (!recipient)
       return res.status(400).json({ error: 'Recipient is required' })
     await mailService.deliverMail(
@@ -51,7 +55,8 @@ const sendMail = async (req, res) => {
       req.user,
       recipient,
       subject,
-      body
+      body,
+      attachments
     )
     res.status(200).json({ success: 'Mail has been sent.' })
   } catch (error) {
@@ -97,6 +102,16 @@ const getMail = async (req, res) => {
     handleMailError(res, error)
   }
 }
+const uploadAttachment = async (req, res) => {
+  upload.array('attachments', 10)(req, res, async (err) => {
+    if (err) return handleUploadError(res, err)
+    if (!req.files || req.files.length === 0) {
+      return handleUploadError(res, new Error('NO_FILES'))
+    }
+    const attachmentIds = await mailService.addAttachmentsToDB(req.files)
+    return res.status(200).json(attachmentIds)
+  })
+}
 
 export default {
   getInbox,
@@ -106,4 +121,5 @@ export default {
   trashMail,
   restoreMail,
   getMail,
+  uploadAttachment,
 }

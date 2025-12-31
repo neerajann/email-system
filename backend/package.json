@@ -23,8 +23,9 @@
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.0.0",
     "mongoose": "^9.0.2",
+    "multer": "^2.0.2",
     "nodemailer": "^7.0.12",
-    "nodemailer-direct-transport": "^3.3.2",
+    "nodemailer-direct-transport": "^3.0.7",
     "sanitize-html": "^2.17.0"
   }
 }

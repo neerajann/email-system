@@ -1,9 +1,11 @@
 import Email from '../models/emailSchema.js'
 import Mailbox from '../models/mailboxSchema.js'
 import User from '../models/userSchema.js'
-import { emailPattern, domainEmailPattern } from '../utils/pattern.js'
+import { emailPattern } from '../utils/pattern.js'
 import { htmlToText } from 'html-to-text'
 import emailQueue from '../queues/emailQueue.js'
+import Attachment from '../models/attachmentSchema.js'
+import convertToArray from '../utils/convertToArray.js'
 
 const getMails = async (userId, label) => {
   {
@@ -39,7 +41,14 @@ const getMails = async (userId, label) => {
   }
 }
 
-const deliverMail = async (userId, sender, recipient, subject, body) => {
+const deliverMail = async (
+  userId,
+  sender,
+  recipient,
+  subject,
+  body,
+  attachments
+) => {
   if (!emailPattern.test(recipient)) throw new Error('INVALID_EMAIL')
 
   const content = htmlToText(body, {
@@ -50,11 +59,14 @@ const deliverMail = async (userId, sender, recipient, subject, body) => {
     ],
   })
 
+  let parsedAttachments = convertToArray(attachments)
+
   const email = await Email.create({
     from: sender,
     to: recipient,
     subject,
     body: content,
+    attachments: parsedAttachments,
   })
 
   await Mailbox.create({
@@ -62,6 +74,7 @@ const deliverMail = async (userId, sender, recipient, subject, body) => {
     emailId: email._id,
     labels: ['SENT'],
   })
+  console.log('ok')
 
   await emailQueue.add(
     'sendEmail',
@@ -70,6 +83,7 @@ const deliverMail = async (userId, sender, recipient, subject, body) => {
       to: recipient,
       subject,
       body: content,
+      attachments,
     },
     {
       attempts: 3,
@@ -82,7 +96,6 @@ const deliverMail = async (userId, sender, recipient, subject, body) => {
       },
     }
   )
-
   return true
 }
 
@@ -153,4 +166,34 @@ const getMail = async (userId, mailboxId) => {
   }
   return result
 }
-export default { getMails, deliverMail, moveToTrash, restoreMail, getMail }
+
+const addAttachmentsToDB = async (files) => {
+  try {
+    const attachments = files.map((file) => {
+      return {
+        path: file.path,
+        originalName: file.originalname,
+        encoding: file.encoding,
+        mimetype: file.mimetype,
+        fileName: file.filename,
+        size: file.size,
+      }
+    })
+    const { insertedIds } = await Attachment.insertMany(attachments, {
+      rawResult: true,
+    })
+    return Object.values(insertedIds)
+  } catch (error) {
+    console.log(error)
+    throw new Error('DATABASE_ERROR')
+  }
+}
+
+export default {
+  getMails,
+  deliverMail,
+  moveToTrash,
+  restoreMail,
+  getMail,
+  addAttachmentsToDB,
+}

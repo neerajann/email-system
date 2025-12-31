@@ -1,12 +1,20 @@
 import { Worker } from 'bullmq'
 import IORedis from 'ioredis'
-import env from 'dotenv'
 import nodemailer from 'nodemailer'
 import directTransport from 'nodemailer-direct-transport'
+import Attachment from '../models/attachmentSchema.js'
+import mongoose from 'mongoose'
+import convertToArray from '../utils/convertToArray.js'
+import env from 'dotenv'
 
-env.config()
+env.config({ quiet: true })
+await mongoose.connect(process.env.MONGO_DB_URL)
 
-const connection = new IORedis({ maxRetriesPerRequest: null })
+const connection = new IORedis({
+  maxRetriesPerRequest: null,
+  host: process.env.REDIS_ADDRESS,
+  port: process.env.REDIS_PORT,
+})
 
 const transporter = nodemailer.createTransport(
   directTransport({
@@ -25,12 +33,49 @@ const transporter = nodemailer.createTransport(
 const emailWorker = new Worker(
   'emailQueue',
   async (job) => {
-    console.log(job)
+    if (job.data.attachments) {
+      var filteredAttachmentId = convertToArray(job.data.attachments)
+    }
+
+    if (filteredAttachmentId.length > 0) {
+      const [, attachmentsRecords] = await Promise.all([
+        Attachment.updateMany(
+          {
+            _id: { $in: filteredAttachmentId },
+          },
+          {
+            $set: {
+              status: 'attached',
+            },
+          }
+        ),
+        Attachment.find(
+          {
+            _id: { $in: filteredAttachmentId },
+          },
+          {
+            originalName: 1,
+            _id: 0,
+            encoding: 1,
+            path: 1,
+          }
+        ),
+      ])
+
+      var attachments = attachmentsRecords?.map((record) => {
+        return {
+          filename: record.originalName,
+          encoding: record.encoding,
+          path: record.path,
+        }
+      })
+    }
     await transporter.sendMail({
       from: job.data.from,
       to: job.data.to,
       subject: job.data.subject,
       text: job.data.body,
+      attachments,
     })
   },
   { connection, concurrency: 5 }
