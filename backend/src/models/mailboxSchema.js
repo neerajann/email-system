@@ -13,6 +13,12 @@ const mailBoxSchema = new mongoose.Schema(
       ref: 'Email',
       required: true,
     },
+    threadId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Thread',
+      required: true,
+      index: true,
+    },
     labels: {
       type: [String],
       default: ['INBOX'],

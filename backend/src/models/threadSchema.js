@@ -2,18 +2,31 @@ import mongoose from 'mongoose'
 
 const threadSchema = new mongoose.Schema(
   {
+    subject: {
+      type: String,
+      index: true,
+    },
+
     participants: [
       {
         type: String,
+        index: true,
       },
     ],
-    subject: {
-      type: String,
-      required: true,
-    },
-    lastMessage: {
+
+    lastMessageAt: {
       type: Date,
-      default: Date.now,
+      index: true,
+    },
+
+    messageCount: {
+      type: Number,
+      default: 1,
+    },
+
+    messageIds: {
+      type: [String],
+      index: true,
     },
   },
   { timestamps: true }

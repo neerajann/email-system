@@ -6,6 +6,13 @@ const emailSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Thread',
       index: true,
+      required: true,
+    },
+    messageId: {
+      type: String,
+      index: true,
+      sparse: true,
+      unique: true,
     },
     from: {
       type: String,
@@ -23,7 +30,7 @@ const emailSchema = new mongoose.Schema(
     },
     body: {
       type: String,
-      required: true,
+      default: ' ',
     },
     attachments: {
       type: [
@@ -33,9 +40,18 @@ const emailSchema = new mongoose.Schema(
           required: true,
         },
       ],
+      default: [],
     },
-    default: [],
+    isSystem: {
+      type: Boolean,
+      default: false,
+    },
+    bounceFor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Email',
+    },
   },
+
   { timestamps: true }
 )
 

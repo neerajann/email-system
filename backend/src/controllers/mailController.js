@@ -1,12 +1,14 @@
-import mailService from '../services/mailService.js'
+import sendMailService from '../services/mail/sendMailService.js'
+import mailBoxService from '../services/mail/mailBoxService.js'
+import fetchMailService from '../services/mail/fetchMailService.js'
+import attachmentService from '../services/mail/attachmentService.js'
 import handleMailError from '../utils/handleMailError.js'
 import upload from '../config/multerConfig.js'
-import multer from 'multer'
 import handleUploadError from '../utils/handleUploadError.js'
 
 const getInbox = async (req, res) => {
   try {
-    const emails = await mailService.getMails(req.userId, 'INBOX')
+    const emails = await fetchMailService.getMails(req.userId, 'INBOX')
     if (!emails)
       return res.status(200).json({ message: 'No emails at the moment' })
     return res.json(emails)
@@ -18,7 +20,7 @@ const getInbox = async (req, res) => {
 
 const getSent = async (req, res) => {
   try {
-    const emails = await mailService.getMails(req.userId, 'SENT')
+    const emails = await fetchMailService.getMails(req.userId, 'SENT')
     if (!emails)
       return res
         .status(200)
@@ -32,7 +34,7 @@ const getSent = async (req, res) => {
 
 const getTrash = async (req, res) => {
   try {
-    const emails = await mailService.getMails(req.userId, 'TRASH')
+    const emails = await fetchMailService.getMails(req.userId, 'TRASH')
     if (!emails)
       return res.status(200).json({ message: 'No conversations in Trash.' })
     return res.json(emails)
@@ -42,18 +44,28 @@ const getTrash = async (req, res) => {
   }
 }
 
+const getMail = async (req, res) => {
+  try {
+    const mail = await fetchMailService.getMail(req.userId, req.mailboxId)
+    return res.json(mail)
+  } catch (error) {
+    handleMailError(res, error)
+  }
+}
+
 const sendMail = async (req, res) => {
   try {
-    const recipient = req.body?.recipient?.trim()?.toLowerCase()
+    var recipients = req.body?.recipients?.toLowerCase()
+    recipients = recipients.split(',').map((r) => r.trim())
     const subject = req.body?.subject
     const body = req.body?.body
     const attachments = req.body?.attachments
-    if (!recipient)
+    if (recipients.length === 0)
       return res.status(400).json({ error: 'Recipient is required' })
-    await mailService.deliverMail(
+    await sendMailService.deliverMail(
       req.userId,
       req.user,
-      recipient,
+      recipients,
       subject,
       body,
       attachments
@@ -70,7 +82,7 @@ const trashMail = async (req, res) => {
     if (!mailboxId) {
       return res.status(401).send({ error: 'Missing id' })
     }
-    await mailService.moveToTrash(mailboxId, req.userId)
+    await mailBoxService.moveToTrash(mailboxId, req.userId)
     return res
       .status(200)
       .json({ success: 'The email has been moved to trash successfully' })
@@ -85,7 +97,7 @@ const restoreMail = async (req, res) => {
     if (!mailboxId) {
       return res.status(401).send({ error: 'Missing id' })
     }
-    await mailService.restoreMail(mailboxId, req.userId)
+    await mailBoxService.restoreMail(mailboxId, req.userId)
     return res
       .status(200)
       .json({ success: 'The email has been restored successfully' })
@@ -94,21 +106,13 @@ const restoreMail = async (req, res) => {
   }
 }
 
-const getMail = async (req, res) => {
-  try {
-    const mail = await mailService.getMail(req.userId, req.mailboxId)
-    return res.json(mail)
-  } catch (error) {
-    handleMailError(res, error)
-  }
-}
 const uploadAttachment = async (req, res) => {
   upload.array('attachments', 10)(req, res, async (err) => {
     if (err) return handleUploadError(res, err)
     if (!req.files || req.files.length === 0) {
       return handleUploadError(res, new Error('NO_FILES'))
     }
-    const attachmentIds = await mailService.addAttachmentsToDB(req.files)
+    const attachmentIds = await attachmentService.addAttachmentsToDB(req.files)
     return res.status(200).json(attachmentIds)
   })
 }

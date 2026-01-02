@@ -10,6 +10,10 @@ const handleMailError = (res, err) => {
       console.error(err)
       return res.status(502).json({ error: 'Mail delivery failed.' })
 
+    case 'DATABASE_ERROR':
+      console.log(err)
+      return res.status(500).json({ error: 'Failed to save mail.' })
+
     case 'EMAIL_NOT_FOUND':
       return res
         .status(404)
