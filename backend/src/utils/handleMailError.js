@@ -14,6 +14,11 @@ const handleMailError = (res, err) => {
       console.log(err)
       return res.status(500).json({ error: 'Failed to save mail.' })
 
+    case 'INVALID_ATTACHMENTS':
+      return res
+        .status(400)
+        .json({ error: "Couldn't send the attachment.Try uploading again." })
+
     case 'EMAIL_NOT_FOUND':
       return res
         .status(404)

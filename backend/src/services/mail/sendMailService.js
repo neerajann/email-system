@@ -3,10 +3,11 @@ import emailQueue from '../../queues/emailQueue.js'
 import Thread from '../../models/threadSchema.js'
 import Mailbox from '../../models/mailboxSchema.js'
 import Email from '../../models/emailSchema.js'
-import convertToArray from '../../utils/convertToArray.js'
 import crypto from 'crypto'
 import mongoose from 'mongoose'
 import { emailPattern } from '../../utils/pattern.js'
+import Attachment from '../../models/attachmentSchema.js'
+import sanitizeHtml from 'sanitize-html'
 
 const deliverMail = async (
   userId,
@@ -20,20 +21,37 @@ const deliverMail = async (
     if (!emailPattern.test(recipient)) throw new Error('INVALID_EMAIL')
   })
 
-  const content = htmlToText(body, {
+  const textContent = htmlToText(body, {
     wordwrap: 80,
     selectors: [
       { selector: 'a', options: { hideLinkHrefIfSameAsText: true } },
       { selector: 'img', format: 'skip' },
     ],
   })
+  const htmlContent = sanitizeHtml(body, SANITIZE_CONFIG)
 
-  const parsedAttachments = convertToArray(attachments)
   const messageId = `<${crypto.randomUUID()}@${process.env.DOMAIN_NAME}>`
 
   const session = await mongoose.startSession()
   try {
     session.startTransaction()
+    const parsedAttachments = attachments
+      ?.filter((id) => mongoose.Types.ObjectId.isValid(id))
+      ?.map((id) => new mongoose.Types.ObjectId(id))
+
+    if (parsedAttachments?.length) {
+      var count = await Attachment.countDocuments(
+        {
+          _id: {
+            $in: parsedAttachments,
+          },
+        },
+        { session: session }
+      )
+    }
+    if (parsedAttachments?.length !== count) {
+      throw new Error('INVALID_ATTACHMENTS')
+    }
 
     var [thread] = await Thread.create(
       [
@@ -55,7 +73,10 @@ const deliverMail = async (
           to: recipients,
           messageId: messageId,
           subject,
-          body: content,
+          body: {
+            text: textContent,
+            html: htmlContent,
+          },
           attachments: parsedAttachments,
         },
       ],
@@ -69,14 +90,17 @@ const deliverMail = async (
           threadId: thread._id,
           emailId: email._id,
           labels: ['SENT'],
+          isRead: true,
         },
       ],
       { session: session }
     )
+
     await session.commitTransaction()
   } catch (error) {
-    console.log(error)
     await session.abortTransaction()
+    if (error.message === 'INVALID_ATTACHMENTS') throw error
+    console.log(error)
     throw new Error('DATABASE_ERROR')
   } finally {
     await session.endSession()
@@ -91,12 +115,15 @@ const deliverMail = async (
       sender: sender,
       recipients: recipients,
       subject,
-      body: content,
+      body: {
+        html: htmlContent,
+        text: textContent,
+      },
       attachments,
       messageId: messageId,
     },
     {
-      attempts: 3,
+      attempts: 1,
       backoff: { type: 'exponential', delay: 5000 },
       removeOnComplete: {
         age: 3600,
@@ -107,6 +134,55 @@ const deliverMail = async (
     }
   )
   return true
+}
+
+const SANITIZE_CONFIG = {
+  allowedTags: [
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'p',
+    'b',
+    'strong',
+    'i',
+    'em',
+    'ul',
+    'ol',
+    'li',
+    'br',
+    'span',
+    'div',
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'td',
+    'th',
+    'img',
+    'a',
+  ],
+
+  allowedAttributes: {
+    a: ['href', 'target'],
+    img: ['src', 'alt', 'width', 'height'],
+    '*': ['style'],
+  },
+
+  allowedSchemes: ['http', 'https', 'mailto', 'cid'],
+
+  allowedStyles: {
+    '*': {
+      color: [/^#[0-9a-fA-F]{3,6}$/],
+      'background-color': [/^#[0-9a-fA-F]{3,6}$/],
+      'font-size': [/^\d+(px|em|%)$/],
+      'font-weight': [/^(normal|bold|[1-9]00)$/],
+      'text-align': [/^(left|right|center|justify)$/],
+      'text-decoration': [/^(none|underline|line-through)$/],
+    },
+  },
 }
 
 export default { deliverMail }

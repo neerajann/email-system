@@ -29,8 +29,14 @@ const emailSchema = new mongoose.Schema(
       default: '',
     },
     body: {
-      type: String,
-      default: ' ',
+      text: {
+        type: String,
+        default: ' ',
+      },
+      html: {
+        type: String,
+        default: '',
+      },
     },
     attachments: {
       type: [
@@ -54,6 +60,7 @@ const emailSchema = new mongoose.Schema(
 
   { timestamps: true }
 )
+emailSchema.index({ _id: 1, attachments: 1 })
 
 const Email = mongoose.model('Email', emailSchema)
 export default Email

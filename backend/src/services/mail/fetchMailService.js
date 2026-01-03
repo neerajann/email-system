@@ -48,19 +48,27 @@ const getMails = async (userId, label) => {
           },
           { $unwind: '$threads' },
           {
+            $sort: {
+              receivedAt: -1,
+            },
+          },
+          {
             $project: {
+              _id: 0,
+              threadId: '$_id',
               subject: '$threads.subject',
               messageCount: '$threads.messageCount',
               isRead: 1,
               from: '$emails.from',
               to: '$emails.to',
               snippet: {
-                $substrCP: ['$emails.body', 0, 100],
+                $substrCP: ['$emails.body.text', 0, 100],
               },
               isSystem: '$emails.isSystem',
               receivedAt: 1,
             },
           },
+
           { $skip: page * 50 },
           { $limit: 50 },
         ],
@@ -75,7 +83,8 @@ const getMails = async (userId, label) => {
 }
 
 const getMail = async (userId, threadId) => {
-  Mailbox.updateMany(
+  console.log(userId + ' ' + threadId)
+  await Mailbox.updateMany(
     {
       userId: new mongoose.Types.ObjectId(userId),
       threadId: new mongoose.Types.ObjectId(threadId),
@@ -106,9 +115,17 @@ const getMail = async (userId, threadId) => {
       $unwind: '$emails',
     },
     {
+      $lookup: {
+        from: 'attachments',
+        localField: 'attachments',
+        foreignField: '_id',
+        as: 'attachments',
+      },
+    },
+    {
       $project: {
         _id: 0,
-        id: '$_id',
+        mailId: '$emails._id',
         threadId: '$threadId',
         from: '$emails.from',
         to: '$emails.to',

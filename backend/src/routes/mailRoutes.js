@@ -11,7 +11,14 @@ mailRouter.get('/api/mail/trash', verifyJWT, mailController.getTrash)
 mailRouter.post('/api/mail/send', verifyJWT, mailController.sendMail)
 mailRouter.post('/api/mail/:id/trash/', verifyJWT, mailController.trashMail)
 mailRouter.post('/api/mail/:id/restore', verifyJWT, mailController.restoreMail)
-mailRouter.post('/api/mail/upload', verifyJWT, mailController.uploadAttachment)
+mailRouter.post('/api/mail/upload', verifyJWT, mailController.uploadAttachments)
+
+mailRouter.get(
+  '/api/mail/attachment/:id',
+  verifyJWT,
+  verifyObjectId,
+  mailController.downloadAttachment
+)
 
 mailRouter.get(
   '/api/mail/:id',

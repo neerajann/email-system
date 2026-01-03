@@ -5,6 +5,7 @@ import attachmentService from '../services/mail/attachmentService.js'
 import handleMailError from '../utils/handleMailError.js'
 import upload from '../config/multerConfig.js'
 import handleUploadError from '../utils/handleUploadError.js'
+import mongoose from 'mongoose'
 
 const getInbox = async (req, res) => {
   try {
@@ -106,7 +107,7 @@ const restoreMail = async (req, res) => {
   }
 }
 
-const uploadAttachment = async (req, res) => {
+const uploadAttachments = async (req, res) => {
   upload.array('attachments', 10)(req, res, async (err) => {
     if (err) return handleUploadError(res, err)
     if (!req.files || req.files.length === 0) {
@@ -115,6 +116,30 @@ const uploadAttachment = async (req, res) => {
     const attachmentIds = await attachmentService.addAttachmentsToDB(req.files)
     return res.status(200).json(attachmentIds)
   })
+}
+const downloadAttachment = async (req, res) => {
+  const attachmentId = req.params?.id
+  const mailId = req.query?.mailId?.trim()
+  if (!attachmentId || !mailId) {
+    return res.status(404).json({ error: 'Not found' })
+  }
+  if (!mongoose.Types.ObjectId.isValid(mailId)) {
+    return res.status(404).json({ error: 'Not found' })
+  }
+  const attachment = await attachmentService.fetchAttachmentRecord({
+    userId: req.userId,
+    mailId,
+    attachmentId,
+  })
+  if (!attachment) {
+    return res.status(404).json({ error: 'Not found' })
+  }
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename=${attachment.originalName}`
+  )
+
+  res.sendFile(attachment.path)
 }
 
 export default {
@@ -125,5 +150,6 @@ export default {
   trashMail,
   restoreMail,
   getMail,
-  uploadAttachment,
+  uploadAttachments,
+  downloadAttachment,
 }

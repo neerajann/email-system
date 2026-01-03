@@ -3,6 +3,21 @@ const handleAuthError = (err, res) => {
     case 'MISSING_PARAMETERS':
       return res.status(400).json({ error: 'Some parameters are missing' })
 
+    case 'NAME_MAX_LENGTH_EXCEEDED':
+      return res.status(400).json({
+        error: 'First Name and Last Name cannot exceeded 15 characters.',
+      })
+
+    case 'ADDRESS_MAX_LENGTH_EXCEEDED':
+      return res.status(400).json({
+        error: 'Max length of Email address can be 25.',
+      })
+
+    case 'PASSWORD_MAX_LENGTH_EXCEEDED':
+      return res.status(400).json({
+        error: 'Password cannot exceed 30 characters.',
+      })
+
     case 'INVALID_EMAIL':
       return res.status(400).json({ error: 'Invalid email address' })
 

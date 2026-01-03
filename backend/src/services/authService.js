@@ -12,6 +12,13 @@ const registerUserService = async ({
   if (!firstName || !lastName || !emailAddress || !password)
     throw new Error('MISSING_PARAMETERS')
 
+  if (firstName.length > 15 || lastName.length > 15)
+    throw new Error('NAME_MAX_LENGTH_EXCEEDED')
+
+  if (emailAddress.length > 25) throw new Error('ADDRESS_MAX_LENGTH_EXCEEDED')
+
+  if (password.length > 30) throw new Error('PASSWORD_MAX_LENGTH_EXCEEDED')
+
   if (!domainEmailPattern.test(emailAddress)) throw new Error('INVALID_EMAIL')
 
   if (!passwordPattern.test(password)) throw new Error('INVALID_PASSWORD')
