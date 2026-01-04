@@ -1,12 +1,18 @@
-import express from 'express'
 import authController from '../controllers/authController.js'
 import verifyJWT from '../middlewares/verifyJWT.js'
+import { loginSchema, registerSchema } from '../schemas/authSchema.js'
 
-const authRouter = express.Router()
+const authRouter = (fastify) => {
+  fastify.get('/me', authController.checkUser)
 
-authRouter.get('/api/me', authController.checkUser)
-authRouter.post('/api/register', authController.registerUser)
-authRouter.post('/api/login', authController.loginUser)
-authRouter.post('/api/logout', verifyJWT, authController.logoutUser)
+  fastify.post(
+    '/register',
+    { schema: registerSchema },
+    authController.registerUser
+  )
 
+  fastify.post('/login', { schema: loginSchema }, authController.loginUser)
+
+  fastify.post('/logout', { preHandler: verifyJWT }, authController.logoutUser)
+}
 export default authRouter

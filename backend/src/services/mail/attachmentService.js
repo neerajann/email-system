@@ -8,10 +8,10 @@ const addAttachmentsToDB = async (files) => {
     const attachments = files.map((file) => {
       return {
         path: file.path,
-        originalName: file.originalname,
+        originalName: file.originalName,
         encoding: file.encoding,
         mimetype: file.mimetype,
-        fileName: file.filename,
+        fileName: file.fileName,
         size: file.size,
       }
     })
@@ -29,15 +29,20 @@ const fetchAttachmentRecord = async ({ userId, mailId, attachmentId }) => {
   const userIdObject = new mongoose.Types.ObjectId(userId)
   const mailIdObject = new mongoose.Types.ObjectId(mailId)
   const attachmentIdObject = new mongoose.Types.ObjectId(attachmentId)
+  console.log(userIdObject + ' ' + mailIdObject + ' ' + attachmentIdObject)
 
   const mailboxExists = await Mailbox.exists({
     userId: userIdObject,
     emailId: mailIdObject,
   })
+
   const emailHasAttachment = await Email.exists({
     _id: mailIdObject,
     attachments: attachmentIdObject,
   })
+
+  console.log('emailHasAttachment', emailHasAttachment)
+  console.log('Mailboexits', mailboxExists)
   if (!mailboxExists || !emailHasAttachment) {
     return null
   }
@@ -51,6 +56,7 @@ const fetchAttachmentRecord = async ({ userId, mailId, attachmentId }) => {
       path: 1,
     }
   )
+  console.log('attachmet record', attachmentsRecord)
   return attachmentsRecord
 }
 

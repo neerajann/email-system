@@ -1,14 +1,17 @@
-import './envConfig.js'
+import '../../src/config/env.js'
 import { Worker } from 'bullmq'
 import IORedis from 'ioredis'
 import mongoose from 'mongoose'
 import emailQueue from '../../src/queues/emailQueue.js'
-import { domainEmailPattern } from '../../src/utils/pattern.js'
 import sendFailureMessage from './services/sendFailureMessage.js'
 import fetchAttachmentsRecord from './services/fetchAttachments.js'
 import handleExternalMails from './services/handleExternalMails.js'
 import handleLocalMails from './services/handleLocalMails.js'
 
+const domain = process.env.DOMAIN_NAME
+const domainEmailPattern = new RegExp(
+  `^[a-zA-Z0-9.]+@${domain.replace('.', '\\.')}$`
+)
 await mongoose.connect(process.env.MONGO_DB_URL)
 
 const connection = new IORedis({

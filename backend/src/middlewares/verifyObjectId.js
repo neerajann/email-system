@@ -1,10 +1,9 @@
 import mongoose from 'mongoose'
 
-const verifyObjectId = (req, res, next) => {
+const verifyObjectId = async (req, reply) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(404).json({ error: 'Route not found' })
+    return reply.code(404).send({ error: 'Route not found' })
   }
   req.mailboxId = req.params.id
-  next()
 }
 export default verifyObjectId

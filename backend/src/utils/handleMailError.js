@@ -1,32 +1,29 @@
-const handleMailError = (res, err) => {
+const handleMailError = (reply, err) => {
   switch (err.message) {
-    case 'INVALID_EMAIL':
-      return res.status(400).json({ error: 'Invalid email address.' })
-
     case 'ADDRESS_NOT_FOUND':
-      return res.status(404).json({ error: 'Address not found.' })
+      return reply.code(404).send({ error: 'Address not found.' })
 
     case 'MAIL_DELIVERY_ERROR':
       console.error(err)
-      return res.status(502).json({ error: 'Mail delivery failed.' })
+      return reply.code(502).send({ error: 'Mail delivery failed.' })
 
     case 'DATABASE_ERROR':
       console.log(err)
-      return res.status(500).json({ error: 'Failed to save mail.' })
+      return reply.code(500).send({ error: 'Failed to save mail.' })
 
     case 'INVALID_ATTACHMENTS':
-      return res
-        .status(400)
-        .json({ error: "Couldn't send the attachment.Try uploading again." })
+      return reply
+        .code(400)
+        .send({ error: "Couldn't send the attachment.Try uploading again." })
 
     case 'EMAIL_NOT_FOUND':
-      return res
-        .status(404)
-        .json({ error: "Couldn't find email with the given id." })
+      return reply
+        .code(404)
+        .send({ error: "Couldn't find email with the given id." })
 
     default:
       console.error(err)
-      return res.status(500).json({ error: 'Something went wrong.' })
+      return reply.code(500).send({ error: 'Something went wrong.' })
   }
 }
 

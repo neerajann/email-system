@@ -1,4 +1,3 @@
-import { domainEmailPattern, passwordPattern } from '../utils/pattern.js'
 import bcrypt from 'bcrypt'
 import User from '../models/userSchema.js'
 import jwt from 'jsonwebtoken'
@@ -9,20 +8,6 @@ const registerUserService = async ({
   emailAddress,
   password,
 }) => {
-  if (!firstName || !lastName || !emailAddress || !password)
-    throw new Error('MISSING_PARAMETERS')
-
-  if (firstName.length > 15 || lastName.length > 15)
-    throw new Error('NAME_MAX_LENGTH_EXCEEDED')
-
-  if (emailAddress.length > 25) throw new Error('ADDRESS_MAX_LENGTH_EXCEEDED')
-
-  if (password.length > 30) throw new Error('PASSWORD_MAX_LENGTH_EXCEEDED')
-
-  if (!domainEmailPattern.test(emailAddress)) throw new Error('INVALID_EMAIL')
-
-  if (!passwordPattern.test(password)) throw new Error('INVALID_PASSWORD')
-
   const existingUser = await User.findOne({
     emailAddress: emailAddress,
   })
@@ -40,8 +25,6 @@ const registerUserService = async ({
 }
 
 const loginUserService = async (emailAddress, password) => {
-  if (!emailAddress || !password) throw new Error('MISSING_CREDENTIALS')
-  if (!domainEmailPattern.test(emailAddress)) throw new Error('INVALID_EMAIL')
   const existingUser = await User.findOne({
     emailAddress: emailAddress,
   })

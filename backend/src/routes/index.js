@@ -1,14 +1,9 @@
-import express from 'express'
 import authRouter from './authRoutes.js'
 import mailRouter from './mailRoutes.js'
 
-const router = express.Router()
-
-router.use(authRouter)
-router.use(mailRouter)
-
-router.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' })
-})
+const router = async (fastify) => {
+  await fastify.register(authRouter, { prefix: '/api/auth' })
+  await fastify.register(mailRouter, { prefix: '/api/mail' })
+}
 
 export default router

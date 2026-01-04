@@ -1,25 +1,72 @@
-import express from 'express'
-import cookieParser from 'cookie-parser'
-import cors from 'cors'
+import Fastify from 'fastify'
 import './src/config/env.js'
 import connectDB from './src/config/db.js'
 import router from './src/routes/index.js'
+import cors from '@fastify/cors'
+import cookieParser from '@fastify/cookie'
+import ajvErrors from 'ajv-errors'
+import fastifyMultipart from '@fastify/multipart'
 
-const app = express()
+const fastify = Fastify({
+  ajv: {
+    customOptions: {
+      allErrors: true,
+      coerceTypes: false,
+    },
+    plugins: [ajvErrors],
+  },
+})
+
+fastify.setErrorHandler((error, req, reply) => {
+  if (error.validation) {
+    return reply.code(400).send({
+      error: error.validation[0].message,
+    })
+  }
+  if (error.code === 'FST_ERR_CTP_INVALID_JSON_BODY') {
+    return reply.code(400).send({
+      error: 'Body is not valid JSON',
+    })
+  }
+  console.log(error)
+  return reply.code(500).send({
+    error: 'Something went wrong',
+  })
+})
+
 await connectDB()
 
-app.use(
-  cors({
-    origin: process.env.ORIGIN_ADDRESS,
-  })
-)
-
-app.use(cookieParser())
-
-app.use(express.json())
-
-app.use(router)
-
-app.listen(80, () => {
-  console.log('Server listening on port 80')
+await fastify.register(cors, {
+  origin: process.env.ORIGIN_ADDRESS,
+  credentials: true,
 })
+
+await fastify.register(cookieParser)
+
+await fastify.register(fastifyMultipart, {
+  limits: {
+    files: 10,
+    fileSize: 10 * 1024 * 1024,
+  },
+})
+
+await fastify.register(router)
+
+fastify.setNotFoundHandler((req, reply) => {
+  return reply.code(404).send({
+    error: 'Route not found.',
+  })
+})
+
+fastify.listen(
+  {
+    port: 80,
+    host: '0.0.0.0',
+  },
+  (err) => {
+    if (err) {
+      console.log(err)
+    }
+    console.log('Server running on port 80')
+  }
+)

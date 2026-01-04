@@ -76,6 +76,7 @@ const getMails = async (userId, label) => {
       },
     },
   ])
+
   return {
     mails: result[0].data,
     total: result[0].totalCount[0]?.count || 0,
@@ -83,7 +84,6 @@ const getMails = async (userId, label) => {
 }
 
 const getMail = async (userId, threadId) => {
-  console.log(userId + ' ' + threadId)
   await Mailbox.updateMany(
     {
       userId: new mongoose.Types.ObjectId(userId),
@@ -95,6 +95,7 @@ const getMail = async (userId, threadId) => {
       },
     }
   )
+
   const result = await Mailbox.aggregate([
     {
       $match: {
@@ -137,6 +138,7 @@ const getMail = async (userId, threadId) => {
       },
     },
   ])
+
   if (result.length === 0) {
     throw new Error('EMAIL_NOT_FOUND')
   }

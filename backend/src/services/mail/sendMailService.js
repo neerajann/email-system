@@ -5,22 +5,17 @@ import Mailbox from '../../models/mailboxSchema.js'
 import Email from '../../models/emailSchema.js'
 import crypto from 'crypto'
 import mongoose from 'mongoose'
-import { emailPattern } from '../../utils/pattern.js'
 import Attachment from '../../models/attachmentSchema.js'
 import sanitizeHtml from 'sanitize-html'
 
-const deliverMail = async (
-  userId,
+const deliverMail = async ({
+  senderId,
   sender,
   recipients,
   subject,
   body,
-  attachments
-) => {
-  recipients.forEach((recipient) => {
-    if (!emailPattern.test(recipient)) throw new Error('INVALID_EMAIL')
-  })
-
+  attachments,
+}) => {
   const textContent = htmlToText(body, {
     wordwrap: 80,
     selectors: [
@@ -35,9 +30,9 @@ const deliverMail = async (
   const session = await mongoose.startSession()
   try {
     session.startTransaction()
-    const parsedAttachments = attachments
-      ?.filter((id) => mongoose.Types.ObjectId.isValid(id))
-      ?.map((id) => new mongoose.Types.ObjectId(id))
+    const parsedAttachments = attachments?.map(
+      (id) => new mongoose.Types.ObjectId(id)
+    )
 
     if (parsedAttachments?.length) {
       var count = await Attachment.countDocuments(
@@ -86,7 +81,7 @@ const deliverMail = async (
     await Mailbox.create(
       [
         {
-          userId,
+          userId: senderId,
           threadId: thread._id,
           emailId: email._id,
           labels: ['SENT'],
@@ -109,7 +104,7 @@ const deliverMail = async (
   await emailQueue.add(
     'sendEmail',
     {
-      senderId: userId,
+      senderId: senderId,
       emailId: email._id,
       threadId: thread._id,
       sender: sender,

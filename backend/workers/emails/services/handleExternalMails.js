@@ -37,17 +37,47 @@ const handleExternalMails = async ({
         path: record.path,
       })),
     })
-    console.log(info)
-    return normalizeInfo(info)
+
+    const delivery = normalizeInfo(info)
+    if (!delivery.errors.length) {
+      return delivery
+    }
+
+    const processedRecipients = new Set([
+      ...delivery.accepted,
+      ...delivery.rejected,
+      ...delivery.pending,
+    ])
+
+    console.log(processedRecipients)
+
+    const unclassifiedRecipients = recipients.filter(
+      (email) => !processedRecipients.has(email)
+    )
+
+    for (const error of delivery.errors) {
+      const affectedRecipients = unclassifiedRecipients.filter((email) =>
+        email.endsWith(error.hostname)
+      )
+
+      const { type } = classifyTransportError(error)
+
+      if (type === 'PERMANENT') {
+        delivery.rejected.push(...affectedRecipients)
+      }
+      if (type === 'TEMPORARY') {
+        delivery.pending.push(...affectedRecipients)
+      }
+    }
+
+    return delivery
   } catch (err) {
-    console.log('Nodemailer Error:', err)
-    var classification = classifyTransportError(err.errors[0])
-  }
-  return {
-    accepted: [],
-    rejected: classification.type === 'PERMANENT' ? recipients : [],
-    pending: classification.type === 'TEMPORARY' ? recipients : [],
-    error: classification,
+    const classification = classifyTransportError(err.errors[0])
+    return {
+      accepted: [],
+      rejected: classification.type === 'PERMANENT' ? recipients : [],
+      pending: classification.type === 'TEMPORARY' ? recipients : [],
+    }
   }
 }
 
@@ -75,6 +105,7 @@ const normalizeInfo = (info) => {
     pending: Array.isArray(info.pending)
       ? info.pending.flatMap((p) => p.recipients || [])
       : [],
+    errors: Array.isArray(info.errors) ? info.errors : [],
   }
 }
 export default handleExternalMails

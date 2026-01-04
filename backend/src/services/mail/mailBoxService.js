@@ -1,10 +1,11 @@
+import mongoose from 'mongoose'
 import Mailbox from '../../models/mailboxSchema.js'
 
-const moveToTrash = async (mailboxId, userId) => {
-  const result = await Mailbox.updateOne(
+const moveToTrash = async (threadId, userId) => {
+  const result = await Mailbox.updateMany(
     {
-      _id: mailboxId,
-      userId: userId,
+      threadId: new mongoose.Types.ObjectId(threadId),
+      userId: new mongoose.Types.ObjectId(userId),
       isDeleted: false,
     },
     {
@@ -20,11 +21,11 @@ const moveToTrash = async (mailboxId, userId) => {
   return true
 }
 
-const restoreMail = async (mailboxId, userId) => {
-  const result = await Mailbox.updateOne(
+const restoreMail = async (threadId, userId) => {
+  const result = await Mailbox.updateMany(
     {
-      _id: mailboxId,
-      userId: userId,
+      threadId: new mongoose.Types.ObjectId(threadId),
+      userId: new mongoose.Types.ObjectId(userId),
       isDeleted: true,
     },
     {

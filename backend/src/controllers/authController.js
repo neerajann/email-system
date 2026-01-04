@@ -2,60 +2,61 @@ import authService from '../services/authService.js'
 import handleAuthError from '../utils/handleAuthError.js'
 import jwt from 'jsonwebtoken'
 
-const registerUser = async (req, res) => {
+const registerUser = async (req, reply) => {
   try {
-    const user = await authService.registerUserService({
-      firstName: req.body?.firstName?.trim(),
-      lastName: req.body?.lastName?.trim(),
-      emailAddress: req.body?.emailAddress?.trim().toLowerCase(),
-      password: req.body?.password?.trim(),
+    await authService.registerUserService({
+      firstName: req.body.firstName.trim(),
+      lastName: req.body.lastName.trim(),
+      emailAddress: req.body.emailAddress.trim().toLowerCase(),
+      password: req.body.password.trim(),
     })
-    return res.status(201).json({
+    return reply.code(201).send({
       sucess: 'Account registered successfully. Please procced to login',
-      userId: user._id,
     })
   } catch (err) {
-    handleAuthError(err, res)
+    handleAuthError(err, reply)
   }
 }
 
-const loginUser = async (req, res) => {
+const loginUser = async (req, reply) => {
   try {
     const jwtToken = await authService.loginUserService(
-      req.body?.emailAddress?.trim()?.toLowerCase(),
-      req.body?.password?.trim()
+      req.body.emailAddress.trim().toLowerCase(),
+      req.body.password.trim()
     )
-    res.cookie(process.env.JWT_COOKIE_NAME, jwtToken, {
+    reply.setCookie(process.env.JWT_COOKIE_NAME, jwtToken, {
       httpOnly: true,
       secure: false,
-      maxAge: 1000 * 60 * 60 * 24 * 10,
+      maxAge: 60 * 60 * 24 * 10,
       sameSite: 'lax',
+      path: '/',
     })
-    return res.status(200).json({ sucess: 'Logged in successfully' })
+    return reply.code(200).send({ sucess: 'Logged in successfully' })
   } catch (err) {
-    handleAuthError(err, res)
+    handleAuthError(err, reply)
   }
 }
 
-const logoutUser = (req, res) => {
-  res.clearCookie(process.env.JWT_COOKIE_NAME)
-  return res.status(200).json({ sucess: 'Logged out successfully' })
+const logoutUser = (req, reply) => {
+  reply.clearCookie(process.env.JWT_COOKIE_NAME)
+  return reply.code(200).send({ sucess: 'Logged out successfully' })
 }
 
-const checkUser = (req, res) => {
+const checkUser = (req, reply) => {
   const jwtToken = req.cookies?.[process.env.JWT_COOKIE_NAME]
-  if (!jwtToken) return res.json([])
+  if (!jwtToken) return reply.send([])
 
   try {
     const decoded = jwt.verify(jwtToken, process.env.JWT_SECRET)
     if (decoded.emailAddress && decoded._id) {
-      return res.json({ emailAddress: decoded.emailAddress, id: decoded._id })
+      return reply.send({ emailAddress: decoded.emailAddress, id: decoded._id })
     }
-    res.clearCookie(process.env.JWT_COOKIE_NAME)
-    return res.json([])
+    reply.clearCookie(process.env.JWT_COOKIE_NAME)
+    return reply.send([])
   } catch (error) {
     console.log(error)
-    return res.status(500).json({ error: 'Something went wrong' })
+    return reply.code(500).send({ error: 'Something went wrong' })
   }
 }
+
 export default { registerUser, loginUser, logoutUser, checkUser }
