@@ -1,6 +1,6 @@
-import sendMailService from '../services/mail/sendMailService.js'
-import mailBoxService from '../services/mail/mailBoxService.js'
-import fetchMailService from '../services/mail/fetchMailService.js'
+import sendMailService from '../services/mail/send.mail.service.js'
+import mailBoxService from '../services/mail/mailbox.service.js'
+import fetchMailService from '../services/mail/fetch.mail.service.js'
 import handleMailError from '../utils/handleMailError.js'
 
 const getInbox = async (req, reply) => {

@@ -1,4 +1,4 @@
-import { domainEmailPattern, passwordPattern } from '../utils/pattern.js'
+import { domainEmailPattern, passwordPattern } from '@email-system/core/utils'
 
 const registerSchema = {
   body: {
@@ -26,7 +26,7 @@ const registerSchema = {
       emailAddress: {
         type: 'string',
         maxLength: 30,
-        pattern: domainEmailPattern,
+        pattern: domainEmailPattern.source,
         errorMessage: {
           maxLength: 'Email address cannot exceed 30 characters.',
           pattern: 'Invalid email address',
@@ -36,7 +36,7 @@ const registerSchema = {
         type: 'string',
         minLength: 8,
         maxLength: 30,
-        pattern: passwordPattern,
+        pattern: passwordPattern.source,
         errorMessage: {
           maxLength: 'Password cannot exceed 30 characters.',
           minLength: 'Password is required',
@@ -65,7 +65,7 @@ const loginSchema = {
       emailAddress: {
         type: 'string',
         maxLength: 30,
-        pattern: domainEmailPattern,
+        pattern: domainEmailPattern.source,
         errorMessage: {
           pattern: 'Invalid email address.',
         },

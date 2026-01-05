@@ -1,11 +1,14 @@
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import crypto from 'crypto'
 import handleUploadError from '../utils/handleUploadError.js'
-import attachmentService from '../services/mail/attachmentService.js'
+import attachmentService from '../services/mail/attachment.service.js'
 
 const uploadAttachments = async (req, reply) => {
-  const uploadDir = path.join(process.cwd(), 'attachments')
+  const __dirname = path.dirname(fileURLToPath(import.meta.url))
+  const uploadDir = path.join(__dirname, '../../../data/attachments')
+
   await fs.promises.mkdir(uploadDir, { recursive: true })
 
   const savedFiles = []

@@ -1,0 +1,12 @@
+{
+  "name": "@email-system/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./config": "./config/db.js",
+    "./models": "./models/index.js",
+    "./queues": "./queues/index.js",
+    "./utils": "./utils/pattern.js"
+  }
+}

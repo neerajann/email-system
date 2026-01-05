@@ -1,12 +1,12 @@
 import { htmlToText } from 'html-to-text'
-import emailQueue from '../../queues/emailQueue.js'
-import Thread from '../../models/threadSchema.js'
-import Mailbox from '../../models/mailboxSchema.js'
-import Email from '../../models/emailSchema.js'
 import crypto from 'crypto'
 import mongoose from 'mongoose'
-import Attachment from '../../models/attachmentSchema.js'
 import sanitizeHtml from 'sanitize-html'
+import { Thread } from '@email-system/core/models'
+import { Mailbox } from '@email-system/core/models'
+import { Email } from '@email-system/core/models'
+import { Attachment } from '@email-system/core/models'
+import { outboundEmailQueue } from '@email-system/core/queues'
 
 const deliverMail = async ({
   senderId,
@@ -101,8 +101,8 @@ const deliverMail = async ({
     await session.endSession()
   }
 
-  await emailQueue.add(
-    'sendEmail',
+  await outboundEmailQueue.add(
+    'outboundEmailQueue',
     {
       senderId: senderId,
       emailId: email._id,

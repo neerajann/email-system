@@ -1,12 +1,13 @@
 import verifyJWT from '../middlewares/verifyJWT.js'
 import verifyObjectId from '../middlewares/verifyObjectId.js'
-import mailController from '../controllers/mailController.js'
-import attachmentController from '../controllers/attachmentController.js'
+import mailController from '../controllers/mail.controller.js'
+import attachmentController from '../controllers/attachment.controller.js'
+
 import {
   attachmentSchema,
   emailSchema,
   trashMailSchema,
-} from '../schemas/mailSchema.js'
+} from '../schemas/mail.schema.js'
 
 const mailRouter = async (fastify) => {
   fastify.get('/inbox', { preHandler: verifyJWT }, mailController.getInbox)

@@ -1,0 +1,5 @@
+export { default as User } from './user.schema.js'
+export { default as Mailbox } from './mailbox.schema.js'
+export { default as Email } from './email.schema.js'
+export { default as Attachment } from './attachment.schema.js'
+export { default as Thread } from './thread.schema.js'

@@ -1,6 +1,6 @@
-import authController from '../controllers/authController.js'
+import authController from '../controllers/auth.controller.js'
 import verifyJWT from '../middlewares/verifyJWT.js'
-import { loginSchema, registerSchema } from '../schemas/authSchema.js'
+import { loginSchema, registerSchema } from '../schemas/auth.schema.js'
 
 const authRouter = (fastify) => {
   fastify.get('/me', authController.checkUser)

@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import Mailbox from '../../models/mailboxSchema.js'
+import { Mailbox } from '@email-system/core/models'
 
 const getMails = async (userId, label) => {
   let page = 0

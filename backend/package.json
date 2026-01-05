@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js",
     "start": "node server.js"
   },
   "keywords": [],
@@ -12,6 +12,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@email-system/core": "*",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.2.0",
     "@fastify/multipart": "^9.3.0",
@@ -19,17 +20,13 @@
     "ajv-errors": "^3.0.0",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.66.4",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1",
     "fastify": "^5.6.2",
     "html-to-text": "^9.0.5",
     "ioredis": "^5.8.2",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.0.0",
     "mongoose": "^9.0.2",
-    "multer": "^2.0.2",
     "nodemailer": "^7.0.12",
     "nodemailer-direct-transport": "^3.0.7",
     "sanitize-html": "^2.17.0"

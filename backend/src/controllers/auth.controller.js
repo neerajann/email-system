@@ -1,4 +1,4 @@
-import authService from '../services/authService.js'
+import authService from '../services/auth.service.js'
 import handleAuthError from '../utils/handleAuthError.js'
 import jwt from 'jsonwebtoken'
 

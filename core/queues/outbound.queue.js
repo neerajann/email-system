@@ -1,6 +1,6 @@
 import { Queue } from 'bullmq'
 
-const emailQueue = new Queue('emailQueue', {
+const outboundEmailQueue = new Queue('outboundEmailQueue', {
   connection: {
     host: process.env.REDIS_HOST,
     port: process.env.REDIS_PORT,
@@ -10,10 +10,10 @@ const emailQueue = new Queue('emailQueue', {
 })
 
 try {
-  await emailQueue.waitUntilReady()
+  await outboundEmailQueue.waitUntilReady()
   console.log('Redis connected')
 } catch (err) {
   throw new Error('Couldnot connect to redis server')
 }
 
-export default emailQueue
+export default outboundEmailQueue

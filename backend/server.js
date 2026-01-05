@@ -1,6 +1,6 @@
 import Fastify from 'fastify'
 import './src/config/env.js'
-import connectDB from './src/config/db.js'
+import connectDB from '@email-system/core/config'
 import router from './src/routes/index.js'
 import cors from '@fastify/cors'
 import cookieParser from '@fastify/cookie'

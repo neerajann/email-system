@@ -1,4 +1,4 @@
-import { mongooseObjectIdPattern } from '../utils/pattern.js'
+import { mongooseObjectIdPattern } from '@email-system/core/utils'
 
 const emailSchema = {
   body: {
@@ -26,7 +26,7 @@ const emailSchema = {
         type: 'array',
         items: {
           type: 'string',
-          pattern: mongooseObjectIdPattern,
+          pattern: mongooseObjectIdPattern.source,
           errorMessage: {
             pattern: 'Invalid attachment id',
           },
@@ -73,7 +73,7 @@ const trashMailSchema = {
     properties: {
       id: {
         type: 'string',
-        pattern: mongooseObjectIdPattern,
+        pattern: mongooseObjectIdPattern.source,
         errorMessage: {
           pattern: 'Invalid id.',
         },
@@ -94,7 +94,7 @@ const attachmentSchema = {
     properties: {
       id: {
         type: 'string',
-        pattern: mongooseObjectIdPattern,
+        pattern: mongooseObjectIdPattern.source,
         errorMessage: {
           pattern: 'Invalid attachment id.',
         },
@@ -112,7 +112,7 @@ const attachmentSchema = {
     properties: {
       mailId: {
         type: 'string',
-        pattern: mongooseObjectIdPattern,
+        pattern: mongooseObjectIdPattern.source,
         errorMessage: {
           pattern: 'Invalid mail id.',
         },

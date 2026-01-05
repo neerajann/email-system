@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
-import Attachment from '../../models/attachmentSchema.js'
-import Email from '../../models/emailSchema.js'
-import Mailbox from '../../models/mailboxSchema.js'
+import { Attachment } from '@email-system/core/models'
+import { Email } from '@email-system/core/models'
+import { Mailbox } from '@email-system/core/models'
 
 const addAttachmentsToDB = async (files) => {
   try {
@@ -56,7 +56,6 @@ const fetchAttachmentRecord = async ({ userId, mailId, attachmentId }) => {
       path: 1,
     }
   )
-  console.log('attachmet record', attachmentsRecord)
   return attachmentsRecord
 }
 

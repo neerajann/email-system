@@ -1,5 +1,5 @@
-import authRouter from './authRoutes.js'
-import mailRouter from './mailRoutes.js'
+import authRouter from './auth.routes.js'
+import mailRouter from './mail.routes.js'
 
 const router = async (fastify) => {
   await fastify.register(authRouter, { prefix: '/api/auth' })
