@@ -1,0 +1,12 @@
+{
+  "name": "inbound-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@email-system/core": "*"
+  }
+}

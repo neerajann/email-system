@@ -1,0 +1,12 @@
+{
+  "name": "outbound-worker",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@email-system/core": "*"
+  }
+}
