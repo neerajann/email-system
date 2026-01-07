@@ -40,7 +40,7 @@ const processIncomingReply = async ({ mail, envelope }) => {
     name: emailAddressToName[p.address] ?? '',
   }))
 
-  const sanitizedHtml = htmlSanitizer(mail.html, SANITIZE_CONFIG)
+  const sanitizedHtml = htmlSanitizer(mail.html)
 
   const email = await Email.create({
     threadId,

@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
 import dns from 'dns/promises'
-
+import fs from 'fs'
 const smtpRelay = async ({
   sender,
   recipients,
@@ -55,6 +55,11 @@ const smtpRelay = async ({
           filename: r.originalName,
           path: r.path,
         })),
+        dkim: {
+          domainName: process.env.DOMAIN_NAME,
+          keySelector: 'default',
+          privateKey: fs.readFileSync('./inboxify.private', 'utf8'),
+        },
       })
       console.log('Info:', info)
 
