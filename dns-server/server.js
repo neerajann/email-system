@@ -1,4 +1,4 @@
-import dgram, { Socket } from 'node:dgram'
+import dgram from 'node:dgram'
 import dnsPacket from 'dns-packet'
 import { MongoClient } from 'mongodb'
 import env from 'dotenv'
@@ -8,7 +8,7 @@ env.config({ quiet: true })
 const server = dgram.createSocket('udp4')
 const upstream = dgram.createSocket('udp4')
 
-const client = new MongoClient('mongodb://127.0.0.1:27017/')
+const client = new MongoClient(process.env.MONGO_URL)
 await client.connect()
 
 const db = client.db('dns')
@@ -84,6 +84,7 @@ const findRecord = async (incomingMessage) => {
   )
 }
 const sendResponse = ({ incomingMessage, rinfo, recordFromDB, blocked }) => {
+  console.log(incomingMessage)
   let answers
   const questions = incomingMessage.questions[0]
   const qtype = questions.type
@@ -118,6 +119,40 @@ const sendResponse = ({ incomingMessage, rinfo, recordFromDB, blocked }) => {
           preference: recordFromDB.records[0].priority ?? 10,
           exchange: recordFromDB.records[0].content,
         },
+      },
+    ]
+  } else if (qtype === 'TXT' || qtype === dnsPacket?.TYPE?.TXT) {
+    const txtData = recordFromDB.records[0].content
+
+    let dnsData
+    if (Array.isArray(txtData)) {
+      const needsSplitting = txtData.some((str) => Buffer.byteLength(str) > 255)
+
+      if (needsSplitting) {
+        dnsData = []
+        for (const str of txtData) {
+          if (Buffer.byteLength(str) <= 255) {
+            dnsData.push(str)
+          } else {
+            for (let i = 0; i < str.length; i += 255) {
+              dnsData.push(str.substring(i, i + 255))
+            }
+          }
+        }
+      } else {
+        dnsData = txtData
+      }
+    } else {
+      dnsData = txtData
+    }
+
+    answers = [
+      {
+        type: 'TXT',
+        class: 'IN',
+        name: questions.name,
+        ttl: 50,
+        data: dnsData,
       },
     ]
   } else {
@@ -164,6 +199,10 @@ upstream.on('message', (response) => {
   pendingRequests.delete(decoded.id)
 })
 
-server.bind(53, () => {
-  console.log('DNS Server running ')
+server.on('error', (err) => {
+  console.error('DNS Server error:\n', err)
+})
+
+server.bind(53, '0.0.0.0', () => {
+  console.log('DNS Server running on port 53 ')
 })
