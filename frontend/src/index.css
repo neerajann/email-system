@@ -1,17 +1,100 @@
 @import 'tailwindcss';
 
-@theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif,
-    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+.side-bar {
+  @apply flex items-center;
 }
 
+.show-side-bar {
+  @apply text-base font-medium mt-5 border rounded w-full p-2;
+}
+
+.hide-side-bar {
+  @apply mt-8;
+}
+
+@config "../tailwind.config.js";
+
 body {
-  background-color: rgb(241, 233, 233);
-  /* background-image: linear-gradient(#0c0b0b, #110309e0); */
-  /* background-image: linear-gradient(
-    to right,
-    rgb(32, 7, 32),
-    rgb(39, 23, 23),
-    rgb(29, 21, 29)
-  ); */
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+:root {
+  /* surfaces */
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+
+  /* inputs */
+  --input: #ffffff;
+  --border: #e5e5e5;
+
+  /* brand / accent */
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+
+  --secondary: #f5f5f5;
+  --secondary-foreground: #171717;
+
+  /* states */
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+
+  --destructive: #e40014;
+  --destructive-foreground: #fcf3f3;
+  /* focus */
+  --ring: #a1a1a1;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+
+  --card: #171717;
+  --card-foreground: #fafafa;
+
+  --input: #262626;
+  --border: #ffffff26;
+
+  --primary: #fafafa;
+  --primary-foreground: #0a0a0a;
+
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+
+  --muted: #262626;
+  --muted-foreground: #a1a1a1;
+
+  --destructive: #ff4d4f;
+  --destructive-foreground: #0a0a0a;
+
+  --ring: #737373;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-ring: var(--ring);
+}
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+input[type='password']::-webkit-textfield-decoration-container {
+  display: none;
+}
+input[type='password']::-ms-reveal,
+input[type='password']::-ms-clear {
+  display: none;
 }

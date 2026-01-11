@@ -1,10 +1,14 @@
-import formatMailDate from './utils/fomatMailDate'
+import { memo } from 'react'
+import formatMailDate from '../utils/fomatMailDate'
+import { Link } from 'react-router-dom'
 
-const Mail = (props) => {
+const Mail = memo((props) => {
   const mail = props.data
-  console.log(mail)
   return (
-    <div className='flex border flex-1 rounded  px-5 py-3 mr-5 justify-center items-center bg-white'>
+    <Link
+      to={mail.threadId}
+      className='flex border flex-1 rounded  px-5 py-3 mr-5 justify-center items-center bg-white'
+    >
       <img
         className='size-12 rounded-full'
         src='https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg'
@@ -21,7 +25,7 @@ const Mail = (props) => {
           <p>{mail.snippet}</p>
         </div>
       </div>
-    </div>
+    </Link>
   )
-}
+})
 export default Mail
