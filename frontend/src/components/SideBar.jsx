@@ -1,4 +1,4 @@
-import { IoMdArchive } from 'react-icons/io'
+import { MdLightMode, MdDarkMode } from 'react-icons/md'
 import { RiQuillPenLine, RiInbox2Line, RiInbox2Fill } from 'react-icons/ri'
 import { NavLink } from 'react-router-dom'
 
@@ -13,8 +13,8 @@ import {
 import { useAppContext } from '../AppContext'
 
 const SideBar = () => {
-  const { showSideBar } = useAppContext()
-  console.log(showSideBar)
+  const { showSideBar, darkMode, setDarkMode } = useAppContext()
+
   const menuItems = [
     {
       name: 'Inbox',
@@ -44,36 +44,76 @@ const SideBar = () => {
 
   return (
     <div
-      className={` h-screen transition-all  ease-in-out top-15 shadow-2xl shadow-[#20121244] border-r  lg:block w-50  p-4   ${
-        showSideBar ? 'block' : 'hidden '
-      }`}
+      className={`
+    h-screen
+    w-62
+    shrink-0
+    bg-background
+    border-r 
+    p-5
+    border-border
+    transition-transform
+    duration-300
+    ease-in-out
+    fixed
+    flex
+    flex-col
+    top-10
+    left-0
+    z-20
+    lg:static
+    ${showSideBar ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}
+  `}
     >
       <button
-        className=' flex items-center text-base font-medium mt-5 border rounded w-full p-2'
+        className=' flex items-center  text-sm mt-5 border rounded w-full p-2 border-border  bg-input'
         onClick={() => setShowComposeMail(true)}
       >
-        <RiQuillPenLine className='size-8' />
+        <RiQuillPenLine className='size-6' />
 
-        <div className='ml-2'>Compose</div>
+        <div className='ml-2  font-normal '>Compose</div>
       </button>
+      <div className=' border-t border-border mt-3 pt-4 flex-1'>
+        {menuItems.map((item) => {
+          return (
+            <NavLink
+              key={item.name}
+              to={item.route}
+              className={({ isActive }) =>
+                ` flex items-center text-sm rounded mb-5 border border-border p-2 ${
+                  isActive ? 'bg-input font-medium' : ''
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  {isActive ? item.activeIcon : item.icon}
 
-      {menuItems.map((item) => {
-        return (
-          <NavLink
-            key={item.name}
-            to={item.route}
-            className='side-bar show-side-bar'
-          >
-            {({ isActive }) => (
-              <>
-                {isActive ? item.activeIcon : item.icon}
-
-                <div className='ml-4'>{item.name}</div>
-              </>
-            )}
-          </NavLink>
-        )
-      })}
+                  <div className='ml-4'>{item.name}</div>
+                </>
+              )}
+            </NavLink>
+          )
+        })}
+      </div>
+      <div className='mb-25 w-full flex justify-center'>
+        <button
+          className='bg-background border border-border px-4 py-2 rounded w-full font-medium text-sm flex items-center justify-center'
+          onClick={() => {
+            setDarkMode(!darkMode)
+          }}
+        >
+          {darkMode ? (
+            <>
+              <MdLightMode className=' mr-3' /> Light Mode
+            </>
+          ) : (
+            <>
+              <MdDarkMode className='mr-3' /> Dark Mode
+            </>
+          )}
+        </button>
+      </div>
     </div>
   )
 }

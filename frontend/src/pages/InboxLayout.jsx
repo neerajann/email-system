@@ -10,12 +10,14 @@ import ComposeMail from '../components/ComposeMail'
 import { useAppContext } from '../AppContext'
 import { Outlet } from 'react-router-dom'
 
-const Inbox = () => {
+const InboxLayout = () => {
   const { showComposeMail } = useAppContext()
+
   const fetchInbox = async () => {
     const res = await api.get('/mail/inbox')
-    return res.data.mails
+    return res.data
   }
+
   const {
     data = [],
     isLoading,
@@ -46,9 +48,9 @@ const Inbox = () => {
     return () => toast.dismiss()
   }, [isLoading, isError])
 
+  console.log(data)
   return (
-    <div className='w-full h-full relative'>
-      <TopBar />
+    <div className='w-full h-screen relative'>
       <ToastContainer
         position='top-center'
         style={{ top: '5rem' }}
@@ -59,14 +61,22 @@ const Inbox = () => {
         pauseOnHover
       />
 
-      <div className='flex w-screen '>
-        <SideBar />
-        <Mails data={data} />
-        {/* {showComposeMail && <ComposeMail />} */}
-        <Outlet />
+      <div className='flex flex-1 h-full '>
+        <div className='flex-1 border-r border-border'>
+          <div className=' flex items-center justify-between text-sm  font-medium px-4 py-2 shadow-xs mb-3'>
+            {data.total} {data.total <= 1 ? 'email' : 'emails'}
+            <button className=' bg-background border border-border px-4 py-2 rounded font-normal'>
+              Select
+            </button>
+          </div>
+          <Mails mails={data.mails} total={data.total} />
+        </div>
+        <div className='hidden lg:flex flex-1'>
+          <Outlet />
+        </div>
       </div>
     </div>
   )
 }
 
-export default Inbox
+export default InboxLayout

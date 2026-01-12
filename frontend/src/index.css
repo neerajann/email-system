@@ -39,8 +39,8 @@ body {
   --secondary-foreground: #171717;
 
   /* states */
-  --muted: #f5f5f5;
-  --muted-foreground: #737373;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 45%;
 
   --destructive: #e40014;
   --destructive-foreground: #fcf3f3;
@@ -64,8 +64,8 @@ body {
   --secondary: #262626;
   --secondary-foreground: #fafafa;
 
-  --muted: #262626;
-  --muted-foreground: #a1a1a1;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
 
   --destructive: #ff4d4f;
   --destructive-foreground: #0a0a0a;
@@ -97,4 +97,30 @@ input[type='password']::-webkit-textfield-decoration-container {
 input[type='password']::-ms-reveal,
 input[type='password']::-ms-clear {
   display: none;
+}
+
+/* WebKit browsers (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+  border: 2px solid var(--background);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ring);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--background);
 }

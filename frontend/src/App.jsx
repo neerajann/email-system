@@ -1,4 +1,4 @@
-import Inbox from './pages/Inbox'
+import Inbox from './pages/InboxLayout'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import axios from 'axios'
@@ -10,6 +10,9 @@ import Trash from './pages/Trash'
 import Starred from './pages/Starred'
 import Thread from './pages/Thread'
 import PublicRoute from './PublicRoute'
+import MailboxLayout from './MailboxLayout'
+import InboxLayout from './pages/InboxLayout'
+import EmptyMailView from './EmptyMailView'
 
 function App() {
   axios.defaults.withCredentials = true
@@ -17,15 +20,18 @@ function App() {
   return (
     <Routes>
       <Route path='/' element={<ProtectedRoute />} />
+
       <Route
-        path='inbox'
         element={
           <ProtectedRoute>
-            <Inbox />
+            <MailboxLayout />
           </ProtectedRoute>
         }
       >
-        <Route path=':id' element={<Thread />} />
+        <Route path='/inbox' element={<InboxLayout />}>
+          <Route index element={<EmptyMailView />} />
+          <Route path=':id' element={<Thread />} />
+        </Route>
       </Route>
 
       <Route

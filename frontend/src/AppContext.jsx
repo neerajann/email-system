@@ -4,6 +4,9 @@ import api from './services/api'
 const AppContext = createContext(null)
 
 const AppProvider = ({ children }) => {
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('dark-mode') === 'true'
+  })
   const [showSideBar, setShowSideBar] = useState(false)
   const [showComposeMail, setShowComposeMail] = useState(false)
   const [user, setUser] = useState(null)
@@ -26,12 +29,26 @@ const AppProvider = ({ children }) => {
     checkAuth()
   }, [])
 
+  useEffect(() => {
+    const html = document.documentElement
+
+    if (darkMode) {
+      html.classList.add('dark')
+      localStorage.setItem('dark-mode', 'true')
+    } else {
+      html.classList.remove('dark')
+      localStorage.setItem('dark-mode', 'false')
+    }
+  }, [darkMode])
+
   const value = {
     showSideBar,
     setShowSideBar,
     showComposeMail,
     setShowComposeMail,
     user,
+    darkMode,
+    setDarkMode,
     setUser,
     loading,
   }
