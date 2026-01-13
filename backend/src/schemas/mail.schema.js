@@ -66,27 +66,6 @@ const emailSchema = {
   },
 }
 
-const trashMailSchema = {
-  params: {
-    type: 'object',
-    required: ['id'],
-    properties: {
-      id: {
-        type: 'string',
-        pattern: mongooseObjectIdPattern.source,
-        errorMessage: {
-          pattern: 'Invalid id.',
-        },
-      },
-    },
-    errorMessage: {
-      required: {
-        id: 'Id is missing.',
-      },
-    },
-  },
-}
-
 const attachmentSchema = {
   params: {
     type: 'object',
@@ -125,4 +104,40 @@ const attachmentSchema = {
     },
   },
 }
-export { emailSchema, trashMailSchema, attachmentSchema }
+const patchMailSchema = {
+  body: {
+    type: 'object',
+    additionalProperties: false,
+    oneOf: [
+      { required: ['isRead'] },
+      { required: ['isStarred'] },
+      {
+        required: ['isDeleted'],
+      },
+    ],
+    properties: {
+      isRead: {
+        type: 'boolean',
+        errorMessage: {
+          type: 'Invalid value for isRead.',
+        },
+      },
+      isStarred: {
+        type: 'boolean',
+        errorMessage: {
+          type: 'Invalid value for isStarred.',
+        },
+      },
+      isDeleted: {
+        type: 'boolean',
+        errorMessage: {
+          type: 'Invalid value for isDeleted.',
+        },
+      },
+    },
+    errorMessage: {
+      oneOf: 'Exactly one of isRead, isStarred, or isDeleted must be provided.',
+    },
+  },
+}
+export { emailSchema, attachmentSchema, patchMailSchema }

@@ -1,7 +1,5 @@
 import mongoose from 'mongoose'
-import { Attachment } from '@email-system/core/models'
-import { Email } from '@email-system/core/models'
-import { Mailbox } from '@email-system/core/models'
+import { Attachment, Mailbox, Email } from '@email-system/core/models'
 
 const addAttachmentsToDB = async (files) => {
   try {

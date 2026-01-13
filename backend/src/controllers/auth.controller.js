@@ -1,4 +1,4 @@
-import authService from '../services/auth.service.js'
+import authService from '../services/auth/auth.service.js'
 import handleAuthError from '../utils/handleAuthError.js'
 import jwt from 'jsonwebtoken'
 
@@ -11,7 +11,7 @@ const registerUser = async (req, reply) => {
       password: req.body.password.trim(),
     })
     return reply.code(201).send({
-      sucess: 'Account registered successfully. Please procced to login',
+      success: 'Account registered successfully. Please procced to login',
     })
   } catch (err) {
     handleAuthError(err, reply)
@@ -31,7 +31,7 @@ const loginUser = async (req, reply) => {
       sameSite: 'lax',
       path: '/',
     })
-    return reply.code(200).send({ sucess: 'Logged in successfully' })
+    return reply.code(200).send({ success: 'Logged in successfully' })
   } catch (err) {
     handleAuthError(err, reply)
   }
@@ -39,20 +39,27 @@ const loginUser = async (req, reply) => {
 
 const logoutUser = (req, reply) => {
   reply.clearCookie(process.env.JWT_COOKIE_NAME)
-  return reply.code(200).send({ sucess: 'Logged out successfully' })
+  return reply.code(200).send({ success: 'Logged out successfully' })
 }
 
 const checkUser = (req, reply) => {
   const jwtToken = req.cookies?.[process.env.JWT_COOKIE_NAME]
-  if (!jwtToken) return reply.send([])
+  if (!jwtToken)
+    return reply.send({
+      user: null,
+    })
 
   try {
     const decoded = jwt.verify(jwtToken, process.env.JWT_SECRET)
     if (decoded.emailAddress && decoded._id) {
-      return reply.send({ emailAddress: decoded.emailAddress, id: decoded._id })
+      return reply.send({
+        user: { emailAddress: decoded.emailAddress, id: decoded._id },
+      })
     }
     reply.clearCookie(process.env.JWT_COOKIE_NAME)
-    return reply.send([])
+    return reply.send({
+      user: null,
+    })
   } catch (error) {
     console.log(error)
     return reply.code(500).send({ error: 'Something went wrong' })

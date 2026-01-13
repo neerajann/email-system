@@ -6,14 +6,20 @@ import attachmentController from '../controllers/attachment.controller.js'
 import {
   attachmentSchema,
   emailSchema,
-  trashMailSchema,
+  patchMailSchema,
 } from '../schemas/mail.schema.js'
 
 const mailRouter = async (fastify) => {
   fastify.get('/inbox', { preHandler: verifyJWT }, mailController.getInbox)
   fastify.get('/sent', { preHandler: verifyJWT }, mailController.getSent)
   fastify.get('/trash', { preHandler: verifyJWT }, mailController.getTrash)
-
+  fastify.get(
+    '/starred',
+    {
+      preHandler: verifyJWT,
+    },
+    mailController.getStarred
+  )
   fastify.post(
     '/send',
 
@@ -21,16 +27,6 @@ const mailRouter = async (fastify) => {
     mailController.sendMail
   )
 
-  fastify.post(
-    '/:id/trash',
-    { preHandler: verifyJWT, schema: trashMailSchema },
-    mailController.trashMail
-  )
-  fastify.post(
-    '/:id/restore',
-    { preHandler: verifyJWT, schema: trashMailSchema },
-    mailController.restoreMail
-  )
   fastify.post(
     '/attachment',
     { preHandler: verifyJWT },
@@ -47,6 +43,23 @@ const mailRouter = async (fastify) => {
     '/:id',
     { preHandler: [verifyJWT, verifyObjectId] },
     mailController.getMail
+  )
+
+  fastify.patch(
+    '/:id',
+    {
+      preHandler: [verifyJWT, verifyObjectId],
+      schema: patchMailSchema,
+    },
+    mailController.patchMail
+  )
+
+  fastify.delete(
+    '/:id',
+    {
+      preHandler: [verifyJWT, verifyObjectId],
+    },
+    mailController.deleteMail
   )
 }
 

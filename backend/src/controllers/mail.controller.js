@@ -74,30 +74,37 @@ const getTrash = async (req, reply) => {
   }
 }
 
-const trashMail = async (req, reply) => {
+const patchMail = async (req, reply) => {
   try {
     const threadId = req.params.id
-
-    await mailBoxService.moveToTrash(threadId, req.userId)
-    return reply
-      .code(200)
-      .send({ success: 'The email has been moved to trash successfully' })
+    await mailBoxService.patchMail({
+      threadId,
+      userId: req.userId,
+      data: req.body,
+    })
+    return reply.code(200).send({
+      success: 'The operation was successful.',
+    })
   } catch (error) {
     handleMailError(reply, error)
   }
 }
 
-const restoreMail = async (req, reply) => {
+const deleteMail = async (req, reply) => {
   try {
     const threadId = req.params.id
-
-    await mailBoxService.restoreMail(threadId, req.userId)
-    return reply
-      .code(200)
-      .send({ success: 'The email has been restored successfully' })
-  } catch (error) {
+    await mailBoxService.deleteMail({ userId: req.userId, threadId })
+    return reply.code(200).send({
+      success: 'The mail has been deleted successfully.',
+    })
+  } catch {
     handleMailError(reply, error)
   }
+}
+const getStarred = async (req, reply) => {
+  try {
+    const emails = fetchMailService.getStarred(req.userId)
+  } catch (error) {}
 }
 
 export default {
@@ -105,7 +112,8 @@ export default {
   getSent,
   getTrash,
   sendMail,
-  trashMail,
-  restoreMail,
   getMail,
+  patchMail,
+  deleteMail,
+  getStarred,
 }

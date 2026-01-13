@@ -3,10 +3,10 @@ const handleAuthError = (err, reply) => {
     case 'EMAIL_EXIST':
       return reply
         .code(409)
-        .send({ error: 'That email address is taken. Try another.' })
+        .send({ error: 'The email address is taken. Try another.' })
 
     case 'INVALID_CREDENTIALS':
-      return reply.code(404).send({ error: 'Invalid credientals' })
+      return reply.code(401).send({ error: 'Invalid credientals.' })
 
     default: {
       return reply.code(500).send({ error: 'Something went wrong' })

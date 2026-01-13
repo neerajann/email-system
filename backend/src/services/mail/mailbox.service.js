@@ -1,44 +1,32 @@
 import mongoose from 'mongoose'
 import { Mailbox } from '@email-system/core/models'
 
-const moveToTrash = async (threadId, userId) => {
-  const result = await Mailbox.updateMany(
+const patchMail = async ({ userId, threadId, data }) => {
+  const result = await Mailbox.findOneAndUpdate(
     {
-      threadId: new mongoose.Types.ObjectId(threadId),
       userId: new mongoose.Types.ObjectId(userId),
-      isDeleted: false,
+      threadId: new mongoose.Types.ObjectId(threadId),
     },
     {
-      $set: {
-        isDeleted: true,
-      },
-      $addToSet: {
-        labels: 'TRASH',
-      },
+      $set: data,
+    },
+    {
+      sort: { receivedAt: -1 },
+      projection: { _id: 1 },
     }
   )
-  if (result.modifiedCount == 0) throw new Error('EMAIL_NOT_FOUND')
+
+  if (!result) throw new Error('EMAIL_NOT_FOUND')
   return true
 }
 
-const restoreMail = async (threadId, userId) => {
-  const result = await Mailbox.updateMany(
-    {
-      threadId: new mongoose.Types.ObjectId(threadId),
-      userId: new mongoose.Types.ObjectId(userId),
-      isDeleted: true,
-    },
-    {
-      $set: {
-        isDeleted: false,
-      },
-      $pull: {
-        labels: 'TRASH',
-      },
-    }
-  )
-  if (result.modifiedCount == 0) throw new Error('EMAIL_NOT_FOUND')
+const deleteMail = async ({ userId, threadId }) => {
+  const result = await Mailbox.deleteMany({
+    userId: new mongoose.Types.ObjectId(userId),
+    threadId: new mongoose.Types.ObjectId(threadId),
+  })
+  if (result.deletedCount === 0) throw new Error('EMAIL_NOT_FOUND')
   return true
 }
 
-export default { moveToTrash, restoreMail }
+export default { deleteMail, patchMail }

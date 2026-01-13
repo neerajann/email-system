@@ -53,12 +53,12 @@ const uploadAttachments = async (req, reply) => {
         fs.unlink(filePath, () => {})
         continue
       }
+      const safeFileName = part.filename.replace(/[^\w.\-]/g, '_')
       savedFiles.push({
         path: filePath,
-        originalName: part.filename,
+        originalName: safeFileName,
         mimetype: part.mimetype,
         fileName,
-        encoding: part.encoding,
         size: part.file.bytesRead,
       })
     }

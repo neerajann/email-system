@@ -145,4 +145,87 @@ const getMail = async (userId, threadId) => {
   return result
 }
 
-export default { getMails, getMail }
+const getStarred = async (userId) => {
+  {
+    let page = 0
+    const result = await Mailbox.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          isDeleted: false,
+          isStarred: true,
+        },
+      },
+      {
+        $sort: {
+          receivedAt: -1,
+        },
+      },
+      {
+        $group: {
+          _id: '$threadId',
+          emailId: { $first: '$emailId' },
+          isRead: { $first: '$isRead' },
+          receivedAt: { $first: '$receivedAt' },
+        },
+      },
+      {
+        $facet: {
+          data: [
+            {
+              $lookup: {
+                from: 'emails',
+                localField: 'emailId',
+                foreignField: '_id',
+                as: 'emails',
+              },
+            },
+            {
+              $unwind: '$emails',
+            },
+            {
+              $lookup: {
+                from: 'threads',
+                localField: '_id',
+                foreignField: '_id',
+                as: 'threads',
+              },
+            },
+            { $unwind: '$threads' },
+            {
+              $sort: {
+                receivedAt: -1,
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                threadId: '$_id',
+                subject: '$threads.subject',
+                messageCount: '$threads.messageCount',
+                isRead: 1,
+                from: '$emails.from',
+                to: '$emails.to',
+                snippet: {
+                  $substrCP: ['$emails.body.text', 0, 100],
+                },
+                isSystem: '$emails.isSystem',
+                receivedAt: 1,
+              },
+            },
+
+            { $skip: page * 50 },
+            { $limit: 50 },
+          ],
+          totalCount: [{ $count: 'count' }],
+        },
+      },
+    ])
+
+    return {
+      mails: result[0].data,
+      total: result[0].totalCount[0]?.count || 0,
+    }
+  }
+}
+export default { getMails, getMail, getStarred }

@@ -21,6 +21,11 @@ const handleMailError = (reply, err) => {
         .code(404)
         .send({ error: "Couldn't find email with the given id." })
 
+    case 'USER_NOT_FOUND':
+      return reply.code(404).send({
+        error: 'Sender not found.',
+      })
+
     default:
       console.error(err)
       return reply.code(500).send({ error: 'Something went wrong.' })
