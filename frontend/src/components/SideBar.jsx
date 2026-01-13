@@ -66,7 +66,7 @@ const SideBar = () => {
   `}
     >
       <button
-        className=' flex items-center  text-sm mt-5 border rounded w-full p-2 border-border  bg-input'
+        className=' flex items-center  text-sm mt-5 border rounded w-full p-2 border-border  bg-input shadow-xs'
         onClick={() => setShowComposeMail(true)}
       >
         <RiQuillPenLine className='size-6' />

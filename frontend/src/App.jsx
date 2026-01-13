@@ -1,18 +1,20 @@
-import Inbox from './pages/InboxLayout'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import axios from 'axios'
 import { Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
 import NotFound from './pages/NotFound'
-import Sent from './pages/Sent'
-import Trash from './pages/Trash'
-import Starred from './pages/Starred'
+import Sent from './pages/SentLayout'
+import Trash from './pages/TrashLayout'
+import Starred from './pages/StarredLayout'
 import Thread from './pages/Thread'
 import PublicRoute from './PublicRoute'
 import MailboxLayout from './MailboxLayout'
 import InboxLayout from './pages/InboxLayout'
 import EmptyMailView from './EmptyMailView'
+import SentLayout from './pages/SentLayout'
+import TrashLayout from './pages/TrashLayout'
+import StarredLayout from './pages/StarredLayout'
 
 function App() {
   axios.defaults.withCredentials = true
@@ -32,33 +34,19 @@ function App() {
           <Route index element={<EmptyMailView />} />
           <Route path=':id' element={<Thread />} />
         </Route>
+        <Route path='/sent' element={<SentLayout />}>
+          <Route index element={<EmptyMailView />} />
+          <Route path=':id' element={<Thread />} />
+        </Route>
+        <Route path='/trash' element={<TrashLayout />}>
+          <Route index element={<EmptyMailView />} />
+          <Route path=':id' element={<Thread />} />
+        </Route>
+        <Route path='/starred' element={<StarredLayout />}>
+          <Route index element={<EmptyMailView />} />
+          <Route path=':id' element={<Thread />} />
+        </Route>
       </Route>
-
-      <Route
-        path='starred'
-        element={
-          <ProtectedRoute>
-            <Starred />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path='sent'
-        element={
-          <ProtectedRoute>
-            <Sent />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path='trash'
-        element={
-          <ProtectedRoute>
-            <Trash />
-          </ProtectedRoute>
-        }
-      />
 
       <Route
         path='/login'

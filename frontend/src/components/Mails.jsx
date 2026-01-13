@@ -5,60 +5,15 @@ const Mails = (props) => {
 
   return (
     <div className='h-full flex-1 grid auto-rows-[90px] overflow-y-auto '>
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}{' '}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}
-      {mails?.length
-        ? mails.map((mail) => <Mail key={mail.threadId} data={mail} />)
-        : "You don't have any mails at the moment."}
+      {mails?.length ? (
+        mails.map((mail) => (
+          <Mail key={mail.threadId} queryKey={props.queryKey} mail={mail} />
+        ))
+      ) : (
+        <div className=' flex h-full  justify-center items-center'>
+          No emails in this folder
+        </div>
+      )}
     </div>
   )
 }

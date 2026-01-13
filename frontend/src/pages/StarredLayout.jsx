@@ -1,14 +1,13 @@
-import { useEffect } from 'react'
-import { ToastContainer, toast } from 'react-toastify'
-import Mails from '../components/Mails'
-import 'react-toastify/dist/ReactToastify.css'
-import { useQuery } from '@tanstack/react-query'
 import api from '../services/api'
+import { useQuery } from '@tanstack/react-query'
+import { toast, ToastContainer } from 'react-toastify'
+import { useEffect } from 'react'
+import Mails from '../components/Mails'
 import { Outlet } from 'react-router-dom'
 
-const InboxLayout = () => {
-  const fetchInbox = async () => {
-    const res = await api.get('/mail/inbox')
+const StarredLayout = () => {
+  const fetchStarred = async () => {
+    const res = await api.get('/mail/starred')
     return res.data
   }
 
@@ -18,8 +17,8 @@ const InboxLayout = () => {
     isError,
     error,
   } = useQuery({
-    queryKey: ['mail', 'inbox'],
-    queryFn: fetchInbox,
+    queryKey: ['mail', 'starred'],
+    queryFn: fetchStarred,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -43,6 +42,7 @@ const InboxLayout = () => {
   }, [isLoading, isError])
 
   console.log(data)
+
   return (
     <div className='w-full h-screen relative'>
       <ToastContainer
@@ -66,7 +66,7 @@ const InboxLayout = () => {
           <Mails
             mails={data.mails}
             total={data.total}
-            queryKey={['mail', 'inbox']}
+            queryKey={['mail', 'starred']}
           />
         </div>
         <div className='hidden lg:flex flex-1'>
@@ -76,5 +76,4 @@ const InboxLayout = () => {
     </div>
   )
 }
-
-export default InboxLayout
+export default StarredLayout
