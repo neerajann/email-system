@@ -50,7 +50,7 @@ const Mail = memo((props) => {
   return (
     <Link
       to={mail.threadId}
-      className='flex border border-border py-4 flex-1   justify-center items-center bg-background mb-2 group relative'
+      className='flex border-y border-border py-4 flex-1   justify-center items-center bg-background mb-2 group relative'
     >
       <div className=' flex  items-center  flex-1 px-10   justify-between'>
         <div className='flex items-center'>

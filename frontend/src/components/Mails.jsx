@@ -10,7 +10,7 @@ const Mails = (props) => {
           <Mail key={mail.threadId} queryKey={props.queryKey} mail={mail} />
         ))
       ) : (
-        <div className=' flex h-full  justify-center items-center'>
+        <div className=' flex h-full  justify-center items-center '>
           No emails in this folder
         </div>
       )}

@@ -57,7 +57,7 @@ const InboxLayout = () => {
 
       <div className='flex flex-1 h-full '>
         <div className='flex-1 border-r border-border'>
-          <div className=' flex items-center justify-between text-sm  font-medium px-4 py-2 shadow-xs mb-3'>
+          <div className=' flex items-center justify-between text-sm  font-medium px-4 py-2 shadow-xs mb-3 border-b border-border'>
             {data.total} {data.total <= 1 ? 'email' : 'emails'}
             <button className=' bg-background border border-border px-4 py-2 rounded font-normal'>
               Select

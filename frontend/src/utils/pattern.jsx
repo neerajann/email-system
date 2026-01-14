@@ -6,4 +6,5 @@ const domainEmailPattern = new RegExp(`^[a-zA-Z0-9.]+@${escapedDomain}$`)
 const passwordPattern =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/
 
-export { domainEmailPattern, passwordPattern }
+const emailPattern = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/
+export { domainEmailPattern, passwordPattern, emailPattern }

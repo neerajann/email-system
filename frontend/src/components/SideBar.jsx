@@ -13,7 +13,8 @@ import {
 import { useAppContext } from '../AppContext'
 
 const SideBar = () => {
-  const { showSideBar, darkMode, setDarkMode } = useAppContext()
+  const { showSideBar, darkMode, setDarkMode, setShowComposeMail } =
+    useAppContext()
 
   const menuItems = [
     {
