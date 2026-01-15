@@ -9,7 +9,7 @@ const TopBar = () => {
     if (result.data.success) setUser(null)
   }
   return (
-    <div className=' w-full flex justify-between items-center p-4  bg-background border-b   border-border  relative z-30 shadow-xs'>
+    <div className=' w-full flex justify-between items-center p-4  bg-background border-b   border-border  relative z-50 shadow-xs'>
       <div className='flex items-center mr-4 '>
         <GiHamburgerMenu
           className='mr-5 size-6 lg:hidden'

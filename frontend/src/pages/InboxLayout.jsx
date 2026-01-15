@@ -44,25 +44,46 @@ const InboxLayout = () => {
 
   console.log(data)
   return (
-    <div className='w-full h-screen relative'>
-      <ToastContainer
-        position='top-center'
-        style={{ top: '5rem' }}
-        className='fixed z-30 pointer-events-none'
-        toastClassName='pointer-events-auto'
-        hideProgressBar={false}
-        closeOnClick
-        pauseOnHover
-      />
-
+    <div className='w-full h-screen '>
       <div className='flex flex-1 h-full '>
-        <div className='flex-1 border-r border-border'>
-          <div className=' flex items-center justify-between text-sm  font-medium px-4 py-2 shadow-xs mb-3 border-b border-border'>
+        <div className='flex-1 border-r border-border relative flex flex-col'>
+          <div
+            className='
+            flex items-center justify-between
+            text-sm font-medium
+            px-4 py-2
+            shadow-xs mb-3
+            border-b border-border
+            bg-background
+            relative
+            z-45
+            '
+          >
             {data.total} {data.total <= 1 ? 'email' : 'emails'}
             <button className=' bg-background border border-border px-4 py-2 rounded font-normal'>
               Select
             </button>
           </div>
+          <div
+            className='relative z-40 overflow-hidden'
+            style={{ height: '0px' }}
+          >
+            <ToastContainer
+              position='top-center'
+              style={{ top: '160px' }}
+              className='
+              absolute
+              left-1/2
+              -translate-x-1/2
+              pointer-events-none
+            '
+              toastClassName='pointer-events-auto'
+              hideProgressBar={false}
+              closeOnClick
+              pauseOnHover
+            />
+          </div>
+
           <Mails
             mails={data.mails}
             total={data.total}

@@ -3,11 +3,13 @@ import { useAppContext } from '../AppContext'
 import { RxCross2 } from 'react-icons/rx'
 import { emailPattern } from '../utils/pattern'
 import api from '../services/api'
+import { filesize } from 'filesize'
 
 const ComposeMail = () => {
   const { setShowComposeMail } = useAppContext()
   const [showSuggestion, setShowSuggestion] = useState(false)
   const [recipents, setRecipents] = useState('')
+  const [attachmentsInfo, setAttachmentsInfo] = useState([])
   const [email, setEmail] = useState({
     recipients: [],
     subject: '',
@@ -16,6 +18,10 @@ const ComposeMail = () => {
   })
   const subjectRef = useRef(null)
   const recipentsRef = useRef(null)
+  const fileInputRef = useRef(null)
+  const uploadErrorRef = useRef(null)
+
+  const MAX_TOTAL_SIZE = 10 * 1024 * 1024
 
   const handleRecipentsChange = (e) => {
     const el = e.target
@@ -39,6 +45,74 @@ const ComposeMail = () => {
     setShowSuggestion(emailPattern.test(current))
   }
 
+  const handleFiles = async (e) => {
+    const files = Array.from(e.target.files)
+    if (files.length + email.attachments.length > 10) {
+      uploadErrorRef.current.textContent = 'You can only upload upto 10 files'
+      return
+    }
+    const exisitingSize = email.attachments.reduce(
+      (acc, att) => acc + att.size,
+      0
+    )
+    const newFileSize = files.reduce((acc, file) => acc + file.size, 0)
+    if (exisitingSize + newFileSize > MAX_TOTAL_SIZE) {
+      uploadErrorRef.current.textContent =
+        'Total attachments cannot exceed 10 MB'
+      return
+    }
+
+    await uploadFiles(files)
+    e.target.value = null
+  }
+
+  const uploadFiles = async (files) => {
+    files.forEach(async (file, index) => {
+      setAttachmentsInfo([
+        ...attachmentsInfo,
+        {
+          name: file.name,
+          size: file.size,
+          progress: 0,
+          uploaded: false,
+        },
+      ])
+
+      const form = new FormData()
+      form.append('attachments', file)
+
+      const result = await api.post('/mail/attachment', form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (event) => {
+          if (!event.total) return
+          const percent = Math.round((event.loaded * 100) / event.total)
+          setAttachmentsInfo((prev) =>
+            prev.map((att, i) =>
+              i === index ? { ...att, progress: percent } : att
+            )
+          )
+        },
+      })
+
+      if (result.data) {
+        setAttachmentsInfo((prev) =>
+          prev.map((att, i) => (i === index ? { ...att, uploaded: true } : att))
+        )
+        result.data.forEach((attachmendId) => {
+          email.attachments.push(attachmendId)
+        })
+      }
+    })
+  }
+
+  console.log(attachmentsInfo)
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    handleFiles({ target: { files: e.dataTransfer.files } })
+  }
   const sendMail = async () => {
     if (email.recipients.length === 0) {
       return (recipentsRef.current.textContent =
@@ -55,11 +129,22 @@ const ComposeMail = () => {
   const cancelMail = async () => {
     setShowComposeMail(false)
   }
-  console.log(email)
 
+  const removeAttachment = (index) => {
+    if (attachmentsInfo[index].uploaded) {
+      setAttachmentsInfo((prev) => prev.filter((_, i) => i != index))
+      email.attachments.filter((_, id) => id != index)
+    } else {
+      setAttachmentsInfo((prev) => prev.filter((_, i) => i != index))
+    }
+  }
   return (
     <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-      <div className='w-full max-w-2xl max-h-[90vh] flex flex-col rounded-lg border border-input  shadow-lg overflow-hidden bg-background'>
+      <div
+        className='w-full max-w-2xl max-h-[90vh] flex flex-col rounded-lg border border-input  shadow-lg overflow-hidden bg-background'
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={handleDrop}
+      >
         <div className=' border-b border-input px-4 md:px-6 py-4 flex items-center justify-between '>
           <h2 className='text-lg md:text-2xl font-semibold '>Compose Email</h2>
           <button
@@ -228,25 +313,68 @@ const ComposeMail = () => {
             />
           </div>
           <div className='space-y-2'>
-            <label className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50'>
-              Attachments:
-            </label>
+            {attachmentsInfo.length > 0 && (
+              <label className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 block mb-3'>
+                Attachments:
+              </label>
+            )}
+
+            {attachmentsInfo.map((attachment, index) => {
+              return (
+                <div
+                  className='border bg-input border-border w-full flex items-center gap-x-4 justify-between text-xs font-normal p-2 rounded mb-3'
+                  key={index}
+                >
+                  <div>
+                    {attachment.name}
+                    <span className='ml-2 '>({filesize(attachment.size)})</span>
+                  </div>
+                  {attachment.progress != 100 && (
+                    <div className='flex-1 h-1.5 bg-muted rounded flex items-center'>
+                      <div
+                        className='h-full bg-foreground  rounded-sm transition-all'
+                        style={{ width: `${attachment.progress}%` }}
+                      />
+                    </div>
+                  )}
+                  <button
+                    className=' border border-border p-1 rounded'
+                    onClick={() => removeAttachment(index)}
+                  >
+                    <RxCross2 size={15} />
+                  </button>
+                </div>
+              )
+            })}
             <input
               type='file'
+              ref={fileInputRef}
               multiple
-              className='block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-input file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90'
+              className='hidden'
+              onChange={handleFiles}
             />
+
+            <div className='flex items-center justify-between border border-border p-2 rounded w-40 '>
+              <button
+                type='button'
+                onClick={() => fileInputRef.current.click()}
+                className='flex items-center  text-sm font-medium'
+              >
+                📎 Attach files
+              </button>
+            </div>
+            <span ref={uploadErrorRef}></span>
           </div>
           <div className='flex gap-2 pt-4'>
             <button
-              className='flex-1 text-sm  border-border border p-2 rounded hover:scale-[0.95] active:scale-[1.02] transition-all ease-in-out'
+              className='flex-1 text-sm font-semibold  border-border border p-2 rounded hover:scale-[0.95] active:scale-[1.02] transition-all ease-in-out'
               onClick={sendMail}
             >
               Send
             </button>
             <button
               variant='outline'
-              className='border border-border px-3 py-2 rounded text-sm hover:scale-[0.95] active:scale-[1.02]'
+              className='border font-semibold border-border px-3 py-2 rounded text-sm hover:scale-[0.95] active:scale-[1.02]'
               onClick={cancelMail}
             >
               Cancel
