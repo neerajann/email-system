@@ -5,77 +5,95 @@ import crypto from 'crypto'
 import handleUploadError from '../utils/handleUploadError.js'
 import attachmentService from '../services/mail/attachment.service.js'
 
-const uploadAttachments = async (req, reply) => {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url))
-  const uploadDir = path.join(__dirname, '../../../data/attachments')
+const uploadAttachments = {
+  onRequestAbort: async (req) => {
+    const filePaths = req.uploadedFilePaths || []
 
-  await fs.promises.mkdir(uploadDir, { recursive: true })
+    for (const filePath of filePaths) {
+      try {
+        await fs.promises.unlink(filePath)
+      } catch (err) {
+        console.log(err)
+      }
+    }
+  },
+  handler: async (req, reply) => {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url))
+    const uploadDir = path.join(__dirname, '../../../data/attachments')
 
-  const savedFiles = []
-  let fileCount = 0
+    await fs.promises.mkdir(uploadDir, { recursive: true })
 
-  try {
-    for await (const part of req.parts()) {
-      if (!part.file) continue
-      if (!part.filename) continue
+    const savedFiles = []
+    req.uploadedFilePaths = []
+    let fileCount = 0
 
-      if (part.fieldname !== 'attachments') continue
+    try {
+      for await (const part of req.parts()) {
+        if (!part.file) continue
+        if (!part.filename) continue
 
-      fileCount++
+        if (part.fieldname !== 'attachments') continue
 
-      const uniqueSuffix = Date.now() + '-' + crypto.randomUUID()
-      const fileName = `${uniqueSuffix}-${part.filename}`
-      const filePath = path.join(uploadDir, fileName)
+        fileCount++
 
-      await new Promise((resolve, reject) => {
-        const stream = fs.createWriteStream(filePath)
+        const uniqueSuffix = Date.now() + '-' + crypto.randomUUID()
+        const fileName = `${uniqueSuffix}-${part.filename}`
+        const filePath = path.join(uploadDir, fileName)
+        req.uploadedFilePaths.push(filePath)
 
-        const cleanup = (err) => {
-          part.file.unpipe(stream)
-          part.file.destroy()
-          stream.destroy()
-          fs.unlink(filePath, () => {})
-          reject(err)
-        }
+        await new Promise((resolve, reject) => {
+          const stream = fs.createWriteStream(filePath)
 
-        part.file.on('limit', () => {
-          cleanup(new Error('FILE_TOO_LARGE'))
+          const cleanup = (err) => {
+            part.file.unpipe(stream)
+            part.file.destroy()
+            stream.destroy()
+            fs.unlink(filePath, () => {})
+            reject(err)
+          }
+
+          part.file.on('limit', () => {
+            cleanup(new Error('FILE_TOO_LARGE'))
+          })
+
+          part.file.on('error', cleanup)
+          stream.on('error', cleanup)
+          stream.on('finish', resolve)
+
+          part.file.pipe(stream)
         })
 
-        part.file.on('error', cleanup)
-        stream.on('error', cleanup)
-        stream.on('finish', resolve)
-
-        part.file.pipe(stream)
-      })
-
-      if (part.file.bytesRead === 0) {
-        fs.unlink(filePath, () => {})
-        continue
+        if (part.file.bytesRead === 0) {
+          fs.unlink(filePath, () => {})
+          continue
+        }
+        const safeFileName = part.filename.replace(/[^\w.\-]/g, '_')
+        savedFiles.push({
+          path: filePath,
+          originalName: safeFileName,
+          mimetype: part.mimetype,
+          fileName,
+          size: part.file.bytesRead,
+        })
       }
-      const safeFileName = part.filename.replace(/[^\w.\-]/g, '_')
-      savedFiles.push({
-        path: filePath,
-        originalName: safeFileName,
-        mimetype: part.mimetype,
-        fileName,
-        size: part.file.bytesRead,
-      })
-    }
 
-    if (fileCount === 0) {
-      throw new Error('NO_FILES')
-    }
+      if (fileCount === 0) {
+        throw new Error('NO_FILES')
+      }
 
-    const attachmentIds = await attachmentService.addAttachmentsToDB(savedFiles)
-    return reply.code(200).send(attachmentIds)
-  } catch (error) {
-    for (const f of savedFiles) {
-      fs.unlink(f.path, () => {})
+      const attachmentIds = await attachmentService.addAttachmentsToDB(
+        savedFiles
+      )
+      req.uploadedFilePaths = []
+      return reply.code(200).send(attachmentIds)
+    } catch (error) {
+      for (const f of savedFiles) {
+        fs.unlink(f.path, () => {})
+      }
+      console.log(error)
+      return handleUploadError(reply, error)
     }
-    console.log(error)
-    return handleUploadError(reply, error)
-  }
+  },
 }
 
 const downloadAttachment = async (req, reply) => {
@@ -97,4 +115,28 @@ const downloadAttachment = async (req, reply) => {
 
   return reply.send(fs.createReadStream(attachment.path))
 }
-export default { uploadAttachments, downloadAttachment }
+
+const deleteAttachments = async (req, reply) => {
+  try {
+    console.log(req.body)
+    const response = await attachmentService.deleteAttachments(
+      req.body.attachments
+    )
+    if (response === 'all') {
+      return reply.code(204).send()
+    } else if (response === 'partial') {
+      return reply.code(207).send({
+        message: 'Some attachments could not be deleted',
+      })
+    } else {
+      return reply.code(404).send({
+        message: 'No matching resources found to delete',
+      })
+    }
+  } catch (error) {
+    console.log(error)
+    handleUploadError(reply, error)
+  }
+}
+
+export default { uploadAttachments, downloadAttachment, deleteAttachments }

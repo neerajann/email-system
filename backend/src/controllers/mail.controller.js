@@ -5,7 +5,10 @@ import handleMailError from '../utils/handleMailError.js'
 
 const getInbox = async (req, reply) => {
   try {
-    const emails = await fetchMailService.getMails(req.userId, 'INBOX')
+    const emails = await fetchMailService.getMails({
+      userId: req.userId,
+      label: 'INBOX',
+    })
     if (!emails)
       return reply.code(200).send({ message: 'No emails at the moment' })
     return reply.send(emails)
@@ -17,7 +20,10 @@ const getInbox = async (req, reply) => {
 
 const getSent = async (req, reply) => {
   try {
-    const emails = await fetchMailService.getMails(req.userId, 'SENT')
+    const emails = await fetchMailService.getMails({
+      userId: req.userId,
+      label: 'SENT',
+    })
     if (!emails)
       return reply
         .code(200)
@@ -26,6 +32,36 @@ const getSent = async (req, reply) => {
   } catch (error) {
     console.log(error)
     reply.code(500).send({ error: 'Something went wrong' })
+  }
+}
+
+const getTrash = async (req, reply) => {
+  try {
+    const emails = await fetchMailService.getMails({
+      userId: req.userId,
+      trash: true,
+    })
+    if (!emails)
+      return reply.code(200).send({ message: 'No conversations in Trash.' })
+    return reply.send(emails)
+  } catch (error) {
+    console.log(error)
+    return reply.code(500).send({ error: 'Something went wrong' })
+  }
+}
+
+const getStarred = async (req, reply) => {
+  try {
+    const emails = await fetchMailService.getMails({
+      userId: req.userId,
+      starred: true,
+    })
+    if (!emails)
+      return reply.code(200).send({ message: 'No conversations in Starred.' })
+    return reply.send(emails)
+  } catch (error) {
+    console.log(error)
+    return reply.code(500).send({ error: 'Something went wrong' })
   }
 }
 
@@ -62,18 +98,6 @@ const sendMail = async (req, reply) => {
   }
 }
 
-const getTrash = async (req, reply) => {
-  try {
-    const emails = await fetchMailService.getMails(req.userId, 'TRASH')
-    if (!emails)
-      return reply.code(200).send({ message: 'No conversations in Trash.' })
-    return reply.send(emails)
-  } catch (error) {
-    console.log(error)
-    return reply.code(500).send({ error: 'Something went wrong' })
-  }
-}
-
 const patchMail = async (req, reply) => {
   try {
     const threadId = req.params.id
@@ -100,11 +124,6 @@ const deleteMail = async (req, reply) => {
   } catch {
     handleMailError(reply, error)
   }
-}
-const getStarred = async (req, reply) => {
-  try {
-    const emails = fetchMailService.getStarred(req.userId)
-  } catch (error) {}
 }
 
 export default {

@@ -1,15 +1,26 @@
 import mongoose from 'mongoose'
 import { Mailbox } from '@email-system/core/models'
 
-const getMails = async (userId, label) => {
+const getMails = async ({ userId, label, trash, starred }) => {
   let page = 0
+
+  const match = {
+    userId: new mongoose.Types.ObjectId(userId),
+    isDeleted: false,
+  }
+  if (label) {
+    match.labels = { $in: [label] }
+  }
+  if (trash === true) {
+    match.isDeleted = true
+  }
+  if (starred === true) {
+    match.isStarred = true
+  }
+
   const result = await Mailbox.aggregate([
     {
-      $match: {
-        userId: new mongoose.Types.ObjectId(userId),
-        labels: { $in: [label] },
-        isDeleted: label === 'TRASH',
-      },
+      $match: match,
     },
     {
       $sort: {
@@ -21,7 +32,9 @@ const getMails = async (userId, label) => {
         _id: '$threadId',
         emailId: { $first: '$emailId' },
         isRead: { $first: '$isRead' },
+        isStarred: { $first: '$isStarred' },
         receivedAt: { $first: '$receivedAt' },
+        isDeleted: { $first: '$isDeleted' },
       },
     },
     {
@@ -59,6 +72,7 @@ const getMails = async (userId, label) => {
               subject: '$threads.subject',
               messageCount: '$threads.messageCount',
               isRead: 1,
+              isStarred: 1,
               from: '$emails.from',
               to: '$emails.to',
               snippet: {
@@ -66,6 +80,7 @@ const getMails = async (userId, label) => {
               },
               isSystem: '$emails.isSystem',
               receivedAt: 1,
+              isDeleted: 1,
             },
           },
 

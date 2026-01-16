@@ -1,5 +1,6 @@
 import mongoose from 'mongoose'
 import { Attachment, Mailbox, Email } from '@email-system/core/models'
+import fs from 'fs/promises'
 
 const addAttachmentsToDB = async (files) => {
   try {
@@ -57,4 +58,44 @@ const fetchAttachmentRecord = async ({ userId, mailId, attachmentId }) => {
   return attachmentsRecord
 }
 
-export default { addAttachmentsToDB, fetchAttachmentRecord }
+const deleteAttachments = async (attachments) => {
+  try {
+    const parsedAttachments = attachments?.map(
+      (attachment) => new mongoose.Types.ObjectId(attachment)
+    )
+    const attachmentInfo = await Attachment.find(
+      {
+        _id: {
+          $in: parsedAttachments,
+        },
+        status: 'temporary',
+      },
+      {
+        path: 1,
+      }
+    )
+
+    await Promise.allSettled(
+      attachmentInfo.map((attachment) => {
+        fs.unlink(attachment.path)
+      })
+    )
+    const result = await Attachment.deleteMany({
+      _id: {
+        $in: parsedAttachments,
+      },
+      status: 'temporary',
+    })
+
+    if (result.deletedCount === parsedAttachments.length) {
+      return 'all'
+    } else if (result.deletedCount === 0) {
+      return 'none'
+    } else {
+      return 'partial'
+    }
+  } catch (error) {
+    throw error
+  }
+}
+export default { addAttachmentsToDB, fetchAttachmentRecord, deleteAttachments }

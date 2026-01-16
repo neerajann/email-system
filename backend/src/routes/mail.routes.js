@@ -4,6 +4,7 @@ import mailController from '../controllers/mail.controller.js'
 import attachmentController from '../controllers/attachment.controller.js'
 
 import {
+  attachmentDeleteSchema,
   attachmentSchema,
   emailSchema,
   patchMailSchema,
@@ -27,10 +28,15 @@ const mailRouter = async (fastify) => {
     mailController.sendMail
   )
 
-  fastify.post(
+  fastify.post('/attachment', {
+    preHandler: verifyJWT,
+    ...attachmentController.uploadAttachments,
+  })
+
+  fastify.delete(
     '/attachment',
-    { preHandler: verifyJWT },
-    attachmentController.uploadAttachments
+    { preHandler: [verifyJWT], schema: attachmentDeleteSchema },
+    attachmentController.deleteAttachments
   )
 
   fastify.get(

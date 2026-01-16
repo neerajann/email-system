@@ -39,6 +39,7 @@ await connectDB()
 await fastify.register(cors, {
   origin: process.env.ORIGIN_ADDRESS,
   credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
 })
 
 await fastify.register(cookieParser)

@@ -140,4 +140,36 @@ const patchMailSchema = {
     },
   },
 }
-export { emailSchema, attachmentSchema, patchMailSchema }
+const attachmentDeleteSchema = {
+  body: {
+    type: 'object',
+    required: ['attachments'],
+    properties: {
+      attachments: {
+        type: 'array',
+        minItems: 1,
+        items: {
+          type: 'string',
+          pattern: mongooseObjectIdPattern.source,
+          errorMessage: {
+            pattern: 'Invalid attachment id',
+          },
+        },
+        errorMessage: {
+          type: 'Attachments must be an array',
+          minItems: 'Please provide at least one attachment id',
+        },
+      },
+    },
+    errorMessage: {
+      required: "Attachment id's array is required ",
+    },
+  },
+}
+
+export {
+  emailSchema,
+  attachmentSchema,
+  patchMailSchema,
+  attachmentDeleteSchema,
+}
