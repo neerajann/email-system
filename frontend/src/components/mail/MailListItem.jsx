@@ -1,15 +1,15 @@
 import { memo } from 'react'
-import formatMailDate from '../utils/fomatMailDate'
-import { Link } from 'react-router-dom'
+import formatMailDate from '../../utils/fomatMailDate'
+import { NavLink } from 'react-router-dom'
 import {
   MdOutlineMarkEmailUnread,
   MdOutlineMarkEmailRead,
 } from 'react-icons/md'
 import { IoStarOutline, IoStarSharp, IoTrashOutline } from 'react-icons/io5'
-import api from '../services/api'
+import api from '../../services/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-const Mail = memo((props) => {
+const MailListItem = memo((props) => {
   const { mail, queryKey } = props
 
   const queryClient = useQueryClient()
@@ -28,7 +28,7 @@ const Mail = memo((props) => {
         return {
           ...old,
           mails: old.mails.map((mail) =>
-            mail.threadId === threadId ? { ...mail, ...data } : mail
+            mail.threadId === threadId ? { ...mail, ...data } : mail,
           ),
         }
       })
@@ -48,20 +48,32 @@ const Mail = memo((props) => {
   })
 
   return (
-    <Link
+    <NavLink
       to={mail.threadId}
-      className='flex border-y border-border py-4 flex-1   justify-center items-center bg-background mb-2 group relative'
+      className={({ isActive }) =>
+        `flex border-y border-border py-4 flex-1 justify-center items-center bg-background mb-2 group relative hover:shadow-sm ${
+          isActive && 'border-r border-3 '
+        }`
+      }
     >
       <div className=' flex  items-center  flex-1 px-10   justify-between'>
-        <div className='flex items-center'>
+        <div className='flex items-center flex-1'>
           <div className='mr-10'>
             {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
           </div>
-          <div className='flex flex-col justify-between'>
-            <h3 className='font-medium text-sm truncate text-foreground mb-1'>
+          <div className='flex flex-col justify-between flex-1'>
+            <h3
+              className={`text-sm truncate text-foreground mb-1 ${
+                !mail.isRead && 'font-semibold'
+              }`}
+            >
               {mail.from.name ?? mail.from.address}
             </h3>
-            <h3 className='text-sm truncate text-muted-foreground mb-1'>
+            <h3
+              className={`text-sm truncate  mb-1 ${
+                !mail.isRead && 'font-semibold'
+              }`}
+            >
               {mail.subject}
             </h3>
             <p className=' text-xs text-muted-foreground line-clamp-1 '>
@@ -69,14 +81,15 @@ const Mail = memo((props) => {
             </p>
           </div>
         </div>
-        <div className='flex items-center '>
-          <div className=' lg:opacity-0 group-hover:opacity-100 transition-all ease-in relative z-100'>
+        <div className='flex items-center relative'>
+          <div className='absolute right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex pointer-events-none group-hover:pointer-events-auto z-60'>
             <button
-              className=' border border-border p-2 rounded mr-2 disabled:opacity-50'
+              className=' border border-border p-2 rounded mr-2 disabled:opacity-50 cursor-pointer'
               disabled={mail.isDeleted}
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
+                console.log('clicked')
                 mailUpdateMutation.mutate({
                   threadId: mail.threadId,
                   data: {
@@ -89,7 +102,7 @@ const Mail = memo((props) => {
             </button>
             <button
               disabled={mail.isDeleted}
-              className='border border-border p-2 rounded mr-2 disabled:opacity-50'
+              className='border border-border p-2 rounded mr-2 disabled:opacity-50 cursor-pointer'
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -104,7 +117,7 @@ const Mail = memo((props) => {
               <IoTrashOutline />
             </button>
             <button
-              className=' border border-border p-2 rounded mr-2 '
+              className=' border border-border p-2 rounded mr-2 cursor-pointer'
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -123,10 +136,15 @@ const Mail = memo((props) => {
               )}
             </button>
           </div>
-          <p className='text-xs ml-3'>{formatMailDate(mail.receivedAt)}</p>
+
+          <div className='opacity-100 group-hover:opacity-0 transition-opacity duration-200'>
+            <p className={`text-xs ml-3 ${!mail.isRead && 'font-semibold'} `}>
+              {formatMailDate(mail.receivedAt)}
+            </p>
+          </div>
         </div>
       </div>
-    </Link>
+    </NavLink>
   )
 })
-export default Mail
+export default MailListItem

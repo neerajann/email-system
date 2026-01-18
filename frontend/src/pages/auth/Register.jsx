@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { domainEmailPattern, passwordPattern } from '../utils/pattern'
-import api from '../services/api'
+import { domainEmailPattern, passwordPattern } from '../../utils/pattern'
+import api from '../../services/api'
 import { Link, useNavigate } from 'react-router-dom'
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
 
@@ -73,22 +73,7 @@ const Register = () => {
               type='text'
               name='firstName'
               placeholder='Enter your name'
-              className='              w-full
-              bg-input
-              text-foreground
-              border
-              border-border
-              rounded-md
-              mt-3
-              p-2
-              pl-3
-              text-sm
-              shadow-xs
-              placeholder:text-muted-foreground
-              focus:outline-none
-              focus:border-ring
-              focus:ring-2
-              focus:ring-ring/50'
+              className='w-full bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 text-sm shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
               onChange={(e) => setData({ ...data, firstName: e.target.value })}
             />
             {errors.name && (
@@ -109,23 +94,7 @@ const Register = () => {
               type='email'
               name='emailAddress'
               placeholder='Enter your email'
-              className='
-              w-full
-              bg-input
-              text-foreground
-              border
-              border-border
-              rounded-md
-              mt-3
-              p-2
-              pl-3
-              text-sm
-              shadow-xs
-              placeholder:text-muted-foreground
-              focus:outline-none
-              focus:border-ring
-              focus:ring-2
-              focus:ring-ring/50'
+              className='w-full bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 text-sm shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
               onChange={(e) =>
                 setData({ ...data, emailAddress: e.target.value })
               }
@@ -148,22 +117,7 @@ const Register = () => {
                 type={showPassword ? 'text' : 'password'}
                 name='password'
                 placeholder='*************'
-                className='              w-full
-              bg-input
-              text-foreground
-              border
-              border-border
-              rounded-md
-              mt-3
-              p-2
-              pl-3
-              text-sm
-              shadow-xs
-              placeholder:text-muted-foreground
-              focus:outline-none
-              focus:border-ring
-              focus:ring-2
-              focus:ring-ring/50'
+                className='w-full bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 text-sm shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
                 onChange={(e) => setData({ ...data, password: e.target.value })}
               ></input>
               <button
@@ -192,23 +146,7 @@ const Register = () => {
           </div>
           <button
             type='submit'
-            className='
-            mt-8
-            w-full
-            p-2
-            rounded-md
-            border
-            border-border
-            bg-foreground
-            text-background
-            font-medium
-            shadow-xs
-            hover:scale-[0.97] transition-all
-            active:scale-[1.03]
-            focus:outline-none
-            focus:ring-2
-            focus:ring-ring/50
-          '
+            className='mt-8 w-full p-2 rounded-md border border-border bg-foreground text-background font-medium shadow-xs hover:scale-[0.97] transition-all active:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-ring/50'
             onClick={(e) => handleSubmit(e)}
           >
             Register

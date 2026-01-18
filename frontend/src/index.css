@@ -46,6 +46,8 @@ body {
   --destructive-foreground: #fcf3f3;
   /* focus */
   --ring: #a1a1a1;
+
+  --shadow-color: 0 0 0;
 }
 
 .dark {
@@ -71,6 +73,7 @@ body {
   --destructive-foreground: #0a0a0a;
 
   --ring: #737373;
+  --shadow-color: 255 255 255;
 }
 
 @theme {
@@ -85,21 +88,22 @@ body {
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-ring: var(--ring);
+  --shadow-color: rgb(var(--shadow-color));
+  --shadow-sm: 0 1px 2px rgb(var(--shadow-color) / 0.15);
+  --shadow-md: 0 4px 6px rgb(var(--shadow-color) / 0.2);
+  --shadow-lg: 0 10px 15px rgb(var(--shadow-color) / 0.25);
 }
 @layer base {
   body {
     @apply bg-background text-foreground;
   }
 }
-input[type='password']::-webkit-textfield-decoration-container {
-  display: none;
-}
+
 input[type='password']::-ms-reveal,
 input[type='password']::-ms-clear {
   display: none;
 }
 
-/* WebKit browsers (Chrome, Edge, Safari) */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -119,7 +123,6 @@ input[type='password']::-ms-clear {
   background-color: var(--ring);
 }
 
-/* Firefox */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border) var(--background);

@@ -1,14 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import api from './services/api'
+import api from '../services/api'
 
-const AppContext = createContext(null)
+const AuthContext = createContext(null)
 
-const AppProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('dark-mode') === 'true'
   })
-  const [showSideBar, setShowSideBar] = useState(false)
-  const [showComposeMail, setShowComposeMail] = useState(false)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -28,7 +26,6 @@ const AppProvider = ({ children }) => {
 
     checkAuth()
   }, [])
-
   useEffect(() => {
     const html = document.documentElement
 
@@ -40,21 +37,15 @@ const AppProvider = ({ children }) => {
       localStorage.setItem('dark-mode', 'false')
     }
   }, [darkMode])
-
   const value = {
-    showSideBar,
-    setShowSideBar,
-    showComposeMail,
-    setShowComposeMail,
     user,
     darkMode,
     setDarkMode,
     setUser,
     loading,
   }
-
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
+const useAuth = () => useContext(AuthContext)
 
-const useAppContext = () => useContext(AppContext)
-export { AppProvider, useAppContext }
+export { AuthProvider, useAuth }
