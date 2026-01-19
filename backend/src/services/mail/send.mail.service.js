@@ -2,7 +2,13 @@ import { htmlToText } from 'html-to-text'
 import crypto from 'crypto'
 import mongoose from 'mongoose'
 import sanitizeHtml from 'sanitize-html'
-import { Thread, Mailbox, Email, Attachment } from '@email-system/core/models'
+import {
+  Thread,
+  Mailbox,
+  Email,
+  Attachment,
+  User,
+} from '@email-system/core/models'
 import { outboundEmailQueue } from '@email-system/core/queues'
 
 const deliverMail = async ({
@@ -42,7 +48,7 @@ const deliverMail = async ({
       (id) => new mongoose.Types.ObjectId(id)
     )
 
-    if (parsedAttachments?.length) {
+    if (attachments?.length) {
       var count = await Attachment.countDocuments(
         {
           _id: {
@@ -53,7 +59,7 @@ const deliverMail = async ({
       )
     }
 
-    if (parsedAttachments?.length !== count) {
+    if (attachments?.length && parsedAttachments.length !== count) {
       throw new Error('INVALID_ATTACHMENTS')
     }
 

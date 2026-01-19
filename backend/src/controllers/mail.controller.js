@@ -86,7 +86,7 @@ const sendMail = async (req, reply) => {
 
     await sendMailService.deliverMail({
       senderId: req.userId,
-      sender: req.user,
+      senderAddress: req.user,
       recipients,
       subject,
       body,
@@ -121,7 +121,7 @@ const deleteMail = async (req, reply) => {
     return reply.code(200).send({
       success: 'The mail has been deleted successfully.',
     })
-  } catch {
+  } catch (error) {
     handleMailError(reply, error)
   }
 }
