@@ -36,8 +36,12 @@ const uploadAttachments = {
 
         fileCount++
 
+        const safeFileNameForStorage = part.filename.replace(
+          /[^a-zA-Z0-9.\-_]/g,
+          '_',
+        )
         const uniqueSuffix = Date.now() + '-' + crypto.randomUUID()
-        const fileName = `${uniqueSuffix}-${part.filename}`
+        const fileName = `${uniqueSuffix}-${safeFileNameForStorage}`
         const filePath = path.join(uploadDir, fileName)
         req.uploadedFilePaths.push(filePath)
 
@@ -67,10 +71,10 @@ const uploadAttachments = {
           fs.unlink(filePath, () => {})
           continue
         }
-        const safeFileName = part.filename.replace(/[^\w.\-]/g, '_')
+
         savedFiles.push({
           path: filePath,
-          originalName: safeFileName,
+          originalName: part.filename,
           mimetype: part.mimetype,
           fileName,
           size: part.file.bytesRead,
@@ -81,9 +85,8 @@ const uploadAttachments = {
         throw new Error('NO_FILES')
       }
 
-      const attachmentIds = await attachmentService.addAttachmentsToDB(
-        savedFiles
-      )
+      const attachmentIds =
+        await attachmentService.addAttachmentsToDB(savedFiles)
       req.uploadedFilePaths = []
       return reply.code(200).send(attachmentIds)
     } catch (error) {
@@ -110,7 +113,7 @@ const downloadAttachment = async (req, reply) => {
   }
   reply.header(
     'Content-Disposition',
-    `attachment; filename=${attachment.originalName}`
+    `attachment; filename=${attachment.originalName}`,
   )
 
   return reply.send(fs.createReadStream(attachment.path))
@@ -120,7 +123,7 @@ const deleteAttachments = async (req, reply) => {
   try {
     console.log(req.body)
     const response = await attachmentService.deleteAttachments(
-      req.body.attachments
+      req.body.attachments,
     )
     if (response === 'all') {
       return reply.code(204).send()

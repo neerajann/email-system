@@ -39,24 +39,21 @@ const deliverMail = async ({
       {
         firstName: 1,
         emailAddress: 1,
-      }
+      },
     )
 
     if (!userInfo) throw new Error('USER_NOT_FOUND')
 
     const parsedAttachments = attachments?.map(
-      (id) => new mongoose.Types.ObjectId(id)
+      (id) => new mongoose.Types.ObjectId(id),
     )
 
     if (attachments?.length) {
-      var count = await Attachment.countDocuments(
-        {
-          _id: {
-            $in: parsedAttachments,
-          },
+      var count = await Attachment.countDocuments({
+        _id: {
+          $in: parsedAttachments,
         },
-        { session: session }
-      )
+      })
     }
 
     if (attachments?.length && parsedAttachments.length !== count) {
@@ -132,7 +129,7 @@ const deliverMail = async ({
       removeOnFail: {
         age: 24 * 3600,
       },
-    }
+    },
   )
   return true
 }

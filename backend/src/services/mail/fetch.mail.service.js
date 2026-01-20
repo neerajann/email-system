@@ -76,7 +76,7 @@ const getMails = async ({ userId, label, trash, starred }) => {
               from: '$emails.from',
               to: '$emails.to',
               snippet: {
-                $substrCP: ['$emails.body.text', 0, 100],
+                $substrCP: ['$emails.body.text', 0, 200],
               },
               isSystem: '$emails.isSystem',
               receivedAt: 1,
@@ -121,7 +121,7 @@ const getMail = async (userId, threadId) => {
     {
       $lookup: {
         from: 'attachments',
-        localField: 'attachments',
+        localField: 'emails.attachments',
         foreignField: '_id',
         as: 'attachments',
       },
@@ -135,7 +135,16 @@ const getMail = async (userId, threadId) => {
         to: '$emails.to',
         subject: '$emails.subject',
         body: '$emails.body',
-        attachments: '$emails.attachments',
+        attachments: {
+          $map: {
+            input: '$attachments',
+            as: 'attachment',
+            in: {
+              id: '$$attachment._id',
+              fileName: '$$attachment.originalName',
+            },
+          },
+        },
         isSystem: '$emails.isSystem',
         isStarred: '$isStarred',
         isDeleted: '$isDeleted',
