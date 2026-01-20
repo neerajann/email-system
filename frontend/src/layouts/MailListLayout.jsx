@@ -5,8 +5,10 @@ import { useQuery } from '@tanstack/react-query'
 import api from '../services/api'
 import { Outlet } from 'react-router-dom'
 import MailListItem from '../components/mail/MailListItem'
+import { useUI } from '../contexts/UIContext'
 
 const MailListLayout = ({ mailType }) => {
+  const { showThread } = useUI()
   const memoizedQueryKey = useMemo(() => ['mail', mailType], [mailType])
 
   const fetchMails = async () => {
@@ -45,9 +47,11 @@ const MailListLayout = ({ mailType }) => {
   }, [isLoading, isError])
 
   return (
-    <div className='w-full h-screen '>
-      <div className='grid grid-cols-1 lg:grid-cols-2 flex-1 h-full '>
-        <div className='flex-1 border-x border-border relative flex flex-col'>
+    <div className='w-full min-h-dvh overflow-hidden '>
+      <div className='grid lg:grid-cols-2  grid-cols-1 h-full min-w-0 '>
+        <div
+          className={` border-x border-border relative ${showThread ? 'hidden lg:flex' : 'flex'}  min-w-0 flex-col`}
+        >
           <div className='flex flex-col shadow-xs mb-3 border-b border-border bg-background relative z-[40]'>
             <div className='flex flex-1 justify-center  w-full p-3'>
               <input
@@ -75,7 +79,7 @@ const MailListLayout = ({ mailType }) => {
             />
           </div>
           {data.mails?.length ? (
-            <div className='h-full flex-1 grid auto-rows-[90px] overflow-y-auto '>
+            <div className='h-full flex-1  min-w-0 grid auto-rows-[100px] overflow-y-auto '>
               {data.mails.map((mail) => (
                 <MailListItem
                   key={mail.threadId}
@@ -92,7 +96,10 @@ const MailListLayout = ({ mailType }) => {
             </div>
           )}
         </div>
-        <div className='hidden lg:flex'>
+
+        <div
+          className={` lg:flex min-w-0 w-full ${showThread ? 'flex' : 'hidden'}`}
+        >
           <Outlet />
         </div>
       </div>

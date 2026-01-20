@@ -6,7 +6,7 @@ const MailboxLayout = () => {
   return (
     <div className='w-full h-full relative'>
       <TopBar />
-      <div className='flex w-screen '>
+      <div className='flex w-full min-w-0'>
         <SideBar />
         <Outlet />
       </div>

@@ -6,9 +6,13 @@ import { filesize } from 'filesize'
 import { toast } from 'react-toastify'
 import { useUI } from '../../contexts/UIContext'
 import { v4 as uuidv4 } from 'uuid'
+import { RiAttachment2 } from 'react-icons/ri'
+import { useQueryClient } from '@tanstack/react-query'
+
 const controllers = {}
 
 const ComposeMail = () => {
+  const queryClient = useQueryClient()
   const { setShowComposeMail } = useUI()
   const [showSuggestion, setShowSuggestion] = useState(false)
   const [recipents, setRecipents] = useState('')
@@ -56,7 +60,7 @@ const ComposeMail = () => {
     }
     const exisitingSize = email.attachments.reduce(
       (acc, att) => acc + att.size,
-      0
+      0,
     )
     const newFileSize = files.reduce((acc, file) => acc + file.size, 0)
     if (exisitingSize + newFileSize > MAX_TOTAL_SIZE) {
@@ -100,8 +104,8 @@ const ComposeMail = () => {
               const percent = Math.round((event.loaded * 100) / event.total)
               setAttachmentsInfo((prev) =>
                 prev.map((att) =>
-                  att.id === id ? { ...att, progress: percent } : att
-                )
+                  att.id === id ? { ...att, progress: percent } : att,
+                ),
               )
             },
           })
@@ -111,8 +115,8 @@ const ComposeMail = () => {
               prev.map((att) =>
                 att.id === id
                   ? { ...att, uploaded: true, id: result.data[0] }
-                  : att
-              )
+                  : att,
+              ),
             )
             result.data.forEach((attachId) => email.attachments.push(attachId))
           }
@@ -125,7 +129,7 @@ const ComposeMail = () => {
         } finally {
           delete controllers[id]
         }
-      })
+      }),
     )
   }
 
@@ -144,7 +148,7 @@ const ComposeMail = () => {
     }
     subjectRef.current.textContent = ''
     const incompleteUpload = attachmentsInfo.filter(
-      (attachment) => !attachment.uploaded
+      (attachment) => !attachment.uploaded,
     )
     console.log(attachmentsInfo)
     console.log(incompleteUpload)
@@ -157,6 +161,7 @@ const ComposeMail = () => {
     try {
       setShowComposeMail(false)
       const response = await api.post('/mail/send', email)
+      queryClient.invalidateQueries(['mail', 'sent'])
       toast('Mail sent sucessfully')
     } catch (error) {
       toast(error.data.error)
@@ -200,15 +205,15 @@ const ComposeMail = () => {
         .catch(console.error)
 
       email.attachments = email.attachments.filter(
-        (attachId) => attachId !== id
+        (attachId) => attachId !== id,
       )
     }
   }
 
   return (
-    <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4 '>
+    <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] lg:p-4 '>
       <div
-        className='w-full max-w-2xl max-h-[90vh] flex flex-col rounded-lg border border-input overflow-hidden bg-background'
+        className='w-full max-w-none lg:max-w-2xl h-dvh lg:h-auto lg:max-h-[90vh] flex flex-col rounded-lg border border-input overflow-hidden bg-background'
         onDragOver={(e) => e.preventDefault()}
         onDrop={handleDrop}
       >
@@ -245,7 +250,7 @@ const ComposeMail = () => {
                         setEmail({
                           ...email,
                           recipients: email.recipients.filter(
-                            (recipent) => recipent != r
+                            (recipent) => recipent != r,
                           ),
                         })
                       }}
@@ -279,22 +284,7 @@ const ComposeMail = () => {
             </div>
             {showSuggestion && (
               <div
-                className='
-                absolute
-                left-0
-                top-full
-                mt-1
-                w-full
-                bg-background
-                border
-                border-border
-                rounded
-                p-2
-                pl-3
-                text-sm
-                shadow-lg
-                z-50
-                '
+                className='absolute left-0 top-full mt-1 w-full bg-background border border-border rounded p-2 pl-3 text-sm shadow z-50'
                 onClick={() => {
                   const r = [...email.recipients, recipents]
                   setEmail({ ...email, recipients: r })
@@ -401,9 +391,9 @@ const ComposeMail = () => {
               <button
                 type='button'
                 onClick={() => fileInputRef.current.click()}
-                className='flex items-center  text-sm font-medium'
+                className='flex items-center  text-sm font-medium gap-2'
               >
-                📎 Attach files
+                <RiAttachment2 size={15} /> Attach files
               </button>
             </div>
             <span

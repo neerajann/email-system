@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { FaReply, FaReplyAll } from 'react-icons/fa'
 import formatMailDate from '../../utils/fomatMailDate'
 import { BsChevronExpand } from 'react-icons/bs'
+import { MdOutlineFileDownload } from 'react-icons/md'
+import DOMPurify from 'dompurify'
 
 const ThreadItem = ({ thread, defaultExpanded }) => {
   const [showMore, setShowMore] = useState(false)
@@ -11,7 +13,7 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
     <>
       {!expand ? (
         <div
-          className=' border border-border rounded-lg p-6 bg-background hover:bg-input cursor-pointer'
+          className=' border border-border rounded-lg p-6 bg-background hover:bg-input cursor-pointer '
           onClick={() => setExpand(true)}
         >
           <div className='flex items-center justify-between min-w-0 overflow-hidden  '>
@@ -53,7 +55,9 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
                 )}
               </div>
 
-              <div className='flex items-center gap-4 text-xs text-muted-foreground flex-none '>
+              <div
+                className={` ${showMore && 'opacity-0'} sm:opacity-100 flex items-center gap-4 text-xs text-muted-foreground flex-none `}
+              >
                 <span className='border border-border p-1 rounded hover:bg-input '>
                   <FaReply
                     size={15}
@@ -123,9 +127,37 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
           </div>
 
           <div
-            dangerouslySetInnerHTML={{ __html: thread.body.html }}
-            className='mt-7 text-sm'
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(thread.body.html),
+            }}
+            className='mt-7 text-sm whitespace-pre-wrap'
           />
+          {thread.attachments.length !== 0 && (
+            <div className='text-sm mt-6 border-t border-border pt-4  '>
+              <span className='text-sm font-semibold '>
+                {thread.attachments.length} &nbsp;Attachment
+                {thread.attachments.length < 1 ? 's' : ''}
+              </span>
+              <div className='flex gap-5 min-w-0 flex-wrap mt-4'>
+                {thread.attachments.map((attachment) => {
+                  return (
+                    <div
+                      key={attachment.id}
+                      className=' border border-border py-2 px-4 bg-input  flex items-center gap-6 rounded w-fit'
+                    >
+                      <span>{attachment.fileName}</span>
+                      <a
+                        href={`${import.meta.env.VITE_API_URL}/mail/attachment/${attachment.id}?mailId=${thread.mailId}`}
+                      >
+                        <MdOutlineFileDownload size={18} />
+                      </a>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           <div className='mt-8 flex items-center gap-6 text-sm'>
             <button className='flex items-center gap-3 border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'>
               <FaReply />
