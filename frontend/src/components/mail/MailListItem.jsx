@@ -84,6 +84,13 @@ const MailListItem = memo((props) => {
               }`}
             >
               {mail.from.name ?? mail.from.address}
+              {mail.messageCount > 1 && (
+                <span
+                  className={`text-muted-foreground ml-2 ${!mail.isRead && 'font-semibold'}`}
+                >
+                  {mail.messageCount}
+                </span>
+              )}
             </h3>
             <h3
               className={`text-sm truncate  mb-1.5 ${
@@ -101,6 +108,7 @@ const MailListItem = memo((props) => {
         <div className='flex shrink-0 items-center ml-2'>
           {/* action buttons  */}
           <div className='hidden group-hover:flex items-center pointer-events-none group-hover:pointer-events-auto '>
+            {/* star mail button  */}
             <button
               className=' border border-border p-2 rounded mr-2 disabled:opacity-50 cursor-pointer '
               disabled={mail.isDeleted}
@@ -117,6 +125,7 @@ const MailListItem = memo((props) => {
             >
               <IoStarOutline />
             </button>
+            {/* trash mail button  */}
             <button
               disabled={mail.isDeleted}
               className='border border-border p-2 rounded mr-2 disabled:opacity-50 cursor-pointer'
@@ -133,6 +142,7 @@ const MailListItem = memo((props) => {
             >
               <IoTrashOutline />
             </button>
+            {/* mail read/unread button  */}
             <button
               className=' border border-border p-2 rounded mr-2 cursor-pointer'
               onClick={(e) => {

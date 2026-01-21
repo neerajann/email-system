@@ -84,7 +84,7 @@ const Thread = () => {
   }
 
   return (
-    <div className='h-dvh w-full lg:w-auto flex flex-1 min-w-0 sm:p-7 p-2.5  flex-col overflow-y-auto pb-30'>
+    <div className='h-dvh w-full lg:w-auto flex flex-1 min-w-0 sm:p-7 p-2.5  flex-col overflow-y-auto '>
       <div
         className={`${showThread ? 'flex lg:hidden' : 'hidden'} items-center justify-between mb-7 mt-2`}
       >
@@ -143,7 +143,7 @@ const Thread = () => {
                 <ThreadItem
                   key={latest.mailId}
                   thread={latest}
-                  defaultExpanded={index === latest.length - 1}
+                  defaultExpanded={index === latestMessages.length - 1}
                 />
               )
             })}
@@ -161,6 +161,7 @@ const Thread = () => {
             )
           })}
       </div>
+      <div className='h-40 w-full shrink-0'></div>
     </div>
   )
 }

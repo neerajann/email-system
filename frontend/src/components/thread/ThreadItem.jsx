@@ -4,13 +4,16 @@ import formatMailDate from '../../utils/fomatMailDate'
 import { BsChevronExpand } from 'react-icons/bs'
 import { MdOutlineFileDownload } from 'react-icons/md'
 import DOMPurify from 'dompurify'
+import Reply from './Reply'
 
 const ThreadItem = ({ thread, defaultExpanded }) => {
   const [showMore, setShowMore] = useState(false)
   const [expand, setExpand] = useState(defaultExpanded)
+  const [showReply, setShowReply] = useState(false)
 
   return (
     <>
+      {/* compact view */}
       {!expand ? (
         <div
           className=' border border-border rounded-lg p-6 bg-background hover:bg-input cursor-pointer '
@@ -32,6 +35,7 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
         </div>
       ) : (
         <div className=' border border-border rounded-lg p-6 bg-background'>
+          {/* expanded view  */}
           <div
             className={`grid items-center cursor-pointer text-sm ${
               showMore ? 'grid-cols-[60px_1fr]' : 'grid-cols-1'
@@ -39,11 +43,19 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
             onClick={() => setExpand(false)}
           >
             {showMore && (
-              <span className='font-semibold text-muted-foreground'>FROM</span>
+              <span
+                className='font-semibold text-muted-foreground cursor-text'
+                onClick={(e) => e.stopPropagation()}
+              >
+                FROM
+              </span>
             )}
 
             <div className='flex items-center justify-between min-w-0 relative'>
-              <div className={`flex gap-1 min-w-0 ${showMore && 'px-1'}`}>
+              <div
+                className={`flex gap-1 min-w-0 ${showMore && 'px-1'} cursor-text `}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <h2 className='font-semibold'>
                   {thread.from.name ?? thread.from.address}
                 </h2>
@@ -58,23 +70,23 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
               <div
                 className={` ${showMore && 'opacity-0'} sm:opacity-100 flex items-center gap-4 text-xs text-muted-foreground flex-none `}
               >
-                <span className='border border-border p-1 rounded hover:bg-input '>
-                  <FaReply
-                    size={15}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      console.log('clicked')
-                    }}
-                  />
+                <span
+                  className='border border-border p-1 rounded hover:bg-input '
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowReply({ reply: true })
+                  }}
+                >
+                  <FaReply size={15} />
                 </span>
-                <span className='border border-border p-1 rounded hover:bg-input '>
-                  <FaReplyAll
-                    size={15}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      console.log('clicked')
-                    }}
-                  />
+                <span
+                  className='border border-border p-1 rounded hover:bg-input '
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowReply({ replyAll: true })
+                  }}
+                >
+                  <FaReplyAll size={15} />
                 </span>
                 <span className='whitespace-nowrap'>
                   {formatMailDate(thread.receivedAt)}
@@ -82,7 +94,6 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
               </div>
             </div>
           </div>
-
           <div
             className={`grid items-start text-sm mt-2 ${
               showMore ? 'grid-cols-[60px_1fr]' : 'grid-cols-1'
@@ -93,7 +104,10 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
             )}
 
             {!showMore ? (
-              <div className='flex items-center gap-1 text-muted-foreground'>
+              <div
+                className='flex items-center gap-1 text-muted-foreground cursor-pointer'
+                onClick={() => setShowMore(true)}
+              >
                 To
                 <span className='truncate'>
                   {thread.to.map((to) => to.name || to.address).join(', ')}
@@ -125,7 +139,6 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
               </div>
             )}
           </div>
-
           <div
             dangerouslySetInnerHTML={{
               __html: DOMPurify.sanitize(thread.body.html),
@@ -157,18 +170,32 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
               </div>
             </div>
           )}
-
-          <div className='mt-8 flex items-center gap-6 text-sm'>
-            <button className='flex items-center gap-3 border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'>
-              <FaReply />
-              Reply
-            </button>
-            <button className='flex items-center gap-3  border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'>
-              <FaReplyAll />
-              Reply All
-            </button>
-          </div>
+          {defaultExpanded && (
+            <div className='mt-8 flex items-center gap-6 text-sm'>
+              <button
+                className='flex items-center gap-3 border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'
+                onClick={() => setShowReply({ reply: true })}
+              >
+                <FaReply />
+                Reply
+              </button>
+              <button
+                className='flex items-center gap-3  border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'
+                onClick={() => setShowReply({ replyAll: true })}
+              >
+                <FaReplyAll />
+                Reply All
+              </button>
+            </div>
+          )}
         </div>
+      )}
+      {showReply && (
+        <Reply
+          setShowReply={setShowReply}
+          thread={thread}
+          showReply={showReply}
+        />
       )}
     </>
   )
