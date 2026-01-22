@@ -16,9 +16,9 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
     },
     {
       _id: 1,
-      firstName: 1,
+      name: 1,
       emailAddress: 1,
-    }
+    },
   )
   console.log('localUser', localUsers)
   if (!localUsers.length) return
@@ -38,7 +38,7 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
 
   console.log('Thread', thread)
   const emailAddressToName = Object.fromEntries(
-    localUsers.map((u) => [u.emailAddress, u.firstName])
+    localUsers.map((u) => [u.emailAddress, u.name]),
   )
   console.log('emailtoname', emailAddressToName)
 
@@ -75,7 +75,7 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
       threadId: thread._id,
       emailId: email._id,
       labels: ['INBOX'],
-    }))
+    })),
   )
 }
 export default processNewIncomingMail

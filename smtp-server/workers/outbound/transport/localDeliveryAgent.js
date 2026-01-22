@@ -5,10 +5,10 @@ const localDeliveryAgent = async ({ threadId, emailId, recipients }) => {
 
   const existingUsers = await User.find(
     { emailAddress: { $in: recipients } },
-    { _id: 1, emailAddress: 1, firstName: 1 }
+    { _id: 1, emailAddress: 1, name: 1 },
   )
   const emailToNameMap = existingUsers.reduce(({ acc, user }) => {
-    acc[user.emailAddress] = user.firstName
+    acc[user.emailAddress] = user.name
     return acc
   }, {})
 
@@ -30,7 +30,7 @@ const localDeliveryAgent = async ({ threadId, emailId, recipients }) => {
   const validEmailAddresses = existingUsers.map((u) => u.emailAddress)
 
   localBouncedMails.push(
-    ...recipients.filter((r) => !validEmailAddresses.includes(r))
+    ...recipients.filter((r) => !validEmailAddresses.includes(r)),
   )
 
   if (validUserIds?.length > 0) {

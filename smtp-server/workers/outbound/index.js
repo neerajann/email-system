@@ -17,12 +17,14 @@ const outboundEmailWorker = new Worker(
     const {
       threadId,
       emailId,
-      messageId,
       sender,
       recipients,
       subject,
       body,
       attachments,
+      messageId,
+      inReplyTo,
+      references,
       attachmentsRecords: cachedAttachments,
       retryCount = 1,
       failureRecords = [],
@@ -44,16 +46,18 @@ const outboundEmailWorker = new Worker(
         body,
         attachmentsRecords,
         failureRecords,
+        inReplyTo,
+        references,
       }))
     } else {
       attachmentsRecords = await loadAttachmentMetadata(attachments)
 
       const localRecipients = recipients.filter((r) =>
-        domainEmailPattern.test(r)
+        domainEmailPattern.test(r),
       )
 
       const externalRecipients = recipients.filter(
-        (r) => !domainEmailPattern.test(r)
+        (r) => !domainEmailPattern.test(r),
       )
 
       const results = await Promise.all([
@@ -72,6 +76,8 @@ const outboundEmailWorker = new Worker(
               subject,
               body,
               attachmentsRecords,
+              inReplyTo,
+              references,
             })
           : { bounced: [], retriable: [] },
       ])
@@ -104,7 +110,7 @@ const outboundEmailWorker = new Worker(
           attachmentsRecords,
           failureRecords: retriable,
         },
-        { delay: 1 * 20 * 1000 }
+        { delay: 1 * 20 * 1000 },
       )
     }
 
@@ -122,7 +128,7 @@ const outboundEmailWorker = new Worker(
     connection,
     concurrency: 5,
     attempts: 1,
-  }
+  },
 )
 
 outboundEmailWorker.on('completed', (job) => {

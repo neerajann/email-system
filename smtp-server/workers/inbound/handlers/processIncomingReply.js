@@ -18,9 +18,9 @@ const processIncomingReply = async ({ mail, envelope }) => {
     },
     {
       _id: 1,
-      firstName: 1,
+      name: 1,
       emailAddress: 1,
-    }
+    },
   )
   if (!localUsers.length) return
 
@@ -32,7 +32,7 @@ const processIncomingReply = async ({ mail, envelope }) => {
     mail?.messageId ?? `<${crypto.randomUUID()}@${process.env.DOMAIN_NAME}>`
 
   const emailAddressToName = Object.fromEntries(
-    localUsers.map((u) => [u.emailAddress, u.firstName])
+    localUsers.map((u) => [u.emailAddress, u.name]),
   )
 
   const recipients = mail.to.value.map((p) => ({
@@ -64,7 +64,7 @@ const processIncomingReply = async ({ mail, envelope }) => {
       threadId,
       emailId: email._id,
       labels: ['INBOX'],
-    }))
+    })),
   )
   await Thread.findByIdAndUpdate(threadId, {
     $push: {

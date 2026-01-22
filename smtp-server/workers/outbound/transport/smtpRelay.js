@@ -9,6 +9,8 @@ const smtpRelay = async ({
   body,
   messageId,
   attachmentsRecords,
+  inReplyTo,
+  references,
 }) => {
   const headerTo = recipients.join(', ')
   const output = { bounced: [], retriable: [] }
@@ -60,6 +62,8 @@ const smtpRelay = async ({
           keySelector: 'default',
           privateKey: fs.readFileSync('./inboxify.private', 'utf8'),
         },
+        inReplyTo: inReplyTo,
+        references: references?.join(' '),
       })
       console.log('Info:', info)
 
