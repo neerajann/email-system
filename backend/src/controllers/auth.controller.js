@@ -5,8 +5,7 @@ import jwt from 'jsonwebtoken'
 const registerUser = async (req, reply) => {
   try {
     await authService.registerUserService({
-      firstName: req.body.firstName.trim(),
-      lastName: req.body.lastName.trim(),
+      name: req.body.name.trim(),
       emailAddress: req.body.emailAddress.trim().toLowerCase(),
       password: req.body.password.trim(),
     })
@@ -22,7 +21,7 @@ const loginUser = async (req, reply) => {
   try {
     const jwtToken = await authService.loginUserService(
       req.body.emailAddress.trim().toLowerCase(),
-      req.body.password.trim()
+      req.body.password.trim(),
     )
     reply.setCookie(process.env.JWT_COOKIE_NAME, jwtToken, {
       httpOnly: true,

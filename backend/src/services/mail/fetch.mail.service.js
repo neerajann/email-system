@@ -129,7 +129,7 @@ const getMail = async (userId, threadId) => {
     {
       $project: {
         _id: 0,
-        mailId: '$emails._id',
+        emailId: '$emails._id',
         threadId: '$threadId',
         from: '$emails.from',
         to: '$emails.to',

@@ -26,6 +26,11 @@ const handleMailError = (reply, err) => {
         error: 'Sender not found.',
       })
 
+    case 'UNAUTHORIZED_REPLY':
+      return reply.code(401).send({
+        error: "You're not authorized to reply to this mail.",
+      })
+
     default:
       console.error(err)
       return reply.code(500).send({ error: 'Something went wrong.' })

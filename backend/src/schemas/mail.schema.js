@@ -3,7 +3,7 @@ import { mongooseObjectIdPattern } from '@email-system/core/utils'
 const emailSchema = {
   body: {
     type: 'object',
-    required: ['recipients', 'subject', 'body'],
+    required: ['recipients', 'subject'],
     additionalProperties: false,
     properties: {
       recipients: {
@@ -48,9 +48,19 @@ const emailSchema = {
 
       body: {
         type: 'string',
-        minLength: 1,
+      },
+      emailId: {
+        type: 'string',
+        pattern: mongooseObjectIdPattern.source,
         errorMessage: {
-          minLength: 'Email body is required',
+          pattern: 'Invalid emailId',
+        },
+      },
+      threadId: {
+        type: 'string',
+        pattern: mongooseObjectIdPattern.source,
+        errorMessage: {
+          pattern: 'Invalid threadId',
         },
       },
     },
@@ -60,7 +70,6 @@ const emailSchema = {
       required: {
         recipients: 'Recipient list is required',
         subject: 'Subject is required',
-        body: 'Email body is required',
       },
     },
   },
@@ -87,19 +96,19 @@ const attachmentSchema = {
   },
   query: {
     type: 'object',
-    required: ['mailId'],
+    required: ['emailId'],
     properties: {
-      mailId: {
+      emailId: {
         type: 'string',
         pattern: mongooseObjectIdPattern.source,
         errorMessage: {
-          pattern: 'Invalid mail id.',
+          pattern: 'Invalid email id.',
         },
       },
     },
     errorMessage: {
       required: {
-        mailId: 'Missing parameter mail id.',
+        emailId: 'Missing parameter email id.',
       },
     },
   },

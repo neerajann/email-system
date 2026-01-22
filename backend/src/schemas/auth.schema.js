@@ -3,24 +3,15 @@ import { domainEmailPattern, passwordPattern } from '@email-system/core/utils'
 const registerSchema = {
   body: {
     type: 'object',
-    required: ['firstName', 'lastName', 'emailAddress', 'password'],
+    required: ['name', 'emailAddress', 'password'],
     properties: {
-      firstName: {
+      name: {
         type: 'string',
         minLength: 1,
-        maxLength: 15,
+        maxLength: 25,
         errorMessage: {
-          minLength: 'First Name is requried.',
-          maxLength: 'First name cannot be longer than 15 characters.',
-        },
-      },
-      lastName: {
-        type: 'string',
-        minLength: 1,
-        maxLength: 15,
-        errorMessage: {
-          minLength: 'First Name is requried.',
-          maxLength: 'First name cannot be longer than 15 characters.',
+          minLength: 'Name is requried.',
+          maxLength: 'Name cannot be longer than 25 characters.',
         },
       },
       emailAddress: {
@@ -48,8 +39,7 @@ const registerSchema = {
     errorMessage: {
       type: 'Missing body.',
       required: {
-        firstName: 'First name is requried.',
-        lastName: 'Last name is required',
+        name: 'Name is requried.',
         password: 'Password is required',
         emailAddress: 'Email address is required',
       },

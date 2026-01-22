@@ -2,12 +2,7 @@ import bcrypt from 'bcrypt'
 import { User } from '@email-system/core/models'
 import jwt from 'jsonwebtoken'
 
-const registerUserService = async ({
-  firstName,
-  lastName,
-  emailAddress,
-  password,
-}) => {
+const registerUserService = async ({ name, emailAddress, password }) => {
   const existingUser = await User.findOne({
     emailAddress: emailAddress,
   })
@@ -17,8 +12,7 @@ const registerUserService = async ({
   const hashedPassword = await bcrypt.hash(password, 10)
 
   return await User.create({
-    firstName: firstName,
-    lastName: lastName,
+    name: name,
     emailAddress: emailAddress,
     password: hashedPassword,
   })
@@ -40,7 +34,7 @@ const loginUserService = async (emailAddress, password) => {
     process.env.JWT_SECRET,
     {
       expiresIn: process.env.JWT_EXPIRY,
-    }
+    },
   )
 }
 export default { registerUserService, loginUserService }

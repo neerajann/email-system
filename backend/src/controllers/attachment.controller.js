@@ -101,11 +101,11 @@ const uploadAttachments = {
 
 const downloadAttachment = async (req, reply) => {
   const attachmentId = req.params.id
-  const mailId = req.query.mailId.trim()
+  const emailId = req.query.emailId.trim()
 
   const attachment = await attachmentService.fetchAttachmentRecord({
     userId: req.userId,
-    mailId,
+    emailId,
     attachmentId,
   })
   if (!attachment) {

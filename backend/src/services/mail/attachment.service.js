@@ -24,19 +24,19 @@ const addAttachmentsToDB = async (files) => {
   }
 }
 
-const fetchAttachmentRecord = async ({ userId, mailId, attachmentId }) => {
+const fetchAttachmentRecord = async ({ userId, emailId, attachmentId }) => {
   const userIdObject = new mongoose.Types.ObjectId(userId)
-  const mailIdObject = new mongoose.Types.ObjectId(mailId)
+  const emailIdObject = new mongoose.Types.ObjectId(emailId)
   const attachmentIdObject = new mongoose.Types.ObjectId(attachmentId)
-  console.log(userIdObject + ' ' + mailIdObject + ' ' + attachmentIdObject)
+  console.log(userIdObject + ' ' + emailIdObject + ' ' + attachmentIdObject)
 
   const mailboxExists = await Mailbox.exists({
     userId: userIdObject,
-    emailId: mailIdObject,
+    emailId: emailIdObject,
   })
 
   const emailHasAttachment = await Email.exists({
-    _id: mailIdObject,
+    _id: emailIdObject,
     attachments: attachmentIdObject,
   })
 
@@ -53,7 +53,7 @@ const fetchAttachmentRecord = async ({ userId, mailId, attachmentId }) => {
       _id: 0,
       originalName: 1,
       path: 1,
-    }
+    },
   )
   return attachmentsRecord
 }
@@ -61,7 +61,7 @@ const fetchAttachmentRecord = async ({ userId, mailId, attachmentId }) => {
 const deleteAttachments = async (attachments) => {
   try {
     const parsedAttachments = attachments?.map(
-      (attachment) => new mongoose.Types.ObjectId(attachment)
+      (attachment) => new mongoose.Types.ObjectId(attachment),
     )
     const attachmentInfo = await Attachment.find(
       {
@@ -72,13 +72,13 @@ const deleteAttachments = async (attachments) => {
       },
       {
         path: 1,
-      }
+      },
     )
 
     await Promise.allSettled(
       attachmentInfo.map((attachment) => {
         fs.unlink(attachment.path)
-      })
+      }),
     )
     const result = await Attachment.deleteMany({
       _id: {

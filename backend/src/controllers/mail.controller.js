@@ -83,7 +83,8 @@ const sendMail = async (req, reply) => {
     const subject = req.body?.subject
     const body = req.body?.body
     const attachments = req.body?.attachments
-
+    const emailId = req.body?.emailId
+    const threadId = req.body?.threadId
     await sendMailService.deliverMail({
       senderId: req.userId,
       senderAddress: req.user,
@@ -91,6 +92,8 @@ const sendMail = async (req, reply) => {
       subject,
       body,
       attachments,
+      emailId,
+      threadId,
     })
     reply.code(200).send({ success: 'Mail has been sent.' })
   } catch (error) {
