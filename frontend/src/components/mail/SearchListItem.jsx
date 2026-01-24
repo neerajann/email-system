@@ -9,9 +9,10 @@ import { IoStarOutline, IoStarSharp, IoTrashOutline } from 'react-icons/io5'
 import api from '../../services/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useUI } from '../../contexts/UIContext'
+import highlightText from '../../utils/highlightText'
 
-const MailListItem = memo((props) => {
-  const { mail, queryKey } = props
+const SearchListItem = memo((props) => {
+  const { mail, query } = props
   const { setShowThread } = useUI()
 
   const queryClient = useQueryClient()
@@ -20,11 +21,11 @@ const MailListItem = memo((props) => {
     mutationFn: ({ threadId, data }) => api.patch(`/mail/${threadId}`, data),
 
     onMutate: async ({ threadId, data }) => {
-      await queryClient.cancelQueries({ queryKey })
+      await queryClient.cancelQueries({ query })
 
-      const previousMails = queryClient.getQueryData(queryKey)
+      const previousMails = queryClient.getQueryData(query)
 
-      queryClient.setQueryData(queryKey, (old) => {
+      queryClient.setQueryData(query, (old) => {
         if (!old || !Array.isArray(old.mails)) return old
 
         return {
@@ -40,20 +41,20 @@ const MailListItem = memo((props) => {
 
     onError: (_err, _vars, context) => {
       if (context?.previousMails) {
-        queryClient.setQueryData(queryKey, context.previousMails)
+        queryClient.setQueryData(query, context.previousMails)
       }
     },
 
     onSettled: (_data, _error, variables) => {
       const { threadId } = variables
-      queryClient.invalidateQueries({ queryKey: ['thread', threadId] })
-      queryClient.invalidateQueries({ queryKey: ['mail'] })
+      queryClient.invalidateQueries({ query: ['thread', threadId] })
+      queryClient.invalidateQueries({ query: ['mail'] })
     },
   })
 
   return (
     <NavLink
-      to={mail.threadId}
+      to={`/search/${mail.threadId}?q=${query}`}
       className={({ isActive }) =>
         `flex border-y border-border py-4 flex-1 items-center bg-background mb-2 group relative hover:shadow-sm min-w-0${
           isActive && 'border-r border-3 '
@@ -71,36 +72,42 @@ const MailListItem = memo((props) => {
         })
       }}
     >
-      <div className=' flex items-center flex-1 px-4 sm:px-10  min-w-0 w-full'>
+      <div className=' flex items-center flex-1 px-5 sm:px-10 min-w-0 w-full'>
         {/* mail content */}
-        <div className='flex items-center flex-1 min-w-0 w-0'>
+        <div className=' flex items-center flex-1 min-w-0 w-full'>
           <div className='mr-5 sm:mr-10 shrink-0'>
             {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
           </div>
           <div className='flex flex-col justify-between flex-1 min-w-0 w-0'>
-            <h3
-              className={`text-sm truncate text-foreground mb-1.5 ${
-                !mail.isRead && 'font-semibold'
-              }`}
-            >
-              {mail.from.name ?? mail.from.address}
-              {mail.messageCount > 1 && (
-                <span
-                  className={`text-muted-foreground ml-2 ${!mail.isRead && 'font-semibold'}`}
-                >
-                  {mail.messageCount}
-                </span>
-              )}
-            </h3>
+            <div className='flex items-center gap-1 mb-1.5  min-w-0'>
+              <h3
+                className={`text-sm truncate text-foreground ${
+                  !mail.isRead && 'font-semibold'
+                }`}
+              >
+                {mail.from.name ?? mail.from.address}
+                {mail.messageCount > 1 && (
+                  <span
+                    className={`text-muted-foreground ml-2 ${!mail.isRead && 'font-semibold'}`}
+                  >
+                    {mail.messageCount}
+                  </span>
+                )}
+              </h3>
+              <span className='border border-border px-2 py-0.5 rounded-xl text-xs ml-2'>
+                {mail.labels[0].charAt(0).toUpperCase() +
+                  mail.labels[0].slice(1).toLowerCase()}
+              </span>
+            </div>
             <h3
               className={`text-sm truncate  mb-1.5 ${
                 !mail.isRead && 'font-semibold'
               }`}
             >
-              {mail.subject}
+              {highlightText(mail.subject, query)}
             </h3>
             <p className=' text-xs text-muted-foreground truncate '>
-              {mail.snippet}
+              {highlightText(mail.body, query)}
             </p>
           </div>
         </div>
@@ -175,4 +182,4 @@ const MailListItem = memo((props) => {
     </NavLink>
   )
 })
-export default MailListItem
+export default SearchListItem

@@ -51,10 +51,10 @@ const Login = () => {
   }
 
   return (
-    <div className='w-screen h-screen flex items-center justify-center'>
+    <div className='w-screen h-dvh flex items-center justify-center'>
       <div className='bg-background border-border p-10 rounded-lg border flex-col max-w-150 w-full lg:w-1/2 m-5 lg:p-20 '>
         <div>
-          <h1 className='text-2xl font-semibold text-center mb-8'>
+          <h1 className='sm:text-2xl text-xl font-semibold text-center mb-8'>
             Welcome back to Inboxify
           </h1>
         </div>
@@ -63,7 +63,7 @@ const Login = () => {
           <div>
             <label
               htmlFor='emailAddress'
-              className='block font-medium text-sm mb-3'
+              className='block font-medium text-base md:text-sm  mb-3'
             >
               Email address
             </label>
@@ -72,7 +72,7 @@ const Login = () => {
               type='email'
               name='emailAddress'
               placeholder='you@inboxify.com'
-              className='w-full bg-input text-foreground border border-border rounded-md p-2 pl-3 text-sm shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+              className='text-base md:text-sm  w-full bg-input text-foreground border border-border rounded-md p-2 pl-3  shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
               onChange={(e) =>
                 setFormData({ ...formData, emailAddress: e.target.value })
               }
@@ -88,7 +88,7 @@ const Login = () => {
           <div>
             <label
               htmlFor='password'
-              className='block font-medium text-sm mb-3'
+              className='block font-medium text-base md:text-sm  mb-3'
             >
               Password
             </label>
@@ -97,7 +97,7 @@ const Login = () => {
                 type={showPassword ? 'text' : 'password'}
                 name='password'
                 placeholder='*************'
-                className='w-full h-10 bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 text-sm shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+                className='text-base md:text-sm w-full h-10 bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }

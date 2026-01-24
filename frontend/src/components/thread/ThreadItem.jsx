@@ -10,6 +10,7 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
   const [showMore, setShowMore] = useState(false)
   const [expand, setExpand] = useState(defaultExpanded)
   const [showReply, setShowReply] = useState(false)
+  console.log(thread)
 
   return (
     <>
@@ -29,7 +30,7 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
               </p>
             </div>
             <span className='text-muted-foreground text-xs shrink-0 ml-4 whitespace-nowrap'>
-              {formatMailDate(thread.receivedAt)}
+              {formatMailDate(thread.receivedAt, true)}
             </span>
           </div>
         </div>
@@ -89,7 +90,7 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
                   <FaReplyAll size={15} />
                 </span>
                 <span className='whitespace-nowrap'>
-                  {formatMailDate(thread.receivedAt)}
+                  {formatMailDate(thread.receivedAt, true)}
                 </span>
               </div>
             </div>

@@ -57,6 +57,9 @@ const SideBar = React.memo(() => {
     ${showSideBar ? 'translate-x-0' : '-translate-x-full xl:translate-x-0 '}
   `}
       >
+        <div className='flex sm:hidden items-center gap-4 '>
+          <h2 className='text-lg font-bold'>inboxify</h2>
+        </div>
         <button
           className=' flex items-center  text-sm mt-5 border rounded w-full p-2 border-border  bg-input shadow-xs'
           onClick={() => setShowComposeMail(true)}

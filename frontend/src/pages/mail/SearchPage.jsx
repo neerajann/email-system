@@ -1,31 +1,31 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import api from '../../services/api'
 import { ToastContainer, toast } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
 import { useQuery } from '@tanstack/react-query'
-import api from '../services/api'
+import 'react-toastify/dist/ReactToastify.css'
 import { Outlet } from 'react-router-dom'
-import MailListItem from '../components/mail/MailListItem'
-import { useUI } from '../contexts/UIContext'
-import { IoMdRefresh } from 'react-icons/io'
+import { useUI } from '../../contexts/UIContext'
+import SearchListItem from '../../components/mail/SearchListItem'
 
-const MailListLayout = ({ mailType }) => {
+const SearchPage = () => {
   const { showThread } = useUI()
-  const memoizedQueryKey = useMemo(() => ['mail', mailType], [mailType])
+  const [searchParams, setSearchParams] = useSearchParams()
+  const query = searchParams.get('q')
 
-  const fetchMails = async () => {
-    const res = await api.get(`/mail/${mailType}`)
+  const searchMails = async () => {
+    const res = await api.get(`/mail/search?q=${query}`)
     return res.data
   }
 
   const {
-    data = [],
+    data: searchResult = [],
     isLoading,
     isError,
     error,
-    refetch,
   } = useQuery({
-    queryKey: ['mail', mailType],
-    queryFn: fetchMails,
+    queryKey: ['search', query],
+    queryFn: searchMails,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -57,11 +57,9 @@ const MailListLayout = ({ mailType }) => {
           <div className='flex flex-col shadow-xs mb-3 border-b border-border bg-background relative z-[40]'>
             <div className='flex items-center justify-between text-sm font-medium px-4 py-2 shadow-xs bg-background relative'>
               <div className='flex items-center gap-3'>
-                <button onClick={() => refetch()}>
-                  <IoMdRefresh size={20} className='cursor-pointer' />
-                </button>
                 <span>
-                  {data.total} {data.total <= 1 ? 'email' : 'emails'}
+                  {searchResult.total}{' '}
+                  {searchResult.total <= 1 ? 'email' : 'emails'}
                 </span>
               </div>
               <button className=' bg-background border border-border px-4 py-2 rounded font-normal'>
@@ -81,20 +79,16 @@ const MailListLayout = ({ mailType }) => {
               pauseOnHover
             />
           </div>
-          {data.mails?.length ? (
+          {searchResult.mails?.length ? (
             <div className='h-full flex-1  min-w-0 grid auto-rows-[110px] overflow-y-auto '>
-              {data.mails.map((mail) => (
-                <MailListItem
-                  key={mail.threadId}
-                  queryKey={memoizedQueryKey}
-                  mail={mail}
-                />
+              {searchResult.mails.map((mail) => (
+                <SearchListItem key={mail.threadId} mail={mail} query={query} />
               ))}
             </div>
           ) : (
             <div className=' flex h-full  justify-center items-center  absolute inset-0 pointer-events-none'>
               <div className='pointer-events-auto'>
-                No emails in this folder
+                No messages matched your search.
               </div>
             </div>
           )}
@@ -109,5 +103,4 @@ const MailListLayout = ({ mailType }) => {
     </div>
   )
 }
-
-export default MailListLayout
+export default SearchPage

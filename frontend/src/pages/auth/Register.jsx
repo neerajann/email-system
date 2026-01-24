@@ -57,24 +57,27 @@ const Register = () => {
   }, [successMessage])
 
   return (
-    <div className='w-screen h-screen flex items-center justify-center'>
+    <div className='w-screen h-dvh flex items-center justify-center'>
       <div className=' bg-background border-border p-10 rounded-lg border flex-col max-w-150 w-full lg:w-1/2 m-5 lg:p-20 '>
         <div>
-          <h1 className=' text-foreground font-semibold text-center text-2xl mb-8 '>
+          <h1 className='sm:text-2xl text-xl text-foreground font-semibold text-center mb-8 '>
             Sign up for an account
           </h1>
         </div>
         <form method='post'>
           <div>
-            <label htmlFor='firstName' className='font-medium block text-sm'>
+            <label
+              htmlFor='name'
+              className='font-medium block text-base md:text-sm '
+            >
               Name
             </label>
             <input
               type='text'
-              name='firstName'
+              name='name'
               placeholder='Enter your name'
-              className='w-full bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 text-sm shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
-              onChange={(e) => setData({ ...data, firstName: e.target.value })}
+              className='text-base md:text-sm w-full bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3  shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+              onChange={(e) => setData({ ...data, name: e.target.value })}
             />
             {errors.name && (
               <span className='text-red-500 text-sm mt-3 block '>
@@ -86,15 +89,15 @@ const Register = () => {
           <div>
             <label
               htmlFor='emailAddress'
-              className='font-medium block text-sm mt-5'
+              className='font-medium block text-base md:text-sm  mt-5'
             >
-              Email Address
+              Email address
             </label>
             <input
               type='email'
               name='emailAddress'
-              placeholder='Enter your email'
-              className='w-full bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 text-sm shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+              placeholder='you@inboxify.com'
+              className='text-base md:text-sm w-full bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
               onChange={(e) =>
                 setData({ ...data, emailAddress: e.target.value })
               }
@@ -108,7 +111,7 @@ const Register = () => {
           <div>
             <label
               htmlFor='password'
-              className='font-medium block text-sm mt-5'
+              className='font-medium block text-base md:text-sm  mt-5'
             >
               Password
             </label>
@@ -117,7 +120,7 @@ const Register = () => {
                 type={showPassword ? 'text' : 'password'}
                 name='password'
                 placeholder='*************'
-                className='w-full bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 text-sm shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+                className='text-base md:text-sm w-full bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
                 onChange={(e) => setData({ ...data, password: e.target.value })}
               ></input>
               <button

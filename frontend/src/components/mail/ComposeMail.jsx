@@ -62,7 +62,7 @@ const ComposeMail = () => {
   return (
     <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] lg:p-4 '>
       <div
-        className='w-full max-w-none lg:max-w-2xl h-dvh lg:h-auto lg:max-h-[90vh] flex flex-col rounded-lg border border-input overflow-hidden bg-background'
+        className='w-full max-w-none lg:max-w-2xl h-dvh lg:h-auto lg:max-h-[90vh] flex flex-col rounded-lg border border-input overflow-hidden bg-background '
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault()
@@ -129,7 +129,7 @@ const ComposeMail = () => {
                 name='recipents'
                 placeholder='recipent@example.com'
                 rows={1}
-                className='flex-1 min-w-30 bg-transparent focus:outline-none resize-none overflow-hidden leading-6'
+                className=' text-base md:text-sm  flex-1 min-w-30 bg-transparent focus:outline-none resize-none overflow-hidden leading-6'
                 value={recipents}
                 onChange={(e) => handleRecipentsChange(e)}
                 onKeyDown={(e) => {
@@ -172,7 +172,7 @@ const ComposeMail = () => {
               type='text'
               name='subject'
               placeholder='Email subject'
-              className='w-full my-2 bg-input text-foreground border border-border rounded-md p-2 pl-3 text-sm shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+              className='text-base md:text-sm  w-full my-2 bg-input text-foreground border border-border rounded-md p-2 pl-3  shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
               onChange={(e) => setEmail({ ...email, subject: e.target.value })}
               autoComplete='off'
               autoCorrect='on'
@@ -188,7 +188,7 @@ const ComposeMail = () => {
               placeholder='Type your message...'
               name='body'
               rows={10}
-              className='my-2 w-full border border-border text-sm p-2 rounded-md shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+              className='my-2 w-full border border-border text-base md:text-sm p-2 rounded-md shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
               onChange={(e) => setEmail({ ...email, body: e.target.value })}
               autoComplete='off'
               autoCorrect='on'

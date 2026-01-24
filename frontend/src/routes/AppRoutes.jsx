@@ -13,6 +13,7 @@ import EmptyMailView from '../components/mail/EmptyMailView'
 import NotFound from '../pages/NotFound'
 import ComposeMail from '../components/mail/ComposeMail'
 import { useUI } from '../contexts/UIContext'
+import SearchPage from '../pages/mail/SearchPage'
 
 const AppRoutes = () => {
   const { showComposeMail } = useUI()
@@ -43,6 +44,9 @@ const AppRoutes = () => {
           </Route>
           <Route path='/starred' element={<StarredPage />}>
             <Route index element={<EmptyMailView />} />
+            <Route path=':id' element={<Thread />} />
+          </Route>
+          <Route path='/search' element={<SearchPage />}>
             <Route path=':id' element={<Thread />} />
           </Route>
         </Route>

@@ -125,7 +125,11 @@ const Thread = () => {
           <>
             {oldMessage.map((o) => {
               return (
-                <ThreadItem key={o.mailId} thread={o} defaultExpanded={false} />
+                <ThreadItem
+                  key={o.emailId}
+                  thread={o}
+                  defaultExpanded={false}
+                />
               )
             })}
             <div
@@ -141,7 +145,7 @@ const Thread = () => {
             {latestMessages.map((latest, index) => {
               return (
                 <ThreadItem
-                  key={latest.mailId}
+                  key={latest.emailId}
                   thread={latest}
                   defaultExpanded={index === latestMessages.length - 1}
                 />
@@ -154,7 +158,7 @@ const Thread = () => {
           threadData.map((thread, index) => {
             return (
               <ThreadItem
-                key={thread.mailId}
+                key={thread.emailId}
                 thread={thread}
                 defaultExpanded={index === threadData.length - 1}
               />

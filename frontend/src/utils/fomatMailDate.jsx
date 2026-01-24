@@ -1,4 +1,4 @@
-const formatMailDate = (isoString) => {
+const formatMailDate = (isoString, full = false) => {
   const date = new Date(isoString)
   const now = new Date()
 
@@ -28,15 +28,15 @@ const formatMailDate = (isoString) => {
 
   // Yesterday
   if (isSameDay(date, yesterday)) {
-    return `Yesterday ${time}`
+    return full ? `Yesterday ${time}` : time
   }
 
   // This week
   if (date >= startOfWeek) {
     const day = new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
+      weekday: 'short',
     }).format(date)
-    return `${day} ${time}`
+    return full ? `${day} ${time}` : day
   }
 
   // Same year
@@ -45,7 +45,7 @@ const formatMailDate = (isoString) => {
       month: 'short',
       day: 'numeric',
     }).format(date)
-    return `${dateStr}, ${time}`
+    return full ? `${dateStr} ${time}` : dateStr
   }
 
   // Previous years
@@ -55,6 +55,6 @@ const formatMailDate = (isoString) => {
     day: 'numeric',
   }).format(date)
 
-  return `${fullDate}, ${time}`
+  return full ? `${fullDate}, ${time}` : fullDate
 }
 export default formatMailDate
