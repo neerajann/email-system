@@ -1,9 +1,7 @@
 import mongoose from 'mongoose'
-import { Mailbox } from '@email-system/core/models'
+import { Email, Mailbox } from '@email-system/core/models'
 
-const getMails = async ({ userId, label, trash, starred }) => {
-  let page = 0
-
+const getMails = async ({ userId, label, trash, starred, page = 0 }) => {
   const match = {
     userId: new mongoose.Types.ObjectId(userId),
     isDeleted: false,
@@ -160,4 +158,113 @@ const getMail = async (userId, threadId) => {
   return result
 }
 
-export default { getMails, getMail }
+const searchMail = async ({ query, userId, page = 0, limit = 50 }) => {
+  const result = await Email.aggregate([
+    {
+      $match: {
+        $text: {
+          $search: query,
+        },
+      },
+    },
+
+    {
+      $addFields: {
+        score: { $meta: 'textScore' },
+      },
+    },
+
+    {
+      $lookup: {
+        from: 'mailboxes',
+        localField: '_id',
+        foreignField: 'emailId',
+        as: 'mailbox',
+      },
+    },
+    { $unwind: '$mailbox' },
+
+    {
+      $match: {
+        'mailbox.userId': new mongoose.Types.ObjectId(userId),
+      },
+    },
+
+    {
+      $lookup: {
+        from: 'threads',
+        localField: 'mailbox.threadId',
+        foreignField: '_id',
+        as: 'threads',
+      },
+    },
+    { $unwind: '$threads' },
+
+    {
+      $group: {
+        _id: '$mailbox.threadId',
+        emailId: { $first: '$_id' },
+        isRead: { $first: '$mailbox.isRead' },
+        isStarred: { $first: '$mailbox.isStarred' },
+        receivedAt: { $first: '$mailbox.receivedAt' },
+        isDeleted: { $first: '$mailbox.isDeleted' },
+        labels: { $first: '$mailbox.labels' },
+        relevanceScore: { $max: '$score' },
+      },
+    },
+
+    {
+      $facet: {
+        data: [
+          // Sort by relevance score first, then by date
+          { $sort: { relevanceScore: -1, receivedAt: -1 } },
+          { $skip: page * limit },
+          { $limit: limit },
+          {
+            $lookup: {
+              from: 'emails',
+              localField: 'emailId',
+              foreignField: '_id',
+              as: 'emails',
+            },
+          },
+          { $unwind: '$emails' },
+          {
+            $lookup: {
+              from: 'threads',
+              localField: '_id',
+              foreignField: '_id',
+              as: 'threads',
+            },
+          },
+          { $unwind: '$threads' },
+          {
+            $project: {
+              _id: 0,
+              threadId: '$_id',
+              subject: '$threads.subject',
+              messageCount: '$threads.messageCount',
+              isRead: 1,
+              isStarred: 1,
+              from: '$emails.from',
+              to: '$emails.to',
+              body: '$emails.body.text',
+              labels: 1,
+              isSystem: '$emails.isSystem',
+              receivedAt: 1,
+              isDeleted: 1,
+              relevanceScore: 1,
+            },
+          },
+        ],
+        total: [{ $count: 'count' }],
+      },
+    },
+  ])
+
+  return {
+    mails: result[0].data,
+    total: result[0].total[0]?.count || 0,
+  }
+}
+export default { getMails, getMail, searchMail }

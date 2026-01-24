@@ -19,13 +19,14 @@ const mailRouter = async (fastify) => {
     {
       preHandler: verifyJWT,
     },
-    mailController.getStarred
+    mailController.getStarred,
   )
+  fastify.get('/search', { preHandler: verifyJWT }, mailController.searchMail)
   fastify.post(
     '/send',
 
     { preHandler: verifyJWT, schema: emailSchema },
-    mailController.sendMail
+    mailController.sendMail,
   )
 
   fastify.post('/attachment', {
@@ -36,19 +37,19 @@ const mailRouter = async (fastify) => {
   fastify.delete(
     '/attachment',
     { preHandler: [verifyJWT], schema: attachmentDeleteSchema },
-    attachmentController.deleteAttachments
+    attachmentController.deleteAttachments,
   )
 
   fastify.get(
     '/attachment/:id',
     { preHandler: [verifyJWT, verifyObjectId], schema: attachmentSchema },
-    attachmentController.downloadAttachment
+    attachmentController.downloadAttachment,
   )
 
   fastify.get(
     '/:id',
     { preHandler: [verifyJWT, verifyObjectId] },
-    mailController.getMail
+    mailController.getMail,
   )
 
   fastify.patch(
@@ -57,7 +58,7 @@ const mailRouter = async (fastify) => {
       preHandler: [verifyJWT, verifyObjectId],
       schema: patchMailSchema,
     },
-    mailController.patchMail
+    mailController.patchMail,
   )
 
   fastify.delete(
@@ -65,7 +66,7 @@ const mailRouter = async (fastify) => {
     {
       preHandler: [verifyJWT, verifyObjectId],
     },
-    mailController.deleteMail
+    mailController.deleteMail,
   )
 }
 

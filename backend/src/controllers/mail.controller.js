@@ -100,6 +100,25 @@ const sendMail = async (req, reply) => {
     handleMailError(reply, error)
   }
 }
+const searchMail = async (req, reply) => {
+  try {
+    const query = req.query?.q
+    if (!query)
+      return reply.code(400).send({ error: 'Missing query parameter' })
+    const emails = await fetchMailService.searchMail({
+      query,
+      user: req.user,
+      userId: req.userId,
+    })
+    if (!emails)
+      return reply.code(200).send({
+        message: 'No email matched your search',
+      })
+    return reply.code(200).send(emails)
+  } catch (error) {
+    handleMailError(reply, error)
+  }
+}
 
 const patchMail = async (req, reply) => {
   try {
@@ -136,6 +155,7 @@ export default {
   sendMail,
   getMail,
   patchMail,
+  searchMail,
   deleteMail,
   getStarred,
 }
