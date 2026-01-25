@@ -32,7 +32,7 @@ const fetchAttachmentRecord = async ({ userId, emailId, attachmentId }) => {
 
   const mailboxExists = await Mailbox.exists({
     userId: userIdObject,
-    emailId: emailIdObject,
+    emailIds: emailIdObject,
   })
 
   const emailHasAttachment = await Email.exists({

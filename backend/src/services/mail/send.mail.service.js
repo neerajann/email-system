@@ -68,6 +68,7 @@ const deliverMail = async ({
     // check if thread exists
     if (threadId) {
       thread = await Thread.findById(threadId)
+      console.log({ thread })
     }
     if (!thread) {
       // create a new thread if it doesnot exist
@@ -75,14 +76,18 @@ const deliverMail = async ({
     } else {
       // check if all the participants are same as that of the thread
       const nextParticipants = new Set([senderAddress, ...recipients])
-      const prevParticipants = new Set([thread.participants])
+      const prevParticipants = new Set(thread.participants)
+      console.log({ nextParticipants })
+      console.log({ prevParticipants })
 
       const sameParticipants =
         nextParticipants.size === prevParticipants.size &&
         [...nextParticipants].every((p) => prevParticipants.has(p))
+      console.log({ sameParticipants })
 
       //If not create a new thread
       if (!sameParticipants) {
+        console.log('not same participants')
         thread = await createThread({ subject, senderAddress, recipients })
       }
     }
@@ -142,16 +147,36 @@ const deliverMail = async ({
         attachments: parsedAttachments,
       })
     }
-    // create entry in users sent mailbox
-    await Mailbox.create([
+    //update message count if it was valid reply mail
+    if (thread._id.equals(threadId)) {
+      await Thread.findByIdAndUpdate(threadId, {
+        $inc: {
+          messageCount: 1,
+        },
+      })
+    }
+    // update mailbox or creates a new one
+    await Mailbox.findOneAndUpdate(
       {
-        userId: senderId,
+        userId: new mongoose.Types.ObjectId(senderId),
         threadId: thread._id,
-        emailId: email._id,
-        labels: ['SENT'],
-        isRead: true,
       },
-    ])
+      {
+        $set: {
+          isRead: true,
+          lastMessageAt: Date.now(),
+        },
+        $addToSet: {
+          labels: 'SENT',
+        },
+        $push: {
+          emailIds: email._id,
+        },
+      },
+      {
+        upsert: true,
+      },
+    )
   } catch (error) {
     if (error.message === 'INVALID_ATTACHMENTS') throw error
     if (error.message === 'USER_NOT_FOUND') throw error

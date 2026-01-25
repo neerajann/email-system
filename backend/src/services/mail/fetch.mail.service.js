@@ -21,18 +21,8 @@ const getMails = async ({ userId, label, trash, starred, page = 0 }) => {
       $match: match,
     },
     {
-      $sort: {
-        receivedAt: -1,
-      },
-    },
-    {
-      $group: {
-        _id: '$threadId',
-        emailId: { $first: '$emailId' },
-        isRead: { $first: '$isRead' },
-        isStarred: { $first: '$isStarred' },
-        receivedAt: { $first: '$receivedAt' },
-        isDeleted: { $first: '$isDeleted' },
+      $addFields: {
+        lastEmailId: { $arrayElemAt: ['$emailIds', -1] },
       },
     },
     {
@@ -41,55 +31,56 @@ const getMails = async ({ userId, label, trash, starred, page = 0 }) => {
           {
             $lookup: {
               from: 'emails',
-              localField: 'emailId',
+              localField: 'lastEmailId',
               foreignField: '_id',
-              as: 'emails',
+              as: 'email',
             },
           },
-          {
-            $unwind: '$emails',
-          },
+          { $unwind: '$email' },
           {
             $lookup: {
               from: 'threads',
-              localField: '_id',
+              localField: 'threadId',
               foreignField: '_id',
-              as: 'threads',
+              as: 'thread',
             },
           },
-          { $unwind: '$threads' },
+          { $unwind: '$thread' },
           {
             $sort: {
-              receivedAt: -1,
+              'email.receivedAt': -1,
             },
           },
           {
             $project: {
               _id: 0,
-              threadId: '$_id',
-              subject: '$threads.subject',
-              messageCount: '$threads.messageCount',
-              isRead: 1,
-              isStarred: 1,
-              from: '$emails.from',
-              to: '$emails.to',
+              threadId: '$thread._id',
+              subject: '$thread.subject',
+              messageCount: '$thread.messageCount',
+              isRead: '$isRead',
+              isStarred: '$isStarred',
+              from: '$email.from',
+              to: '$email.to',
               snippet: {
-                $substrCP: ['$emails.body.text', 0, 200],
+                $substrCP: ['$email.body.text', 0, 200],
               },
-              isSystem: '$emails.isSystem',
-              receivedAt: 1,
-              isDeleted: 1,
+              isSystem: '$email.isSystem',
+              receivedAt: '$email.receivedAt',
+              isDeleted: '$isDeleted',
             },
           },
 
           { $skip: page * 50 },
           { $limit: 50 },
         ],
-        totalCount: [{ $count: 'count' }],
+        totalCount: [
+          {
+            $count: 'count',
+          },
+        ],
       },
     },
   ])
-
   return {
     mails: result[0].data,
     total: result[0].totalCount[0]?.count || 0,
@@ -104,11 +95,10 @@ const getMail = async (userId, threadId) => {
         threadId: new mongoose.Types.ObjectId(threadId),
       },
     },
-    { $sort: { receivedAt: 1 } },
     {
       $lookup: {
         from: 'emails',
-        localField: 'emailId',
+        localField: 'emailIds',
         foreignField: '_id',
         as: 'emails',
       },
@@ -116,6 +106,7 @@ const getMail = async (userId, threadId) => {
     {
       $unwind: '$emails',
     },
+    { $sort: { 'emails.receivedAt': 1 } },
     {
       $lookup: {
         from: 'attachments',
@@ -147,7 +138,7 @@ const getMail = async (userId, threadId) => {
         isStarred: '$isStarred',
         isDeleted: '$isDeleted',
         isRead: '$isRead',
-        receivedAt: '$receivedAt',
+        receivedAt: '$emails.receivedAt',
       },
     },
   ])
@@ -178,7 +169,7 @@ const searchMail = async ({ query, userId, page = 0, limit = 50 }) => {
       $lookup: {
         from: 'mailboxes',
         localField: '_id',
-        foreignField: 'emailId',
+        foreignField: 'emailIds',
         as: 'mailbox',
       },
     },
@@ -195,65 +186,55 @@ const searchMail = async ({ query, userId, page = 0, limit = 50 }) => {
         from: 'threads',
         localField: 'mailbox.threadId',
         foreignField: '_id',
-        as: 'threads',
+        as: 'thread',
       },
     },
-    { $unwind: '$threads' },
+    { $unwind: '$thread' },
+    { $sort: { score: -1 } },
 
     {
       $group: {
-        _id: '$mailbox.threadId',
-        emailId: { $first: '$_id' },
+        _id: '$thread._id',
+        subject: { $first: '$thread.subject' },
+        messageCount: { $first: '$thread.messageCount' },
         isRead: { $first: '$mailbox.isRead' },
-        isStarred: { $first: '$mailbox.isStarred' },
-        receivedAt: { $first: '$mailbox.receivedAt' },
-        isDeleted: { $first: '$mailbox.isDeleted' },
         labels: { $first: '$mailbox.labels' },
+        isStarred: { $first: '$mailbox.isStarred' },
+        isDeleted: { $first: '$mailbox.isDeleted' },
         relevanceScore: { $max: '$score' },
+        from: { $first: '$from' },
+        to: { $first: '$to' },
+        body: { $first: '$body.text' },
+        isSystem: { $first: '$isSystem' },
+        receivedAt: { $first: '$receivedAt' },
       },
     },
-
     {
       $facet: {
         data: [
-          // Sort by relevance score first, then by date
-          { $sort: { relevanceScore: -1, receivedAt: -1 } },
+          {
+            $sort: {
+              receivedAt: -1,
+            },
+          },
           { $skip: page * limit },
           { $limit: limit },
-          {
-            $lookup: {
-              from: 'emails',
-              localField: 'emailId',
-              foreignField: '_id',
-              as: 'emails',
-            },
-          },
-          { $unwind: '$emails' },
-          {
-            $lookup: {
-              from: 'threads',
-              localField: '_id',
-              foreignField: '_id',
-              as: 'threads',
-            },
-          },
-          { $unwind: '$threads' },
           {
             $project: {
               _id: 0,
               threadId: '$_id',
-              subject: '$threads.subject',
-              messageCount: '$threads.messageCount',
-              isRead: 1,
-              isStarred: 1,
-              from: '$emails.from',
-              to: '$emails.to',
-              body: '$emails.body.text',
-              labels: 1,
-              isSystem: '$emails.isSystem',
-              receivedAt: 1,
-              isDeleted: 1,
-              relevanceScore: 1,
+              subject: '$subject',
+              messageCount: '$messageCount',
+              isRead: '$isRead',
+              isStarred: '$isStarred',
+              from: '$from',
+              to: '$to',
+              body: '$body',
+              labels: '$labels',
+              isSystem: '$isSystem',
+              receivedAt: '$receivedAt',
+              isDeleted: '$isDeleted',
+              relevanceScore: '$relevanceScore',
             },
           },
         ],
