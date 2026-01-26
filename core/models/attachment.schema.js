@@ -6,10 +6,6 @@ const attachmentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    encoding: {
-      type: String,
-      required: true,
-    },
     mimetype: {
       type: String,
       required: true,

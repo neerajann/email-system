@@ -8,11 +8,13 @@ const mailBoxSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    emailId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Email',
-      required: true,
-    },
+    emailIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'Email',
+      },
+    ],
     threadId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Thread',
@@ -30,15 +32,19 @@ const mailBoxSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    receivedAt: {
+    isStarred: {
+      type: Boolean,
+      default: false,
+    },
+    lastMessageAt: {
       type: Date,
       default: Date.now,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 )
 
-mailBoxSchema.index({ userId: 1, emailId: 1 })
+mailBoxSchema.index({ userId: 1, emailIds: 1 })
 
 mailBoxSchema.index({ userId: 1, labels: 1, isDeleted: 1 })
 

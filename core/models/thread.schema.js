@@ -7,29 +7,16 @@ const threadSchema = new mongoose.Schema(
       index: true,
     },
 
-    participants: [
-      {
-        type: String,
-        index: true,
-      },
-    ],
-
-    lastMessageAt: {
-      type: Date,
-      index: true,
-    },
-
     messageCount: {
       type: Number,
       default: 1,
     },
 
-    messageIds: {
+    participants: {
       type: [String],
-      index: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 )
 const Thread = mongoose.model('Thread', threadSchema)
 export default Thread

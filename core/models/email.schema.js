@@ -15,13 +15,24 @@ const emailSchema = new mongoose.Schema(
       unique: true,
     },
     from: {
-      type: String,
-      required: true,
+      address: {
+        type: String,
+        required: true,
+      },
+      name: {
+        type: String,
+      },
     },
     to: [
       {
-        type: String,
-        required: true,
+        address: {
+          type: String,
+          required: true,
+        },
+        name: {
+          type: String,
+        },
+        _id: false,
       },
     ],
     subject: {
@@ -56,11 +67,35 @@ const emailSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Email',
     },
+    inReplyTo: {
+      type: String,
+    },
+    references: {
+      type: [
+        {
+          type: String,
+        },
+      ],
+      default: [],
+    },
+    receivedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
 
-  { timestamps: true }
+  { timestamps: true },
 )
 emailSchema.index({ _id: 1, attachments: 1 })
+emailSchema.index(
+  {
+    subject: 'text',
+    'body.text': 'text',
+  },
+  {
+    name: 'search_email',
+  },
+)
 
 const Email = mongoose.model('Email', emailSchema)
 export default Email
