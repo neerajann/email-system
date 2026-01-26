@@ -4,8 +4,10 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js",
-    "start": "node server.js"
+    "server": "nodemon server.js",
+    "worker:incoming": "nodemon workers/inbound/index.js",
+    "worker:outgoing": "nodemon workers/outbound/index.js",
+    "dev": "concurrently \"npm run server\" \"npm run worker:incoming\" \"npm run worker:outgoing\""
   },
   "keywords": [],
   "author": "",

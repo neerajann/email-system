@@ -3,6 +3,7 @@ import uploadAttachment from '../attachments/uploadAttachment.js'
 import resolveThread from '../threading/resolveThread.js'
 import htmlSanitizer from '../utils/htmlSanitizer.js'
 import processNewIncomingMail from './processNewIncomingMail.js'
+import notifyUser from '../../notifyUser.js'
 
 const processIncomingReply = async ({ mail, envelope }) => {
   const threadId = await resolveThread(mail)
@@ -58,24 +59,67 @@ const processIncomingReply = async ({ mail, envelope }) => {
     attachments,
   })
 
-  await Mailbox.insertMany(
-    localUsers.map((user) => ({
-      userId: user._id,
+  const userIds = localUsers.map((l) => l._id)
+
+  await Mailbox.updateMany(
+    {
+      userId: {
+        $in: userIds,
+      },
       threadId,
-      emailId: email._id,
-      labels: ['INBOX'],
-    })),
+    },
+    {
+      $push: {
+        emailIds: email._id,
+      },
+      $set: { lastMessageAt: new Date(), isRead: false },
+      $addToSet: { labels: 'INBOX' },
+    },
+    { upsert: true, new: true },
   )
-  await Thread.findByIdAndUpdate(threadId, {
-    $push: {
-      messageIds: messageId,
-    },
-    $inc: {
-      messageCount: 1,
-    },
-    $set: {
-      lastMessageAt: new Date(),
-    },
+
+  const updatedMailboxes = await Mailbox.find({
+    userId: { $in: userIds },
+    threadId,
   })
+
+  const thread = await Thread.findByIdAndUpdate(
+    threadId,
+    {
+      $push: {
+        messageIds: messageId,
+      },
+      $inc: {
+        messageCount: 1,
+      },
+      $set: {
+        lastMessageAt: Date.now(),
+      },
+    },
+    {
+      new: true,
+    },
+  )
+
+  const notifications = updatedMailboxes.flatMap((result) => {
+    if (result.isDeleted) return []
+    return {
+      userId: result.userId,
+      newMail: {
+        threadId: email.threadId,
+        from: email.from,
+        to: email.to,
+        subject: email.subject,
+        snippet: email.body?.text?.substring(0, 200) ?? ' ',
+        isSystem: false,
+        messageCount: thread.messageCount,
+        isRead: false,
+        isStarred: result.isStarred,
+        receivedAt: email.receivedAt,
+        isDeleted: false,
+      },
+    }
+  })
+  await notifyUser(notifications)
 }
 export default processIncomingReply

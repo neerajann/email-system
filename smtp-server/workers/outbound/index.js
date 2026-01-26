@@ -66,6 +66,7 @@ const outboundEmailWorker = new Worker(
               threadId,
               emailId,
               recipients: localRecipients,
+              parentMessageId: messageId,
             })
           : [],
         externalRecipients.length
@@ -98,6 +99,7 @@ const outboundEmailWorker = new Worker(
         threadId,
         bouncedRecipients: bouncedMails,
         type: 'BOUNCE',
+        parentMessageId: messageId,
       })
     }
 
@@ -121,6 +123,7 @@ const outboundEmailWorker = new Worker(
         threadId,
         bouncedRecipients: retriable,
         type: 'DELIVERY',
+        parentMessageId: messageId,
       })
     }
   },

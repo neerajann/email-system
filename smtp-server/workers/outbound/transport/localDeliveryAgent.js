@@ -1,4 +1,6 @@
-import { Mailbox, User, Email } from '@email-system/core/models'
+import { Mailbox, User, Email, Thread } from '@email-system/core/models'
+import mongoose from 'mongoose'
+import notifyUser from '../../notifyUser.js'
 
 const localDeliveryAgent = async ({ threadId, emailId, recipients }) => {
   let localBouncedMails = []
@@ -7,7 +9,10 @@ const localDeliveryAgent = async ({ threadId, emailId, recipients }) => {
     { emailAddress: { $in: recipients } },
     { _id: 1, emailAddress: 1, name: 1 },
   )
-  const emailToNameMap = existingUsers.reduce(({ acc, user }) => {
+
+  console.log('exisiting users:', existingUsers)
+
+  const emailToNameMap = existingUsers.reduce((acc, user) => {
     acc[user.emailAddress] = user.name
     return acc
   }, {})
@@ -26,7 +31,9 @@ const localDeliveryAgent = async ({ threadId, emailId, recipients }) => {
 
   await email.save()
 
-  const validUserIds = existingUsers.map((u) => u._id)
+  const validUserIds = existingUsers.map(
+    (u) => new mongoose.Types.ObjectId(u._id),
+  )
   const validEmailAddresses = existingUsers.map((u) => u.emailAddress)
 
   localBouncedMails.push(
@@ -34,16 +41,53 @@ const localDeliveryAgent = async ({ threadId, emailId, recipients }) => {
   )
 
   if (validUserIds?.length > 0) {
-    const mailboxEntries = validUserIds.map((userId) => ({
-      threadId: threadId,
-      userId: userId,
-      emailId: emailId,
-      labels: ['INBOX'],
+    const ops = validUserIds.map((userId) => ({
+      updateOne: {
+        filter: { threadId, userId },
+        update: {
+          $set: {
+            lastMessageAt: Date.now(),
+            isRead: false,
+          },
+          $addToSet: { labels: 'INBOX' },
+          $push: { emailIds: emailId },
+        },
+        upsert: true,
+      },
     }))
+    await Mailbox.bulkWrite(ops)
 
-    await Mailbox.insertMany(mailboxEntries)
+    const mailboxEntries = await Mailbox.find({
+      threadId,
+      userId: { $in: validUserIds },
+    })
+
+    const thread = await Thread.findById(threadId, {
+      messageCount: 1,
+    })
+
+    const notifications = mailboxEntries.flatMap((result) => {
+      if (result.isDeleted) return []
+      return {
+        userId: result.userId,
+        newMail: {
+          threadId: threadId,
+          from: email.from,
+          to: email.to,
+          subject: email.subject,
+          snippet: email.body?.text?.substring(0, 200) ?? ' ',
+          isSystem: false,
+          messageCount: thread.messageCount,
+          isRead: false,
+          isStarred: result.isStarred,
+          receivedAt: email.receivedAt,
+          isDeleted: false,
+        },
+      }
+    })
+    await notifyUser(notifications)
   }
-  console.log(localBouncedMails)
+
   return localBouncedMails
 }
 

@@ -4,6 +4,8 @@ import {
   generateDeliveryFailureHtml,
 } from '../assembly/DSNComposer.js'
 import { htmlToText } from 'html-to-text'
+import mongoose from 'mongoose'
+import notifyUser from '../../notifyUser.js'
 
 const failureRecorder = async ({
   sender,
@@ -11,14 +13,16 @@ const failureRecorder = async ({
   threadId,
   bouncedRecipients,
   type,
+  parentMessageId,
 }) => {
   let failureEntries = []
   const allMessageIds = []
+
   const pushFailureEntry = (subject, html) => {
     const systemMessageId = `<system-${crypto.randomUUID()}@${
       process.env.DOMAIN_NAME
     }>`
-    allMessageId.push(systemMessageId)
+    allMessageIds.push(systemMessageId)
 
     const text = htmlToText(html)
     failureEntries.push({
@@ -40,6 +44,8 @@ const failureRecorder = async ({
       },
       isSystem: true,
       bounceFor: emailId,
+      receivedAt: Date.now(),
+      references: [parentMessageId],
     })
   }
 
@@ -60,27 +66,66 @@ const failureRecorder = async ({
   }
 
   const createdEmails = await Email.insertMany(failureEntries)
-  const mailboxRecords = createdEmails.map((email) => {
-    return {
-      threadId: threadId,
-      userId: sender.id,
-      emailId: email._id,
-      labels: ['SYSTEM', 'INBOX'],
+  const createdEmailsId = createdEmails.map((e) => e._id)
+
+  const mailboxRecord = await Mailbox.findOneAndUpdate(
+    {
+      userId: new mongoose.Types.ObjectId(sender.id),
+      threadId: new mongoose.Types.ObjectId(threadId),
+    },
+    {
+      $push: {
+        emailIds: createdEmailsId,
+      },
+      $set: {
+        isRead: false,
+        lastMessageAt: Date.now(),
+      },
+      $addToSet: {
+        labels: { $each: ['SYSTEM', 'INBOX'] },
+      },
+    },
+    { upsert: true, new: true },
+  )
+
+  const thread = await Thread.findByIdAndUpdate(
+    threadId,
+    {
+      $set: {
+        lastMessageAt: new Date(),
+      },
+      $inc: {
+        messageCount: createdEmails?.length,
+      },
+      $push: {
+        messageIds: allMessageIds,
+      },
+    },
+    { new: true },
+  )
+
+  const lastFailedEmail = createdEmails[createdEmails.length - 1]
+
+  if (!mailboxRecord.isDeleted) {
+    const notifications = {
+      userId: sender._id,
+      newMail: {
+        threadId: threadId,
+        from: lastFailedEmail.from,
+        to: lastFailedEmail.to,
+        subject: lastFailedEmail.subject,
+        snippet: lastFailedEmail.body?.text?.substring(0, 200) ?? ' ',
+        isSystem: false,
+        messageCount: thread.messageCount,
+        isRead: false,
+        isStarred: mailboxRecord.isStarred,
+        receivedAt: lastFailedEmail.receivedAt,
+        isDeleted: false,
+      },
     }
-  })
-  await Mailbox.insertMany(mailboxRecords)
-  await Thread.findByIdAndUpdate(threadId, {
-    $set: {
-      lastMessageAt: new Date(),
-    },
-    $inc: {
-      messageCount: createdEmails?.length,
-    },
-    $push: {
-      messageIds: allMessageIds,
-    },
-  })
-  console.log('Failure message sent:', bouncedRecipients)
+    await notifyUser(notifications)
+  }
+
   return true
 }
 export default failureRecorder
