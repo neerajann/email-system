@@ -55,8 +55,8 @@ const MailListItem = memo((props) => {
     <NavLink
       to={mail.threadId}
       className={({ isActive }) =>
-        `flex border-y border-border py-4 flex-1 items-center bg-background mb-2 group relative hover:shadow-sm min-w-0${
-          isActive && 'border-r border-3 '
+        `flex flex-1 items-center border border-b bg-background group relative border-border hover:shadow-sm min-w-0 ${
+          isActive && 'border-l-4'
         }`
       }
       onClick={(e) => {

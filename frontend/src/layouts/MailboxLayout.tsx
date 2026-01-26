@@ -4,9 +4,9 @@ import SideBar from '../components/navigation/SideBar'
 
 const MailboxLayout = () => {
   return (
-    <div className='w-full h-dvh  relative'>
+    <div className='w-full h-dvh relative overflow-hidden flex flex-col'>
       <TopBar />
-      <div className='grid grid-cols-1 xl:grid-cols-[15.5rem_1fr] min-w-0'>
+      <div className='grid grid-cols-1 xl:grid-cols-[15.5rem_1fr] min-w-0 flex-1 overflow-hidden'>
         <SideBar />
         <Outlet />
       </div>

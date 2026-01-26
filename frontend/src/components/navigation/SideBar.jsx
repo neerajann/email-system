@@ -15,7 +15,8 @@ import { useUI } from '../../contexts/UIContext'
 import { useAuth } from '../../contexts/AuthContext'
 
 const SideBar = React.memo(() => {
-  const { showSideBar, setShowComposeMail, setShowSideBar } = useUI()
+  const { showSideBar, setShowComposeMail, setShowSideBar, unreadCount } =
+    useUI()
   const { darkMode, setDarkMode } = useAuth()
   const menuItems = [
     {
@@ -75,7 +76,7 @@ const SideBar = React.memo(() => {
                 key={item.name}
                 to={item.route}
                 className={({ isActive }) =>
-                  ` flex items-center text-sm rounded mb-5 border border-border p-2  hover:shadow-sm ${
+                  `flex items-center text-sm rounded mb-5 border border-border p-2 hover:shadow-sm ${
                     isActive ? 'bg-input font-medium' : ''
                   }`
                 }
@@ -84,7 +85,13 @@ const SideBar = React.memo(() => {
                   <>
                     {isActive ? item.activeIcon : item.icon}
 
-                    <div className='ml-4'>{item.name}</div>
+                    <div className='ml-4 flex-1'>{item.name}</div>
+
+                    {item.name === 'Inbox' && unreadCount > 0 && (
+                      <span className='ml-auto text-xs rounded-full px-2 py-0.5  text-foreground'>
+                        {unreadCount}
+                      </span>
+                    )}
                   </>
                 )}
               </NavLink>

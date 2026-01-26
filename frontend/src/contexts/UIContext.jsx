@@ -6,6 +6,7 @@ const UIProvider = ({ children }) => {
   const [showSideBar, setShowSideBar] = useState(false)
   const [showComposeMail, setShowComposeMail] = useState(false)
   const [showThread, setShowThread] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const value = {
     showSideBar,
     setShowSideBar,
@@ -13,6 +14,8 @@ const UIProvider = ({ children }) => {
     setShowComposeMail,
     showThread,
     setShowThread,
+    unreadCount,
+    setUnreadCount,
   }
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>
 }

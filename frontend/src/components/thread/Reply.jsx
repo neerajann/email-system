@@ -16,10 +16,11 @@ const Reply = ({ thread, showReply, setShowReply }) => {
   const uploadErrorRef = useRef(null)
   const fileInputRef = useRef(null)
   if (!thread) return
+  console.log(thread)
 
   const [reply, setReply] = useState({
     recipients: [],
-    subject: '',
+    subject: thread.subject,
     body: '',
     attachments: [],
   })
@@ -86,6 +87,9 @@ const Reply = ({ thread, showReply, setShowReply }) => {
             autoCorrect='on'
             rows={10}
             className='border border-border my-3 w-full  text-sm p-2 rounded-md shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+            onChange={(e) =>
+              setReply((prev) => ({ ...prev, body: e.target.value }))
+            }
           />
         </div>
 

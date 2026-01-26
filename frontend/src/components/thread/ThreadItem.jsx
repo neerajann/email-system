@@ -10,7 +10,6 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
   const [showMore, setShowMore] = useState(false)
   const [expand, setExpand] = useState(defaultExpanded)
   const [showReply, setShowReply] = useState(false)
-  console.log(thread)
 
   return (
     <>
@@ -140,12 +139,21 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
               </div>
             )}
           </div>
-          <div
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(thread.body.html),
-            }}
-            className='mt-7 text-sm whitespace-pre-wrap'
-          />
+          {thread.isSystem ? (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: thread.body.html,
+              }}
+              className='mt-7 text-sm text-foreground'
+            />
+          ) : (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(thread.body.html),
+              }}
+              className='mt-7 text-sm whitespace-pre-wrap text-foreground'
+            />
+          )}
           {thread.attachments.length !== 0 && (
             <div className='text-sm mt-6 border-t border-border pt-4  '>
               <span className='text-sm font-semibold '>
