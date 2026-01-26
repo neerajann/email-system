@@ -1,4 +1,14 @@
+import IORedis from 'ioredis'
+
+const subscriber = new IORedis({
+  host: process.env.REDIS_HOST,
+  port: process.env.REDIS_PORT,
+})
+
 const clients = new Map()
+
+subscriber.psubscribe('sse:*')
+
 const addClient = ({ userId, reply }) => {
   if (!clients.has(userId)) {
     clients.set(userId, new Set())
@@ -8,6 +18,22 @@ const addClient = ({ userId, reply }) => {
 
 const removeClient = ({ userId, reply }) => {
   clients.get(userId)?.delete(reply)
+  if (clients.get(userId)?.size === 0) {
+    clients.delete(userId)
+  }
 }
 
-export default { addClient, removeClient, clients }
+subscriber.on('pmessage', (pattern, channel, message) => {
+  const userId = channel.split(':')[1]
+  const userClients = clients.get(userId)
+  console.log('Incoming message:', message)
+
+  if (userClients) {
+    for (const reply of userClients) {
+      reply.raw.write(`data:${message}\n\n`)
+    }
+    console.log('Notification sent')
+  }
+})
+
+export default { addClient, removeClient }

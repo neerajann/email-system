@@ -76,18 +76,13 @@ const deliverMail = async ({
     } else {
       // check if all the participants are same as that of the thread
       const nextParticipants = new Set([senderAddress, ...recipients])
-      const prevParticipants = new Set(thread.participants)
-      console.log({ nextParticipants })
-      console.log({ prevParticipants })
-
-      const sameParticipants =
-        nextParticipants.size === prevParticipants.size &&
-        [...nextParticipants].every((p) => prevParticipants.has(p))
-      console.log({ sameParticipants })
+      const prevParticipants = new Set([thread.participants])
+      const hasNewParticipants = [...nextParticipants].some(
+        (p) => !prevParticipants.has(p),
+      )
 
       //If not create a new thread
-      if (!sameParticipants) {
-        console.log('not same participants')
+      if (hasNewParticipants) {
         thread = await createThread({ subject, senderAddress, recipients })
       }
     }

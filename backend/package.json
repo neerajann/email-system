@@ -4,9 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "server": "nodemon server.js",
-    "worker:event-dispatcher": "nodemon src/realtime/event.dispatcher.js",
-    "dev": "concurrently \"npm run server\" \"npm run worker:event-dispatcher\"",
+    "dev": "nodemon server.js",
     "start": "node server.js"
   },
   "keywords": [],
