@@ -1,55 +1,60 @@
 import { memo } from 'react'
 import formatMailDate from '../../utils/fomatMailDate'
-import { NavLink } from 'react-router-dom'
+import { data, NavLink } from 'react-router-dom'
 import {
   MdOutlineMarkEmailUnread,
   MdOutlineMarkEmailRead,
 } from 'react-icons/md'
 import { IoStarOutline, IoStarSharp, IoTrashOutline } from 'react-icons/io5'
-import api from '../../services/api'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+// import api from '../../services/api'
+// import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useUI } from '../../contexts/UIContext'
+import useMailUpdate from '../../services/mailUpdateService'
 
 const MailListItem = memo((props) => {
-  const { mail, queryKey } = props
+  const { mail, queryKey, isSelected, toggleSelection } = props
+
   const { setShowThread } = useUI()
 
-  const queryClient = useQueryClient()
-
-  const mailUpdateMutation = useMutation({
-    mutationFn: ({ threadId, data }) => api.patch(`/mail/${threadId}`, data),
-
-    onMutate: async ({ threadId, data }) => {
-      await queryClient.cancelQueries({ queryKey })
-
-      const previousMails = queryClient.getQueryData(queryKey)
-
-      queryClient.setQueryData(queryKey, (old) => {
-        if (!old || !Array.isArray(old.mails)) return old
-
-        return {
-          ...old,
-          mails: old.mails.map((mail) =>
-            mail.threadId === threadId ? { ...mail, ...data } : mail,
-          ),
-        }
-      })
-
-      return { previousMails }
-    },
-
-    onError: (_err, _vars, context) => {
-      if (context?.previousMails) {
-        queryClient.setQueryData(queryKey, context.previousMails)
-      }
-    },
-
-    onSettled: (_data, _error, variables) => {
-      const { threadId } = variables
-      queryClient.invalidateQueries({ queryKey: ['thread', threadId] })
-      queryClient.invalidateQueries({ queryKey: ['mail'] })
-    },
+  const mailUpdateMutation = useMailUpdate(queryKey, {
+    dataPath: 'mails',
   })
+
+  // const mailUpdateMutation = useMutation({
+  //   mutationFn: ({ threadId, data }) =>
+  //     api.patch('/mail', { threadIds: [threadId], ...data }),
+
+  //   onMutate: async ({ threadId, data }) => {
+  //     await queryClient.cancelQueries({ queryKey })
+
+  //     const previousMails = queryClient.getQueryData(queryKey)
+
+  //     queryClient.setQueryData(queryKey, (old) => {
+  //       if (!old || !Array.isArray(old.mails)) return old
+
+  //       return {
+  //         ...old,
+  //         mails: old.mails.map((mail) =>
+  //           mail.threadId === threadId ? { ...mail, ...data } : mail,
+  //         ),
+  //       }
+  //     })
+
+  //     return { previousMails }
+  //   },
+
+  //   onError: (_err, _vars, context) => {
+  //     if (context?.previousMails) {
+  //       queryClient.setQueryData(queryKey, context.previousMails)
+  //     }
+  //   },
+
+  //   onSettled: (_data, _error, variables) => {
+  //     const { threadId } = variables
+  //     queryClient.invalidateQueries({ queryKey: ['thread', threadId] })
+  //     queryClient.invalidateQueries({ queryKey: ['mail'] })
+  //   },
+  // })
 
   return (
     <NavLink
@@ -64,14 +69,35 @@ const MailListItem = memo((props) => {
           setShowThread(true)
         }
         mailUpdateMutation.mutate({
-          threadId: mail.threadId,
+          threadIds: [mail.threadId],
           data: {
             isRead: true,
           },
         })
       }}
     >
-      <div className=' flex items-center flex-1 px-4 sm:px-10  min-w-0 w-full'>
+      <label className='relative flex items-center ml-4 sm:ml-8 cursor-pointer p-2'>
+        <input
+          type='checkbox'
+          className='peer absolute opacity-0 h-8 w-8 cursor-pointer py-8 -left-0.5'
+          checked={isSelected}
+          onClick={(e) => e.stopPropagation()}
+          onChange={() => toggleSelection(mail.threadId)}
+        />
+
+        <div className='h-4 w-4 border border-border rounded bg-background peer-checked:bg-foreground peer-checked:border-foreground transition-colors pointer-events-none' />
+
+        <svg
+          className='absolute h-4 w-4 text-background opacity-0 peer-checked:opacity-100 pointer-events-none'
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke='currentColor'
+          strokeWidth='3'
+        >
+          <path d='M5 13l4 4L19 7' />
+        </svg>
+      </label>
+      <div className=' flex items-center flex-1 px-4 sm:px-8  min-w-0 w-full'>
         {/* mail content */}
         <div className='flex items-center flex-1 min-w-0 w-0'>
           <div className='mr-5 sm:mr-10 shrink-0'>
@@ -116,7 +142,7 @@ const MailListItem = memo((props) => {
                 e.preventDefault()
                 e.stopPropagation()
                 mailUpdateMutation.mutate({
-                  threadId: mail.threadId,
+                  threadIds: [mail.threadId],
                   data: {
                     isStarred: !mail.isStarred,
                   },
@@ -133,7 +159,7 @@ const MailListItem = memo((props) => {
                 e.preventDefault()
                 e.stopPropagation()
                 mailUpdateMutation.mutate({
-                  threadId: mail.threadId,
+                  threadIds: [mail.threadId],
                   data: {
                     isDeleted: true,
                   },
@@ -149,7 +175,7 @@ const MailListItem = memo((props) => {
                 e.preventDefault()
                 e.stopPropagation()
                 mailUpdateMutation.mutate({
-                  threadId: mail.threadId,
+                  threadIds: [mail.threadId],
                   data: {
                     isRead: !mail.isRead,
                   },

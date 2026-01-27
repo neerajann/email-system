@@ -1,5 +1,6 @@
 import { toast } from 'react-toastify'
 import api from './api'
+import { FiCheckCircle, FiXCircle } from 'react-icons/fi'
 
 const sendMail = async ({
   email,
@@ -33,10 +34,16 @@ const sendMail = async ({
     setShowComposeMail(false)
     await api.post('/mail/send', email)
     queryClient.invalidateQueries(['mail', 'sent'])
-    toast('Mail sent sucessfully')
+    toast.success('Mail sent sucessfully', {
+      containerId: 'result',
+      icon: <FiCheckCircle size={18} className='text-green-500' />,
+    })
   } catch (error) {
     console.log(error)
-    toast(error.data.error)
+    toast.error(error.data.error, {
+      containerId: 'result',
+      icon: <FiXCircle className='text-red-500' size={18} />,
+    })
   }
 }
 

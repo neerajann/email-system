@@ -5,7 +5,7 @@ import {
 } from 'react-icons/md'
 import { IoStarOutline, IoTrashOutline, IoStarSharp } from 'react-icons/io5'
 
-const ActionButtons = ({
+const ThreadActionButtons = ({
   thread,
   patchMail,
   deleteForever,
@@ -29,7 +29,7 @@ const ActionButtons = ({
                   isDeleted: false,
                 })
                 setShowThread(false)
-                navigate(-1)
+                navigate('..', { relative: 'path' })
               }}
             />
           </button>
@@ -44,7 +44,7 @@ const ActionButtons = ({
                 isDeleted: true,
               })
               setShowThread(false)
-              navigate(-1)
+              navigate('..', { relative: 'path' })
             }}
           >
             <IoTrashOutline />
@@ -79,4 +79,4 @@ const ActionButtons = ({
     </div>
   )
 }
-export default ActionButtons
+export default ThreadActionButtons

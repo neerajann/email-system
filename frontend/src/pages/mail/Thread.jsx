@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { data, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FaArrowLeftLong } from 'react-icons/fa6'
 import { useUI } from '../../contexts/UIContext'
 import api from '../../services/api'
-import ActionButtons from '../../components/thread/ActionButtons'
 import ThreadItem from '../../components/thread/ThreadItem'
+import ThreadActionButtons from '../../components/thread/ThreadActionButtons'
+import useMailUpdate from '../../services/mailUpdateService'
 
 const Thread = () => {
   const { showThread, setShowThread } = useUI()
@@ -27,38 +28,41 @@ const Thread = () => {
 
   useEffect(() => {
     if (isError) {
-      navigate('..', { replace: true })
+      navigate('..', { relative: 'path' })
     }
   }, [isError, navigate])
 
-  const patchMailMutation = useMutation({
-    mutationFn: async ({ threadId, data }) => {
-      await api.patch(`/mail/${threadId}`, data)
-    },
-    onMutate: async ({ data }) => {
-      await queryClient.cancelQueries(['thread', id])
-      const previous = queryClient.getQueryData(['thread', id])
+  // const patchMailMutation = useMutation({
+  //   mutationFn: async ({ threadId, data }) => {
+  //     await api.patch('/mail', {
+  //       threadIds: [threadId],
+  //       ...data,
+  //     })
+  //   },
+  //   onMutate: async ({ data }) => {
+  //     await queryClient.cancelQueries(['thread', id])
+  //     const previous = queryClient.getQueryData(['thread', id])
 
-      queryClient.setQueryData(['thread', id], (old) =>
-        old.map((mail) => (mail.threadId === id ? { ...mail, ...data } : mail)),
-      )
-      return { previous }
-    },
-    onError: (_err, _vars, ctx) => {
-      queryClient.setQueryData(['thread', id], ctx.previous)
-    },
+  //     queryClient.setQueryData(['thread', id], (old) =>
+  //       old.map((mail) => (mail.threadId === id ? { ...mail, ...data } : mail)),
+  //     )
+  //     return { previous }
+  //   },
+  //   onError: (_err, _vars, ctx) => {
+  //     queryClient.setQueryData(['thread', id], ctx.previous)
+  //   },
 
-    onSettled: () => {
-      queryClient.invalidateQueries(['thread', id])
-      queryClient.invalidateQueries(['mail'])
-    },
-  })
-
+  //   onSettled: () => {
+  //     queryClient.invalidateQueries(['thread', id])
+  //     queryClient.invalidateQueries(['mail'])
+  //   },
+  // })
+  const patchMailMutation = useMailUpdate(['thread', id], { dataPath: null })
   const patchMail = (e, data) => {
     e.preventDefault()
     e.stopPropagation()
     patchMailMutation.mutate({
-      threadId: threadData[0].threadId,
+      threadIds: [threadData[0].threadId],
       data,
     })
   }
@@ -69,7 +73,7 @@ const Thread = () => {
     await api.delete(`/mail/${id}`)
     queryClient.invalidateQueries(['mail', 'trash'])
     setShowThread(false)
-    navigate(-1)
+    navigate('..', { relative: 'path' })
   }
 
   let hiddenCount = 0
@@ -95,7 +99,7 @@ const Thread = () => {
           <FaArrowLeftLong />
           Back
         </div>
-        <ActionButtons
+        <ThreadActionButtons
           thread={threadData[0]}
           patchMail={patchMail}
           deleteForever={deleteForever}
@@ -108,7 +112,7 @@ const Thread = () => {
         <div
           className={`${showThread ? 'hidden lg:flex' : 'flex'} shrink-0 gap-3 ml-1 float-right`}
         >
-          <ActionButtons
+          <ThreadActionButtons
             thread={threadData[0]}
             patchMail={patchMail}
             deleteForever={deleteForever}
