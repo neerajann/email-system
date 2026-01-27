@@ -10,6 +10,7 @@ import {
   User,
 } from '@email-system/core/models'
 import { outboundEmailQueue } from '@email-system/core/queues'
+import notifyUser from '@email-system/core/messaging'
 
 const deliverMail = async ({
   senderId,
@@ -76,10 +77,12 @@ const deliverMail = async ({
     } else {
       // check if all the participants are same as that of the thread
       const nextParticipants = new Set([senderAddress, ...recipients])
-      const prevParticipants = new Set([thread.participants])
+      const prevParticipants = new Set([...thread.participants])
       const hasNewParticipants = [...nextParticipants].some(
         (p) => !prevParticipants.has(p),
       )
+      console.log({ nextParticipants })
+      console.log({ prevParticipants })
 
       //If not create a new thread
       if (hasNewParticipants) {
@@ -150,7 +153,11 @@ const deliverMail = async ({
         },
       })
     }
-    // update mailbox or creates a new one
+    console.log({ recipients })
+
+    var senderInRecipent = recipients.includes(senderAddress)
+    const labels = senderInRecipent ? ['SENT', 'INBOX'] : ['SENT']
+
     await Mailbox.findOneAndUpdate(
       {
         userId: new mongoose.Types.ObjectId(senderId),
@@ -158,11 +165,11 @@ const deliverMail = async ({
       },
       {
         $set: {
-          isRead: true,
+          isRead: !senderInRecipent,
           lastMessageAt: Date.now(),
         },
         $addToSet: {
-          labels: 'SENT',
+          labels: { $each: labels },
         },
         $push: {
           emailIds: email._id,
@@ -172,6 +179,9 @@ const deliverMail = async ({
         upsert: true,
       },
     )
+
+    var envelopeTo = recipients.filter((r) => r != senderAddress)
+    // update mailbox or creates a new one
   } catch (error) {
     if (error.message === 'INVALID_ATTACHMENTS') throw error
     if (error.message === 'USER_NOT_FOUND') throw error
@@ -180,6 +190,29 @@ const deliverMail = async ({
     throw new Error('DATABASE_ERROR')
   }
 
+  if (senderInRecipent) {
+    const notifications = [
+      {
+        userId: senderId,
+        newMail: {
+          threadId: email.threadId,
+          from: email.from,
+          to: email.to,
+          subject: email.subject,
+          snippet: email.body?.text?.substring(0, 200) ?? ' ',
+          isSystem: false,
+          messageCount: thread.messageCount,
+          isRead: false,
+          isStarred: false,
+          receivedAt: email.receivedAt,
+          isDeleted: false,
+        },
+      },
+    ]
+    notifyUser(notifications)
+  }
+
+  if (envelopeTo.length < 0) return true
   // add to mail delivery queue
   await outboundEmailQueue.add(
     'outboundEmailQueue',
@@ -191,7 +224,8 @@ const deliverMail = async ({
         name: userInfo.name,
         id: senderId,
       },
-      recipients: recipients,
+      recipients: envelopeTo,
+      headerTo: recipients,
       subject,
       body: {
         html: bodyHtml,

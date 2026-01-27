@@ -117,6 +117,7 @@ const patchMailSchema = {
   body: {
     type: 'object',
     additionalProperties: false,
+    required: ['threadIds'],
     oneOf: [
       { required: ['isRead'] },
       { required: ['isStarred'] },
@@ -131,6 +132,7 @@ const patchMailSchema = {
           type: 'Invalid value for isRead.',
         },
       },
+
       isStarred: {
         type: 'boolean',
         errorMessage: {
@@ -143,9 +145,40 @@ const patchMailSchema = {
           type: 'Invalid value for isDeleted.',
         },
       },
+      recipients: {
+        type: 'array',
+        minItems: 1,
+        items: {
+          type: 'string',
+          format: 'email',
+          errorMessage: {
+            format: 'Invalid email address',
+          },
+        },
+        errorMessage: {
+          type: 'Recipients must be an array',
+          minItems: 'At least one recipient is required',
+        },
+      },
+      threadIds: {
+        type: 'array',
+        minItems: 1,
+        items: {
+          type: 'string',
+          pattern: mongooseObjectIdPattern.source,
+          errorMessage: {
+            pattern: 'Invalid thread ids',
+          },
+        },
+        errorMessage: {
+          type: 'Thread ids must be an array',
+          minItems: 'At least one thread id is required',
+        },
+      },
     },
     errorMessage: {
       oneOf: 'Exactly one of isRead, isStarred, or isDeleted must be provided.',
+      required: 'Missing thread ids',
     },
   },
 }

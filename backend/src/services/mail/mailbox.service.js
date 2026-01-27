@@ -1,11 +1,14 @@
 import mongoose from 'mongoose'
 import { Mailbox } from '@email-system/core/models'
 
-const patchMail = async ({ userId, threadId, data }) => {
+const patchMail = async ({ userId, threadIds, data }) => {
+  const threadIdObjects = threadIds.map((t) => new mongoose.Types.ObjectId(t))
   const result = await Mailbox.updateMany(
     {
       userId: new mongoose.Types.ObjectId(userId),
-      threadId: new mongoose.Types.ObjectId(threadId),
+      threadId: {
+        $in: threadIdObjects,
+      },
     },
     {
       $set: data,

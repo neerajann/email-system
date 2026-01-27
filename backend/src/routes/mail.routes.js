@@ -53,9 +53,9 @@ const mailRouter = async (fastify) => {
   )
 
   fastify.patch(
-    '/:id',
+    '/',
     {
-      preHandler: [verifyJWT, verifyObjectId],
+      preHandler: [verifyJWT],
       schema: patchMailSchema,
     },
     mailController.patchMail,

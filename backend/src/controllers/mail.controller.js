@@ -122,9 +122,9 @@ const searchMail = async (req, reply) => {
 
 const patchMail = async (req, reply) => {
   try {
-    const threadId = req.params.id
+    const threadIds = req.body.threadIds
     await mailBoxService.patchMail({
-      threadId,
+      threadIds,
       userId: req.userId,
       data: req.body,
     })
