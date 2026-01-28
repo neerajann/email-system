@@ -53,14 +53,14 @@ const emailSchema = {
         type: 'string',
         pattern: mongooseObjectIdPattern.source,
         errorMessage: {
-          pattern: 'Invalid emailId',
+          pattern: 'Invalid email id',
         },
       },
-      threadId: {
+      mailboxId: {
         type: 'string',
         pattern: mongooseObjectIdPattern.source,
         errorMessage: {
-          pattern: 'Invalid threadId',
+          pattern: 'Invalid mailboxId',
         },
       },
     },
@@ -117,7 +117,7 @@ const patchMailSchema = {
   body: {
     type: 'object',
     additionalProperties: false,
-    required: ['threadIds'],
+    required: ['mailboxIds'],
     oneOf: [
       { required: ['isRead'] },
       { required: ['isStarred'] },
@@ -160,25 +160,25 @@ const patchMailSchema = {
           minItems: 'At least one recipient is required',
         },
       },
-      threadIds: {
+      mailboxIds: {
         type: 'array',
         minItems: 1,
         items: {
           type: 'string',
           pattern: mongooseObjectIdPattern.source,
           errorMessage: {
-            pattern: 'Invalid thread ids',
+            pattern: 'Invalid mailbox ids',
           },
         },
         errorMessage: {
-          type: 'Thread ids must be an array',
-          minItems: 'At least one thread id is required',
+          type: 'Mailbox ids must be an array',
+          minItems: 'At least one mailbox id is required',
         },
       },
     },
     errorMessage: {
       oneOf: 'Exactly one of isRead, isStarred, or isDeleted must be provided.',
-      required: 'Missing thread ids',
+      required: 'Missing mailbox ids',
     },
   },
 }

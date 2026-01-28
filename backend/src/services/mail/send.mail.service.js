@@ -20,7 +20,7 @@ const deliverMail = async ({
   body,
   attachments,
   emailId,
-  threadId,
+  mailboxId,
 }) => {
   let thread = null
   const bodyText = htmlToText(body, {
@@ -66,11 +66,23 @@ const deliverMail = async ({
       throw new Error('INVALID_ATTACHMENTS')
     }
 
-    // check if thread exists
-    if (threadId) {
-      thread = await Thread.findById(threadId)
-      console.log({ thread })
+    // check if mailbox exists
+    if (mailboxId && emailId) {
+      const result = await Mailbox.findOne(
+        {
+          _id: new mongoose.Types.ObjectId(mailboxId),
+          emailIds: new mongoose.Types.ObjectId(emailId),
+        },
+        {
+          threadId: 1,
+        },
+      ).populate('threadId')
+      if (!result) throw new Error('UNAUTHORIZED_REPLY')
+
+      thread = result.threadId
+      var threadId = result.threadId._id
     }
+
     if (!thread) {
       // create a new thread if it doesnot exist
       thread = await createThread({ subject, senderAddress, recipients })
@@ -94,41 +106,19 @@ const deliverMail = async ({
       //find older email id
       const olderMail = await Email.findById(emailId)
       if (olderMail) {
-        //check if user actually owns the mail that they are trying to reply to
-        const emailExistInUserMailbox = await Mailbox.findOne({
-          emailId: olderMail._id,
-          userId: senderId,
-        })
-        if (!emailExistInUserMailbox) {
-          throw new Error('UNAUTHORIZED_REPLY')
-        } else {
-          //creates a new reply email using the older mail message id
-          var email = await createEmail({
-            threadId: thread._id,
-            senderAddress,
-            senderName: userInfo.name,
-            recipients,
-            messageId,
-            subject: `Re: ${thread.subject}`,
-            bodyHtml,
-            bodyText,
-            attachments: parsedAttachments,
-            inReplyTo: olderMail.inReplyTo,
-            references: [...olderMail.references, olderMail.messageId],
-          })
-        }
-      } else {
-        //if oldermail not found create a new email one not reply
+        //creates a new reply email using the older mail message id
         var email = await createEmail({
           threadId: thread._id,
           senderAddress,
           senderName: userInfo.name,
           recipients,
           messageId,
-          subject: thread.subject,
+          subject: `Re: ${thread.subject}`,
           bodyHtml,
           bodyText,
           attachments: parsedAttachments,
+          inReplyTo: olderMail.inReplyTo,
+          references: [...olderMail.references, olderMail.messageId],
         })
       }
     } else {
@@ -145,6 +135,7 @@ const deliverMail = async ({
         attachments: parsedAttachments,
       })
     }
+
     //update message count if it was valid reply mail
     if (thread._id.equals(threadId)) {
       await Thread.findByIdAndUpdate(threadId, {
@@ -158,7 +149,7 @@ const deliverMail = async ({
     var senderInRecipent = recipients.includes(senderAddress)
     const labels = senderInRecipent ? ['SENT', 'INBOX'] : ['SENT']
 
-    await Mailbox.findOneAndUpdate(
+    var mailbox = await Mailbox.findOneAndUpdate(
       {
         userId: new mongoose.Types.ObjectId(senderId),
         threadId: thread._id,
@@ -177,6 +168,7 @@ const deliverMail = async ({
       },
       {
         upsert: true,
+        new: true,
       },
     )
 
@@ -195,7 +187,7 @@ const deliverMail = async ({
       {
         userId: senderId,
         newMail: {
-          threadId: email.threadId,
+          id: mailbox._id,
           from: email.from,
           to: email.to,
           subject: email.subject,

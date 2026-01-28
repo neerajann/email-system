@@ -1,13 +1,13 @@
 import mongoose from 'mongoose'
 import { Mailbox } from '@email-system/core/models'
 
-const patchMail = async ({ userId, threadIds, data }) => {
-  const threadIdObjects = threadIds.map((t) => new mongoose.Types.ObjectId(t))
+const patchMail = async ({ userId, mailboxIds, data }) => {
+  const mailboxIdsObject = mailboxIds.map((i) => new mongoose.Types.ObjectId(i))
   const result = await Mailbox.updateMany(
     {
       userId: new mongoose.Types.ObjectId(userId),
-      threadId: {
-        $in: threadIdObjects,
+      _id: {
+        $in: mailboxIdsObject,
       },
     },
     {
@@ -19,10 +19,10 @@ const patchMail = async ({ userId, threadIds, data }) => {
   return true
 }
 
-const deleteMail = async ({ userId, threadId }) => {
+const deleteMail = async ({ userId, mailboxId }) => {
   const result = await Mailbox.deleteMany({
     userId: new mongoose.Types.ObjectId(userId),
-    threadId: new mongoose.Types.ObjectId(threadId),
+    _id: new mongoose.Types.ObjectId(mailboxId),
   })
   if (result.deletedCount === 0) throw new Error('EMAIL_NOT_FOUND')
   return true
