@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import api from '../services/api'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { Outlet } from 'react-router-dom'
 import MailListItem from '../components/mail/MailListItem'
 import { useUI } from '../contexts/UIContext'
@@ -14,36 +13,43 @@ import {
 } from 'react-icons/md'
 import { IoTrashOutline } from 'react-icons/io5'
 import useMailUpdate from '../services/mailUpdateService'
+import SearchListItem from '../components/mail/SearchListItem'
+
 const didMount = { current: false }
 
-const MailListLayout = ({ mailType }) => {
+const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
+  const loadMoreRef = useRef(null)
   const { showThread, setUnreadCount } = useUI()
   const queryClient = useQueryClient()
-  const memoizedQueryKey = useMemo(() => ['mail', mailType], [mailType])
+  const memoizedQueryKey = useMemo(() => queryKey, [queryKey])
+
   const patchMailMutation = useMailUpdate(memoizedQueryKey, {
-    dataPath: 'mails',
-  })
-  const [selectionState, setSelectionState] = useState({
-    isBulkMode: false,
-    selectedThreadIds: new Set([]),
+    isInfiniteQuery: true,
   })
 
-  const fetchMails = async () => {
-    const res = await api.get(`/mail/${mailType}`)
-    return res.data
-  }
+  const [selectionState, setSelectionState] = useState({
+    isBulkMode: false,
+    selectedMailboxIds: new Set([]),
+  })
 
   const {
     data = [],
     isLoading,
     isError,
     error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     refetch,
-  } = useQuery({
-    queryKey: ['mail', mailType],
-    queryFn: fetchMails,
+  } = useInfiniteQuery({
+    queryKey: queryKey,
+    queryFn: fetchFuction,
     staleTime: 5 * 60 * 1000,
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   })
+
+  const mails = data?.pages?.flatMap((page) => page.mails) ?? []
 
   useEffect(() => {
     let toastId
@@ -69,7 +75,7 @@ const MailListLayout = ({ mailType }) => {
   }, [isLoading, isError])
 
   useEffect(() => {
-    if (mailType !== 'inbox') return
+    if (mailboxType !== 'inbox') return
     if (didMount.current) {
       refetch()
     } else {
@@ -88,37 +94,61 @@ const MailListLayout = ({ mailType }) => {
       sse.close()
     }
     return () => sse.close()
-  }, [mailType])
+  }, [mailboxType])
 
   useEffect(() => {
-    if (mailType !== 'inbox') return
+    if (mailboxType !== 'inbox') return
 
     const unreadCount = data?.mails?.filter((m) => !m.isRead)?.length
     setUnreadCount(unreadCount)
-  }, [data, mailType])
+  }, [data, mailboxType])
+
+  useEffect(() => {
+    if (!loadMoreRef.current) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      {
+        rootMargin: '200px',
+      },
+    )
+    observer.observe(loadMoreRef.current)
+    return () => observer.disconnect()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
   const handleNewMail = (newMail) => {
-    queryClient.setQueryData(['mail', mailType], (oldData = []) => {
-      const filtered = oldData.mails.filter(
-        (mail) => mail.threadId !== newMail.threadId,
-      )
-      if (filtered.length === oldData.total) {
-        return { total: oldData.total + 1, mails: [newMail, ...filtered] }
-      }
-      return { ...oldData, mails: [newMail, ...filtered] }
+    queryClient.setQueryData(queryKey, (oldData) => {
+      if (!oldData.pages) return oldData
+
+      const updatedPages = oldData.pages.map((page, index) => {
+        const filtered = page.mails.filter(
+          (mail) => mail.mailboxId !== newMail.mailboxId,
+        )
+        if (index === 0) {
+          return { ...page, mails: [newMail, ...filtered] }
+        }
+        return { ...page, mails: filtered }
+      })
+      return { ...oldData, pages: updatedPages }
     })
+    queryClient.invalidateQueries({ queryKey: queryKey })
   }
-  const toggleSelection = useCallback((threadId) => {
+
+  const toggleSelection = useCallback((mailboxId) => {
     setSelectionState((prev) => {
-      const next = new Set(prev.selectedThreadIds)
-      next.has(threadId) ? next.delete(threadId) : next.add(threadId)
+      const next = new Set(prev.selectedMailboxIds)
+      next.has(mailboxId) ? next.delete(mailboxId) : next.add(mailboxId)
       const isBulkMode = next.size > 0
-      return { isBulkMode, selectedThreadIds: next }
+      return { isBulkMode, selectedMailboxIds: next }
     })
   }, [])
 
   return (
-    <div className='w-full h-full min-h-dvh  overflow-hidden min-w-0 text-sm'>
+    <div className='w-full h-full overflow-hidden min-w-0 text-sm relative'>
       <div className='grid lg:grid-cols-2 overflow-hidden  grid-cols-1 h-full min-w-0 '>
         <div
           className={` overflow-hidden border-x border-border relative ${showThread ? 'hidden lg:flex' : 'flex'}  min-w-0 flex-col`}
@@ -129,26 +159,26 @@ const MailListLayout = ({ mailType }) => {
                 <button onClick={() => refetch()}>
                   <IoMdRefresh size={20} className='cursor-pointer' />
                 </button>
-                <span>
-                  {data.total} {data.total <= 1 ? 'email' : 'emails'}
-                </span>
               </div>
               {selectionState.isBulkMode ? (
                 <div className='flex items-center gap-2 '>
+                  <span className='text-xs font-normal mr-4'>
+                    {selectionState.selectedMailboxIds.size} selected
+                  </span>
                   {/* trash mail button  */}
-                  {mailType === 'trash' ? (
+                  {mailboxType === 'trash' ? (
                     <button
                       className=' border border-border p-2 rounded disabled:opacity-50 cursor-pointer hover:bg-input'
                       onClick={() => {
                         patchMailMutation.mutate({
-                          threadIds: Array.from(
-                            selectionState.selectedThreadIds,
+                          mailboxIds: Array.from(
+                            selectionState.selectedMailboxIds,
                           ),
                           data: { isDeleted: false },
                         })
-                        setSelectionState((prev) => ({
+                        setSelectionState(() => ({
                           isBulkMode: false,
-                          selectedThreadIds: new Set([]),
+                          selectedMailboxIds: new Set([]),
                         }))
                       }}
                     >
@@ -159,14 +189,14 @@ const MailListLayout = ({ mailType }) => {
                       className='border border-border p-2 rounded disabled:opacity-50 cursor-pointer'
                       onClick={() => {
                         patchMailMutation.mutate({
-                          threadIds: Array.from(
-                            selectionState.selectedThreadIds,
+                          mailboxIds: Array.from(
+                            selectionState.selectedMailboxIds,
                           ),
                           data: { isDeleted: true },
                         })
                         setSelectionState((prev) => ({
                           isBulkMode: false,
-                          selectedThreadIds: new Set([]),
+                          selectedMailboxIds: new Set([]),
                         }))
                       }}
                     >
@@ -174,23 +204,23 @@ const MailListLayout = ({ mailType }) => {
                     </button>
                   )}
                   {/* mail read/unread button  */}
-                  {data.mails.some(
+                  {mails.some(
                     (mail) =>
-                      selectionState.selectedThreadIds.has(mail.threadId) &&
+                      selectionState.selectedMailboxIds.has(mail.mailboxId) &&
                       !mail.isRead,
                   ) ? (
                     <button
                       className=' border border-border p-2 rounded cursor-pointer'
                       onClick={() => {
                         patchMailMutation.mutate({
-                          threadIds: Array.from(
-                            selectionState.selectedThreadIds,
+                          mailboxIds: Array.from(
+                            selectionState.selectedMailboxIds,
                           ),
                           data: { isRead: true },
                         })
                         setSelectionState((prev) => ({
                           isBulkMode: false,
-                          selectedThreadIds: new Set([]),
+                          selectedMailboxIds: new Set([]),
                         }))
                       }}
                     >
@@ -201,14 +231,14 @@ const MailListLayout = ({ mailType }) => {
                       className=' border border-border p-2 rounded cursor-pointer'
                       onClick={() => {
                         patchMailMutation.mutate({
-                          threadIds: Array.from(
-                            selectionState.selectedThreadIds,
+                          mailboxIds: Array.from(
+                            selectionState.selectedMailboxIds,
                           ),
                           data: { isRead: false },
                         })
                         setSelectionState((prev) => ({
                           isBulkMode: false,
-                          selectedThreadIds: new Set([]),
+                          selectedMailboxIds: new Set([]),
                         }))
                       }}
                     >
@@ -221,7 +251,7 @@ const MailListLayout = ({ mailType }) => {
                       setSelectionState(() => {
                         return {
                           isBulkMode: false,
-                          selectedThreadIds: new Set([]),
+                          selectedMailboxIds: new Set([]),
                         }
                       })
                     }
@@ -235,12 +265,12 @@ const MailListLayout = ({ mailType }) => {
                     className=' bg-background border border-border px-4 py-2 rounded font-normal'
                     onClick={() =>
                       setSelectionState(() => {
-                        const allThreadIDs = new Set(
-                          data.mails.map((d) => d.threadId),
+                        const allMailboxIds = new Set(
+                          mails.map((d) => d.mailboxId),
                         )
                         return {
                           isBulkMode: true,
-                          selectedThreadIds: allThreadIDs,
+                          selectedMailboxIds: allMailboxIds,
                         }
                       })
                     }
@@ -264,20 +294,29 @@ const MailListLayout = ({ mailType }) => {
               pauseOnHover
             />
           </div>
-          {data.mails?.length ? (
+          {mails?.length ? (
             <div className='h-full flex-1 min-w-0 grid auto-rows-[100px] gap-4 overflow-y-auto '>
-              {data.mails.map((mail) => (
-                <MailListItem
-                  key={mail.threadId}
-                  queryKey={memoizedQueryKey}
-                  mail={mail}
-                  isSelected={selectionState.selectedThreadIds.has(
-                    mail.threadId,
-                  )}
-                  toggleSelection={toggleSelection}
-                />
-              ))}
-              <div className='h-40'></div>
+              {mailboxType === 'search'
+                ? mails.map((mail) => (
+                    <SearchListItem
+                      key={mail.mailboxId}
+                      queryKey={memoizedQueryKey}
+                      mail={mail}
+                      query={query}
+                    />
+                  ))
+                : mails.map((mail) => (
+                    <MailListItem
+                      key={mail.mailboxId}
+                      queryKey={memoizedQueryKey}
+                      mail={mail}
+                      isSelected={selectionState.selectedMailboxIds.has(
+                        mail?.mailboxId,
+                      )}
+                      toggleSelection={toggleSelection}
+                    />
+                  ))}
+              <div className='h-30' ref={loadMoreRef}></div>
             </div>
           ) : (
             <div className=' flex h-full  justify-center items-center  absolute inset-0 pointer-events-none'>
@@ -293,14 +332,14 @@ const MailListLayout = ({ mailType }) => {
         >
           <Outlet />
         </div>
-        <ToastContainer
-          containerId={'result'}
-          position='bottom-right'
-          toastClassName='pointer-events-auto !bg-background border border-border !text-foreground text-sm'
-          hideProgressBar={true}
-          autoClose={3000}
-        />
       </div>
+      <ToastContainer
+        containerId={'result'}
+        position='bottom-right'
+        toastClassName='pointer-events-auto !bg-background border border-border !text-foreground text-sm'
+        hideProgressBar={true}
+        autoClose={3000}
+      />
     </div>
   )
 }

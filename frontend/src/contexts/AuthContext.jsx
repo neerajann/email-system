@@ -5,8 +5,14 @@ const AuthContext = createContext(null)
 
 const AuthProvider = ({ children }) => {
   const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('dark-mode') === 'true'
+    console.log(localStorage.getItem('dark-mode'))
+
+    if (localStorage.getItem('dark-mode')) {
+      return localStorage.getItem('dark-mode') === 'true' ? true : false
+    }
+    return window.matchMedia('(prefers-color-scheme:dark)').matches
   })
+
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 

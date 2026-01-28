@@ -28,7 +28,7 @@ const formatMailDate = (isoString, full = false) => {
 
   // Yesterday
   if (isSameDay(date, yesterday)) {
-    return full ? `Yesterday ${time}` : time
+    return full ? `Yesterday ${time}` : 'Yesterday'
   }
 
   // This week

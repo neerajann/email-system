@@ -8,35 +8,35 @@ import { handleFiles, removeAttachment } from '../../services/attachmentService'
 import { cancelMail, sendReply } from '../../services/emailService'
 import { useQueryClient } from '@tanstack/react-query'
 
-const Reply = ({ thread, showReply, setShowReply }) => {
+const Reply = ({ email, showReply, setShowReply }) => {
   const queryClient = useQueryClient()
   const controllersRef = useRef({})
   const { user } = useAuth()
   const [attachmentsInfo, setAttachmentsInfo] = useState([])
   const uploadErrorRef = useRef(null)
   const fileInputRef = useRef(null)
-  if (!thread) return
-  console.log(thread)
+  if (!email) return
+  console.log(email)
 
   const [reply, setReply] = useState({
     recipients: [],
-    subject: thread.subject,
+    subject: email.subject,
     body: '',
     attachments: [],
   })
 
   useEffect(() => {
     if (showReply?.replyAll) {
-      const recipents = thread.to
+      const recipents = email.to
         .filter((r) => {
           return r.address !== user
         })
         .map((r) => r.address)
 
-      recipents.push(thread.from.address)
+      recipents.push(email.from.address)
       setReply((prev) => ({ ...prev, recipients: recipents }))
     } else if (showReply?.reply) {
-      setReply((prev) => ({ ...prev, recipients: [thread.from.address] }))
+      setReply((prev) => ({ ...prev, recipients: [email.from.address] }))
     }
   }, [])
 
@@ -152,8 +152,8 @@ const Reply = ({ thread, showReply, setShowReply }) => {
                 uploadErrorRef,
                 setShowReply,
                 queryClient,
-                mailId: thread.mailId,
-                threadId: thread.threadId,
+                mailboxId: email.mailboxId,
+                emailId: email.emailId,
               })
             }}
           >

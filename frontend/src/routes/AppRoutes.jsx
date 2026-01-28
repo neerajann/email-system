@@ -47,6 +47,7 @@ const AppRoutes = () => {
             <Route path=':id' element={<Thread />} />
           </Route>
           <Route path='/search' element={<SearchPage />}>
+            <Route index element={<EmptyMailView />} />
             <Route path=':id' element={<Thread />} />
           </Route>
         </Route>

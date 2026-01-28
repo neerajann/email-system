@@ -129,7 +129,7 @@ const ComposeMail = () => {
                 name='recipents'
                 placeholder='recipent@example.com'
                 rows={1}
-                className=' text-base md:text-sm  flex-1 min-w-30 bg-transparent focus:outline-none resize-none overflow-hidden leading-6'
+                className=' text-base md:text-sm  flex-1 min-w-30 bg-transparent focus:outline-none resize-none overflow-hidden leading-6 border-none active:outline-none'
                 value={recipents}
                 onChange={(e) => handleRecipentsChange(e)}
                 onKeyDown={(e) => {
@@ -188,7 +188,7 @@ const ComposeMail = () => {
               placeholder='Type your message...'
               name='body'
               rows={10}
-              className='my-2 w-full border border-border text-base md:text-sm p-2 rounded-md shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+              className='bg-background my-2 w-full border border-border text-base md:text-sm p-2 rounded-md shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
               onChange={(e) => setEmail({ ...email, body: e.target.value })}
               autoComplete='off'
               autoCorrect='on'

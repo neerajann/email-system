@@ -69,8 +69,8 @@ const sendReply = async ({
   uploadErrorRef,
   setShowReply,
   queryClient,
-  mailId,
-  threadId,
+  emailId,
+  mailboxId,
 }) => {
   const incompleteUpload = attachmentsInfo.filter(
     (attachment) => !attachment.uploaded,
@@ -87,8 +87,8 @@ const sendReply = async ({
     setShowReply(false)
     await api.post('/mail/send', {
       ...reply,
-      mailId,
-      threadId,
+      emailId,
+      mailboxId,
     })
     queryClient.invalidateQueries(['mail', 'sent'])
     toast('Mail sent sucessfully')

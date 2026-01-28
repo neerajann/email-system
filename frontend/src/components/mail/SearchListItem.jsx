@@ -6,55 +6,18 @@ import {
   MdOutlineMarkEmailRead,
 } from 'react-icons/md'
 import { IoStarOutline, IoStarSharp, IoTrashOutline } from 'react-icons/io5'
-import api from '../../services/api'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useUI } from '../../contexts/UIContext'
 import highlightText from '../../utils/highlightText'
+import useMailUpdate from '../../services/mailUpdateService'
 
 const SearchListItem = memo((props) => {
-  const { mail, query } = props
+  const { mail, query, queryKey, isSelected } = props
   const { setShowThread } = useUI()
 
-  const queryClient = useQueryClient()
-
-  const mailUpdateMutation = useMutation({
-    mutationFn: ({ threadId, data }) => api.patch(`/mail/${threadId}`, data),
-
-    onMutate: async ({ threadId, data }) => {
-      await queryClient.cancelQueries({ query })
-
-      const previousMails = queryClient.getQueryData(query)
-
-      queryClient.setQueryData(query, (old) => {
-        if (!old || !Array.isArray(old.mails)) return old
-
-        return {
-          ...old,
-          mails: old.mails.map((mail) =>
-            mail.threadId === threadId ? { ...mail, ...data } : mail,
-          ),
-        }
-      })
-
-      return { previousMails }
-    },
-
-    onError: (_err, _vars, context) => {
-      if (context?.previousMails) {
-        queryClient.setQueryData(query, context.previousMails)
-      }
-    },
-
-    onSettled: (_data, _error, variables) => {
-      const { threadId } = variables
-      queryClient.invalidateQueries({ query: ['thread', threadId] })
-      queryClient.invalidateQueries({ query: ['mail'] })
-    },
-  })
-
+  const mailUpdateMutation = useMailUpdate({ queryKey })
   return (
     <NavLink
-      to={`/search/${mail.threadId}?q=${query}`}
+      to={`/search/${mail.mailboxId}?q=${query}`}
       className={({ isActive }) =>
         `flex border-y border-border py-4 flex-1 items-center bg-background mb-2 group relative hover:shadow-sm min-w-0${
           isActive && 'border-r border-3 '
@@ -65,7 +28,7 @@ const SearchListItem = memo((props) => {
           setShowThread(true)
         }
         mailUpdateMutation.mutate({
-          threadId: mail.threadId,
+          mailboxIds: [mail.mailboxId],
           data: {
             isRead: true,
           },
@@ -123,7 +86,7 @@ const SearchListItem = memo((props) => {
                 e.preventDefault()
                 e.stopPropagation()
                 mailUpdateMutation.mutate({
-                  threadId: mail.threadId,
+                  mailboxIds: [mail.mailboxId],
                   data: {
                     isStarred: !mail.isStarred,
                   },
@@ -140,7 +103,7 @@ const SearchListItem = memo((props) => {
                 e.preventDefault()
                 e.stopPropagation()
                 mailUpdateMutation.mutate({
-                  threadId: mail.threadId,
+                  mailboxIds: [mail.mailboxId],
                   data: {
                     isDeleted: true,
                   },
@@ -156,7 +119,7 @@ const SearchListItem = memo((props) => {
                 e.preventDefault()
                 e.stopPropagation()
                 mailUpdateMutation.mutate({
-                  threadId: mail.threadId,
+                  mailboxIds: [mail.mailboxId],
                   data: {
                     isRead: !mail.isRead,
                   },

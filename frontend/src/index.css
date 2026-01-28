@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@plugin "@tailwindcss/forms";
 
 .side-bar {
   @apply flex items-center;

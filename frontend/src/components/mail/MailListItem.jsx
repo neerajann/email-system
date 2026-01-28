@@ -1,13 +1,11 @@
 import { memo } from 'react'
 import formatMailDate from '../../utils/fomatMailDate'
-import { data, NavLink } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
   MdOutlineMarkEmailUnread,
   MdOutlineMarkEmailRead,
 } from 'react-icons/md'
 import { IoStarOutline, IoStarSharp, IoTrashOutline } from 'react-icons/io5'
-// import api from '../../services/api'
-// import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useUI } from '../../contexts/UIContext'
 import useMailUpdate from '../../services/mailUpdateService'
 
@@ -16,49 +14,11 @@ const MailListItem = memo((props) => {
 
   const { setShowThread } = useUI()
 
-  const mailUpdateMutation = useMailUpdate(queryKey, {
-    dataPath: 'mails',
-  })
-
-  // const mailUpdateMutation = useMutation({
-  //   mutationFn: ({ threadId, data }) =>
-  //     api.patch('/mail', { threadIds: [threadId], ...data }),
-
-  //   onMutate: async ({ threadId, data }) => {
-  //     await queryClient.cancelQueries({ queryKey })
-
-  //     const previousMails = queryClient.getQueryData(queryKey)
-
-  //     queryClient.setQueryData(queryKey, (old) => {
-  //       if (!old || !Array.isArray(old.mails)) return old
-
-  //       return {
-  //         ...old,
-  //         mails: old.mails.map((mail) =>
-  //           mail.threadId === threadId ? { ...mail, ...data } : mail,
-  //         ),
-  //       }
-  //     })
-
-  //     return { previousMails }
-  //   },
-
-  //   onError: (_err, _vars, context) => {
-  //     if (context?.previousMails) {
-  //       queryClient.setQueryData(queryKey, context.previousMails)
-  //     }
-  //   },
-
-  //   onSettled: (_data, _error, variables) => {
-  //     const { threadId } = variables
-  //     queryClient.invalidateQueries({ queryKey: ['thread', threadId] })
-  //     queryClient.invalidateQueries({ queryKey: ['mail'] })
-  //   },
-  // })
+  const mailUpdateMutation = useMailUpdate(queryKey)
 
   return (
     <NavLink
-      to={mail.threadId}
+      to={mail.mailboxId}
       className={({ isActive }) =>
         `flex flex-1 items-center border border-b bg-background group relative border-border hover:shadow-sm min-w-0 ${
           isActive && 'border-l-4'
@@ -69,7 +29,7 @@ const MailListItem = memo((props) => {
           setShowThread(true)
         }
         mailUpdateMutation.mutate({
-          threadIds: [mail.threadId],
+          mailboxIds: [mail.mailboxId],
           data: {
             isRead: true,
           },
@@ -82,7 +42,7 @@ const MailListItem = memo((props) => {
           className='peer absolute opacity-0 h-8 w-8 cursor-pointer py-8 -left-0.5'
           checked={isSelected}
           onClick={(e) => e.stopPropagation()}
-          onChange={() => toggleSelection(mail.threadId)}
+          onChange={() => toggleSelection(mail.mailboxId)}
         />
 
         <div className='h-4 w-4 border border-border rounded bg-background peer-checked:bg-foreground peer-checked:border-foreground transition-colors pointer-events-none' />
@@ -142,14 +102,14 @@ const MailListItem = memo((props) => {
                 e.preventDefault()
                 e.stopPropagation()
                 mailUpdateMutation.mutate({
-                  threadIds: [mail.threadId],
+                  mailboxIds: [mail.mailboxId],
                   data: {
                     isStarred: !mail.isStarred,
                   },
                 })
               }}
             >
-              <IoStarOutline />
+              {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
             </button>
             {/* trash mail button  */}
             <button
@@ -159,7 +119,7 @@ const MailListItem = memo((props) => {
                 e.preventDefault()
                 e.stopPropagation()
                 mailUpdateMutation.mutate({
-                  threadIds: [mail.threadId],
+                  mailboxIds: [mail.mailboxId],
                   data: {
                     isDeleted: true,
                   },
@@ -175,7 +135,7 @@ const MailListItem = memo((props) => {
                 e.preventDefault()
                 e.stopPropagation()
                 mailUpdateMutation.mutate({
-                  threadIds: [mail.threadId],
+                  mailboxIds: [mail.mailboxId],
                   data: {
                     isRead: !mail.isRead,
                   },

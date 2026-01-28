@@ -4,13 +4,16 @@ import api from './api'
 const useMailUpdate = (queryKey, options = {}) => {
   const queryClient = useQueryClient()
 
-  const { dataPath = 'mails', invalidateKeys = [['mail']] } = options
+  const {
+    invalidateKeys = [['mailboxes'], ['search']],
+    isInfiniteQuery = true,
+  } = options
 
   return useMutation({
-    mutationFn: ({ threadIds, data }) =>
-      api.patch('/mail', { threadIds, ...data }),
+    mutationFn: ({ mailboxIds, data }) =>
+      api.patch('/mail', { mailboxIds, ...data }),
 
-    onMutate: async ({ threadIds, data }) => {
+    onMutate: async ({ mailboxIds, data }) => {
       await queryClient.cancelQueries({ queryKey })
 
       const previousData = queryClient.getQueryData(queryKey)
@@ -18,16 +21,24 @@ const useMailUpdate = (queryKey, options = {}) => {
       queryClient.setQueryData(queryKey, (old) => {
         if (!old) return old
 
-        const mailsArray = dataPath ? old[dataPath] : old
-        if (!Array.isArray(mailsArray)) return old
+        if (isInfiniteQuery) {
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              mails: page.mails.map((mail) =>
+                mailboxIds.includes(mail.id) ? { ...mail, ...data } : mail,
+              ),
+            })),
+          }
+        }
 
-        const updatedMails = mailsArray.map((mail) =>
-          threadIds.includes(mail.threadId) ? { ...mail, ...data } : mail,
+        const updatedMails = old.mails.map((mail) =>
+          mailboxIds.includes(mail.id) ? { ...mail, ...data } : mail,
         )
 
-        return dataPath ? { ...old, [dataPath]: updatedMails } : updatedMails
+        return { ...old, mails: updatedMails }
       })
-
       return { previousData }
     },
 
@@ -38,10 +49,10 @@ const useMailUpdate = (queryKey, options = {}) => {
     },
 
     onSettled: (_data, _error, variables) => {
-      const { threadIds } = variables
+      const { mailboxIds } = variables
 
-      threadIds.forEach((threadId) => {
-        queryClient.invalidateQueries({ queryKey: ['thread', threadId] })
+      mailboxIds.forEach((id) => {
+        queryClient.invalidateQueries({ queryKey: ['mail', id] })
       })
 
       invalidateKeys.forEach((key) => {

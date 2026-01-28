@@ -6,19 +6,21 @@ import {
 import { IoStarOutline, IoTrashOutline, IoStarSharp } from 'react-icons/io5'
 
 const ThreadActionButtons = ({
-  thread,
+  email,
   patchMail,
   deleteForever,
   setShowThread,
   navigate,
 }) => {
+  console.log(email)
+
   return (
     <div className='flex gap-3'>
-      {thread.isDeleted ? (
+      {email.isDeleted ? (
         <>
           <button
             className='text-xs border rounded px-2 border-border hover:bg-input'
-            onClick={() => deleteForever(thread.threadId)}
+            onClick={() => deleteForever(email.mailboxId)}
           >
             Delete forever
           </button>
@@ -37,7 +39,7 @@ const ThreadActionButtons = ({
       ) : (
         <>
           <button
-            disabled={thread.isDeleted}
+            disabled={email.isDeleted}
             className='border border-border p-2 rounded disabled:opacity-50 cursor-pointer hover:bg-input'
             onClick={(e) => {
               patchMail(e, {
@@ -51,14 +53,14 @@ const ThreadActionButtons = ({
           </button>
           <button
             className=' border border-border p-2 rounded disabled:opacity-50 cursor-pointer hover:bg-input'
-            disabled={thread.isDeleted}
+            disabled={email.isDeleted}
             onClick={(e) =>
               patchMail(e, {
-                isStarred: !thread.isStarred,
+                isStarred: !email.isStarred,
               })
             }
           >
-            {thread.isStarred ? <IoStarSharp /> : <IoStarOutline />}
+            {email.isStarred ? <IoStarSharp /> : <IoStarOutline />}
           </button>
         </>
       )}
@@ -66,11 +68,11 @@ const ThreadActionButtons = ({
         className=' border border-border p-2 rounded mr-2 cursor-pointer hover:bg-input'
         onClick={(e) =>
           patchMail(e, {
-            isRead: !thread.isRead,
+            isRead: !email.isRead,
           })
         }
       >
-        {thread.isRead ? (
+        {email.isRead ? (
           <MdOutlineMarkEmailUnread />
         ) : (
           <MdOutlineMarkEmailRead />

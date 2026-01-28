@@ -6,7 +6,7 @@ import { MdOutlineFileDownload } from 'react-icons/md'
 import DOMPurify from 'dompurify'
 import Reply from './Reply'
 
-const ThreadItem = ({ thread, defaultExpanded }) => {
+const ThreadItem = ({ email, defaultExpanded }) => {
   const [showMore, setShowMore] = useState(false)
   const [expand, setExpand] = useState(defaultExpanded)
   const [showReply, setShowReply] = useState(false)
@@ -22,14 +22,14 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
           <div className='flex items-center justify-between min-w-0 overflow-hidden  '>
             <div className='flex flex-1 min-w-0'>
               <h2 className=' font-semibold text-sm mr-3 shrink-0 whitespace-nowrap'>
-                {thread.from.name ?? thread.from.address}
+                {email.from.name ?? email.from.address}
               </h2>
               <p className='text-sm  text-muted-foreground truncate break-all overflow-hidden'>
-                {thread.body.text}
+                {email.body.text}
               </p>
             </div>
             <span className='text-muted-foreground text-xs shrink-0 ml-4 whitespace-nowrap'>
-              {formatMailDate(thread.receivedAt, true)}
+              {formatMailDate(email.receivedAt, true)}
             </span>
           </div>
         </div>
@@ -57,12 +57,12 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <h2 className='font-semibold'>
-                  {thread.from.name ?? thread.from.address}
+                  {email.from.name ?? email.from.address}
                 </h2>
 
                 {showMore && (
                   <span className='text-muted-foreground'>
-                    {thread.from.address}
+                    {email.from.address}
                   </span>
                 )}
               </div>
@@ -89,7 +89,7 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
                   <FaReplyAll size={15} />
                 </span>
                 <span className='whitespace-nowrap'>
-                  {formatMailDate(thread.receivedAt, true)}
+                  {formatMailDate(email.receivedAt, true)}
                 </span>
               </div>
             </div>
@@ -110,7 +110,7 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
               >
                 To
                 <span className='truncate'>
-                  {thread.to.map((to) => to.name || to.address).join(', ')}
+                  {email.to.map((to) => to.name || to.address).join(', ')}
                 </span>
                 <BsChevronExpand
                   className='shrink-0 cursor-pointer'
@@ -119,7 +119,7 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
               </div>
             ) : (
               <div className='flex flex-col gap-2'>
-                {thread.to.map((to) => (
+                {email.to.map((to) => (
                   <div key={to.address} className='flex gap-2 px-1'>
                     <span>{to.name ?? to.address}</span>
                     {to.name && (
@@ -139,29 +139,29 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
               </div>
             )}
           </div>
-          {thread.isSystem ? (
+          {email.isSystem ? (
             <div
               dangerouslySetInnerHTML={{
-                __html: thread.body.html,
+                __html: email.body.html,
               }}
               className='mt-7 text-sm text-foreground'
             />
           ) : (
             <div
               dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(thread.body.html),
+                __html: DOMPurify.sanitize(email.body.html),
               }}
               className='mt-7 text-sm whitespace-pre-wrap text-foreground'
             />
           )}
-          {thread.attachments.length !== 0 && (
+          {email.attachments.length !== 0 && (
             <div className='text-sm mt-6 border-t border-border pt-4  '>
               <span className='text-sm font-semibold '>
-                {thread.attachments.length} &nbsp;Attachment
-                {thread.attachments.length < 1 ? 's' : ''}
+                {email.attachments.length} &nbsp;Attachment
+                {email.attachments.length < 1 ? 's' : ''}
               </span>
               <div className='flex gap-5 min-w-0 flex-wrap mt-4'>
-                {thread.attachments.map((attachment) => {
+                {email.attachments.map((attachment) => {
                   return (
                     <div
                       key={attachment.id}
@@ -169,7 +169,7 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
                     >
                       <span>{attachment.fileName}</span>
                       <a
-                        href={`${import.meta.env.VITE_API_URL}/mail/attachment/${attachment.id}?mailId=${thread.mailId}`}
+                        href={`${import.meta.env.VITE_API_URL}/mail/attachment/${attachment.id}?mailId=${email.mailId}`}
                       >
                         <MdOutlineFileDownload size={18} />
                       </a>
@@ -202,7 +202,7 @@ const ThreadItem = ({ thread, defaultExpanded }) => {
       {showReply && (
         <Reply
           setShowReply={setShowReply}
-          thread={thread}
+          email={email}
           showReply={showReply}
         />
       )}

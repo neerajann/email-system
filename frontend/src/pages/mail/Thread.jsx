@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { data, useNavigate, useParams } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FaArrowLeftLong } from 'react-icons/fa6'
 import { useUI } from '../../contexts/UIContext'
 import api from '../../services/api'
@@ -15,8 +15,8 @@ const Thread = () => {
   const queryClient = useQueryClient()
   const [showHidden, setShowHidden] = useState(false)
 
-  const { data: threadData = [], isError } = useQuery({
-    queryKey: ['thread', id],
+  const { data, isError } = useQuery({
+    queryKey: ['mail', id],
     queryFn: async () => {
       const { data } = await api.get(`/mail/${id}`)
       return data
@@ -25,6 +25,7 @@ const Thread = () => {
     enabled: !!id,
     retry: 1,
   })
+  const emails = data?.mails || []
 
   useEffect(() => {
     if (isError) {
@@ -32,46 +33,23 @@ const Thread = () => {
     }
   }, [isError, navigate])
 
-  // const patchMailMutation = useMutation({
-  //   mutationFn: async ({ threadId, data }) => {
-  //     await api.patch('/mail', {
-  //       threadIds: [threadId],
-  //       ...data,
-  //     })
-  //   },
-  //   onMutate: async ({ data }) => {
-  //     await queryClient.cancelQueries(['thread', id])
-  //     const previous = queryClient.getQueryData(['thread', id])
-
-  //     queryClient.setQueryData(['thread', id], (old) =>
-  //       old.map((mail) => (mail.threadId === id ? { ...mail, ...data } : mail)),
-  //     )
-  //     return { previous }
-  //   },
-  //   onError: (_err, _vars, ctx) => {
-  //     queryClient.setQueryData(['thread', id], ctx.previous)
-  //   },
-
-  //   onSettled: () => {
-  //     queryClient.invalidateQueries(['thread', id])
-  //     queryClient.invalidateQueries(['mail'])
-  //   },
-  // })
-  const patchMailMutation = useMailUpdate(['thread', id], { dataPath: null })
+  const patchMailMutation = useMailUpdate(['mail', id], {
+    isInfiniteQuery: false,
+  })
   const patchMail = (e, data) => {
     e.preventDefault()
     e.stopPropagation()
     patchMailMutation.mutate({
-      threadIds: [threadData[0].threadId],
+      mailboxIds: [emails[0].mailboxId],
       data,
     })
   }
 
-  const deleteForever = async (id) => {
+  const deleteForever = async (mailboxId) => {
     const result = confirm('Are you sure you want to deleted?')
     if (!result) return
-    await api.delete(`/mail/${id}`)
-    queryClient.invalidateQueries(['mail', 'trash'])
+    await api.delete(`/mail/${mailboxId}`)
+    queryClient.invalidateQueries(['mailboxes', 'trash'])
     setShowThread(false)
     navigate('..', { relative: 'path' })
   }
@@ -79,12 +57,12 @@ const Thread = () => {
   let hiddenCount = 0
   let latestMessages = []
   let oldMessage = []
-  if (!threadData.length) return null
+  if (!emails.length) return null
 
-  if (threadData.length > 3) {
-    oldMessage = threadData.slice(0, 1)
-    hiddenCount = Math.max(0, threadData.length - 3)
-    latestMessages = threadData.slice(threadData.length - 2, threadData.length)
+  if (emails.length > 3) {
+    oldMessage = emails.slice(0, 1)
+    hiddenCount = Math.max(0, emails.length - 3)
+    latestMessages = emails.slice(emails.length - 2, emails.length)
   }
 
   return (
@@ -100,7 +78,7 @@ const Thread = () => {
           Back
         </div>
         <ThreadActionButtons
-          thread={threadData[0]}
+          email={emails[0]}
           patchMail={patchMail}
           deleteForever={deleteForever}
           setShowThread={setShowThread}
@@ -113,7 +91,7 @@ const Thread = () => {
           className={`${showThread ? 'hidden lg:flex' : 'flex'} shrink-0 gap-3 ml-1 float-right`}
         >
           <ThreadActionButtons
-            thread={threadData[0]}
+            email={emails[0]}
             patchMail={patchMail}
             deleteForever={deleteForever}
             setShowThread={setShowThread}
@@ -121,7 +99,7 @@ const Thread = () => {
           />
         </div>
 
-        <h2 className='text-xl font-semibold'>{threadData[0]?.subject}</h2>
+        <h2 className='text-xl font-semibold'>{emails[0]?.subject}</h2>
       </div>
 
       <div className='grid gap-5 min-w-0 *:min-w-0 mb-8'>
@@ -129,11 +107,7 @@ const Thread = () => {
           <>
             {oldMessage.map((o) => {
               return (
-                <ThreadItem
-                  key={o.emailId}
-                  thread={o}
-                  defaultExpanded={false}
-                />
+                <ThreadItem key={o.emailId} email={o} defaultExpanded={false} />
               )
             })}
             <div
@@ -150,7 +124,7 @@ const Thread = () => {
               return (
                 <ThreadItem
                   key={latest.emailId}
-                  thread={latest}
+                  email={latest}
                   defaultExpanded={index === latestMessages.length - 1}
                 />
               )
@@ -159,12 +133,12 @@ const Thread = () => {
         )}
 
         {(showHidden || hiddenCount === 0) &&
-          threadData.map((thread, index) => {
+          emails.map((email, index) => {
             return (
               <ThreadItem
-                key={thread.emailId}
-                thread={thread}
-                defaultExpanded={index === threadData.length - 1}
+                key={email.emailId}
+                email={email}
+                defaultExpanded={index === emails.length - 1}
               />
             )
           })}
