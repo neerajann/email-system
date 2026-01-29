@@ -18,7 +18,7 @@ const [{ data: result1 }, { data: result2 }, { data: result3 }] =
       password: '#Neerajan@9821',
     }),
   ])
-console.log(result1.data)
+console.log(result1)
 console.log(
   '-------------------------------------------------------------------',
 )

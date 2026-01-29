@@ -20,7 +20,7 @@ const MailListItem = memo((props) => {
     <NavLink
       to={mail.mailboxId}
       className={({ isActive }) =>
-        `flex flex-1 items-center border border-b bg-background group relative border-border hover:shadow-sm min-w-0 ${
+        `h-25 flex flex-1 items-center border border-b bg-background group relative border-border hover:shadow-sm min-w-0 ${
           isActive && 'border-l-4'
         }`
       }
@@ -28,12 +28,14 @@ const MailListItem = memo((props) => {
         if (window.innerWidth < 1024) {
           setShowThread(true)
         }
-        mailUpdateMutation.mutate({
-          mailboxIds: [mail.mailboxId],
-          data: {
-            isRead: true,
-          },
-        })
+        if (!mail.isRead) {
+          mailUpdateMutation.mutate({
+            mailboxIds: [mail.mailboxId],
+            data: {
+              isRead: true,
+            },
+          })
+        }
       }}
     >
       <label className='relative flex items-center ml-4 sm:ml-8 cursor-pointer p-2'>
@@ -60,7 +62,7 @@ const MailListItem = memo((props) => {
       <div className=' flex items-center flex-1 px-4 sm:px-8  min-w-0 w-full'>
         {/* mail content */}
         <div className='flex items-center flex-1 min-w-0 w-0'>
-          <div className='mr-5 sm:mr-10 shrink-0'>
+          <div className='mr-5 sm:mr-10 shrink-0 hidden sm:inline-block'>
             {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
           </div>
           <div className='flex flex-col justify-between flex-1 min-w-0 w-0'>
@@ -151,10 +153,13 @@ const MailListItem = memo((props) => {
           </div>
 
           {/* date and time */}
-          <div className='group-hover:hidden'>
+          <div className='group-hover:hidden flex flex-col gap-3 items-end'>
             <p className={`text-xs ml-3 ${!mail.isRead && 'font-semibold'} `}>
               {formatMailDate(mail.receivedAt)}
             </p>
+            <div className='sm:hidden'>
+              {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
+            </div>
           </div>
         </div>
       </div>

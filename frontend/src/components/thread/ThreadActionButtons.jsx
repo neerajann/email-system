@@ -8,19 +8,17 @@ import { IoStarOutline, IoTrashOutline, IoStarSharp } from 'react-icons/io5'
 const ThreadActionButtons = ({
   email,
   patchMail,
-  deleteForever,
+  setShowConfirmationModal,
   setShowThread,
   navigate,
 }) => {
-  console.log(email)
-
   return (
     <div className='flex gap-3'>
       {email.isDeleted ? (
         <>
           <button
             className='text-xs border rounded px-2 border-border hover:bg-input'
-            onClick={() => deleteForever(email.mailboxId)}
+            onClick={() => setShowConfirmationModal(true)}
           >
             Delete forever
           </button>

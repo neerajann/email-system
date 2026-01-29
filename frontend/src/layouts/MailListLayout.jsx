@@ -52,7 +52,7 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
   const mails = data?.pages?.flatMap((page) => page.mails) ?? []
 
   useEffect(() => {
-    let toastId
+    var toastId
 
     if (isLoading) {
       toastId = toast.loading('Loading...', {
@@ -155,7 +155,7 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
         >
           <div className='flex flex-col shadow-xs mb-3 border-b border-border bg-background relative z-[40]'>
             <div className='flex items-center justify-between text-sm font-medium px-4 py-2 shadow-xs bg-background relative'>
-              <div className='flex items-center gap-3'>
+              <div className='ml-6'>
                 <button onClick={() => refetch()}>
                   <IoMdRefresh size={20} className='cursor-pointer' />
                 </button>
@@ -294,8 +294,9 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
               pauseOnHover
             />
           </div>
+
           {mails?.length ? (
-            <div className='h-full flex-1 min-w-0 grid auto-rows-[100px] gap-4 overflow-y-auto '>
+            <div className='h-full flex-1 min-w-0 grid auto-rows-auto gap-4 overflow-y-auto content-start pb-8'>
               {mailboxType === 'search'
                 ? mails.map((mail) => (
                     <SearchListItem
@@ -303,6 +304,10 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
                       queryKey={memoizedQueryKey}
                       mail={mail}
                       query={query}
+                      isSelected={selectionState.selectedMailboxIds.has(
+                        mail?.mailboxId,
+                      )}
+                      toggleSelection={toggleSelection}
                     />
                   ))
                 : mails.map((mail) => (
@@ -316,7 +321,12 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
                       toggleSelection={toggleSelection}
                     />
                   ))}
-              <div className='h-30' ref={loadMoreRef}></div>
+              <div
+                className='min-h-15 h-10 text-sm flex items-center justify-center'
+                ref={loadMoreRef}
+              >
+                {isFetchingNextPage && <span>Loading more....</span>}
+              </div>
             </div>
           ) : (
             <div className=' flex h-full  justify-center items-center  absolute inset-0 pointer-events-none'>

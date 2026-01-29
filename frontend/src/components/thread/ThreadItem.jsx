@@ -5,11 +5,34 @@ import { BsChevronExpand } from 'react-icons/bs'
 import { MdOutlineFileDownload } from 'react-icons/md'
 import DOMPurify from 'dompurify'
 import Reply from './Reply'
+import QuotedBlock from './QuotedBlock'
 
-const ThreadItem = ({ email, defaultExpanded }) => {
+const ThreadItem = ({ email, defaultExpanded, emails }) => {
   const [showMore, setShowMore] = useState(false)
   const [expand, setExpand] = useState(defaultExpanded)
   const [showReply, setShowReply] = useState(false)
+  const [showQuotedBlock, setShowQuotedBlock] = useState(false)
+
+  const messageIdMap = new Map()
+  emails.map((e) =>
+    messageIdMap.set(e.messageId, {
+      receivedAt: e.receivedAt,
+      body: e.body.text,
+      sender: e.from,
+      inReplyTo: e?.inReplyTo,
+    }),
+  )
+  const quotedText = []
+
+  const constructQuotedText = (email) => {
+    if (!email?.inReplyTo) return
+    const parent = messageIdMap.get(email.inReplyTo)
+    if (!parent) return
+    quotedText.push(parent)
+    constructQuotedText(parent)
+  }
+
+  constructQuotedText(email)
 
   return (
     <>
@@ -179,6 +202,22 @@ const ThreadItem = ({ email, defaultExpanded }) => {
               </div>
             </div>
           )}
+          {quotedText.length > 0 && (
+            <div>
+              <div
+                className='mt-6 h-3.5 rounded-2xl not w-8 border border-border flex items-center justify-center bg-input hover:cursor-pointer'
+                onClick={() => setShowQuotedBlock((prev) => !prev)}
+              >
+                <span className='leading-none text-xs'>•••</span>
+              </div>
+              {showQuotedBlock && (
+                <div className='mt-6'>
+                  <QuotedBlock quotes={[...quotedText]} />
+                </div>
+              )}
+            </div>
+          )}
+
           {defaultExpanded && (
             <div className='mt-8 flex items-center gap-6 text-sm'>
               <button

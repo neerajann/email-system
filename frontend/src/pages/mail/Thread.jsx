@@ -7,6 +7,7 @@ import api from '../../services/api'
 import ThreadItem from '../../components/thread/ThreadItem'
 import ThreadActionButtons from '../../components/thread/ThreadActionButtons'
 import useMailUpdate from '../../services/mailUpdateService'
+import ConfirmationPopupModal from '../../components/ui/ConfirmationPopupModal'
 
 const Thread = () => {
   const { showThread, setShowThread } = useUI()
@@ -14,6 +15,7 @@ const Thread = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [showHidden, setShowHidden] = useState(false)
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
 
   const { data, isError } = useQuery({
     queryKey: ['mail', id],
@@ -46,8 +48,6 @@ const Thread = () => {
   }
 
   const deleteForever = async (mailboxId) => {
-    const result = confirm('Are you sure you want to deleted?')
-    if (!result) return
     await api.delete(`/mail/${mailboxId}`)
     queryClient.invalidateQueries(['mailboxes', 'trash'])
     setShowThread(false)
@@ -64,6 +64,7 @@ const Thread = () => {
     hiddenCount = Math.max(0, emails.length - 3)
     latestMessages = emails.slice(emails.length - 2, emails.length)
   }
+  console.log(emails[0].mailboxId)
 
   return (
     <div className='h-dvh w-full lg:w-auto flex flex-1 min-w-0 sm:p-7 p-2.5  flex-col overflow-y-auto '>
@@ -80,7 +81,7 @@ const Thread = () => {
         <ThreadActionButtons
           email={emails[0]}
           patchMail={patchMail}
-          deleteForever={deleteForever}
+          setShowConfirmationModal={setShowConfirmationModal}
           setShowThread={setShowThread}
           navigate={navigate}
         />
@@ -93,8 +94,7 @@ const Thread = () => {
           <ThreadActionButtons
             email={emails[0]}
             patchMail={patchMail}
-            deleteForever={deleteForever}
-            setShowThread={setShowThread}
+            setShowConfirmationModal={setShowConfirmationModal}
             navigate={navigate}
           />
         </div>
@@ -107,7 +107,12 @@ const Thread = () => {
           <>
             {oldMessage.map((o) => {
               return (
-                <ThreadItem key={o.emailId} email={o} defaultExpanded={false} />
+                <ThreadItem
+                  key={o.emailId}
+                  email={o}
+                  defaultExpanded={false}
+                  emails={emails}
+                />
               )
             })}
             <div
@@ -126,6 +131,7 @@ const Thread = () => {
                   key={latest.emailId}
                   email={latest}
                   defaultExpanded={index === latestMessages.length - 1}
+                  emails={emails}
                 />
               )
             })}
@@ -139,10 +145,19 @@ const Thread = () => {
                 key={email.emailId}
                 email={email}
                 defaultExpanded={index === emails.length - 1}
+                emails={emails}
               />
             )
           })}
       </div>
+      {showConfirmationModal && (
+        <ConfirmationPopupModal
+          handlerFunction={deleteForever}
+          message={'Are you sure you want to delete this mail forever?'}
+          setShowConfirmationModal={setShowConfirmationModal}
+          mailboxId={emails[0].mailboxId}
+        />
+      )}
       <div className='h-40 w-full shrink-0'></div>
     </div>
   )

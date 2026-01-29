@@ -13,7 +13,7 @@ const SearchPage = () => {
 
   return (
     <MailListLayout
-      queryKey={['search', searchParams]}
+      queryKey={['search', query]}
       fetchFuction={searchMails}
       mailboxType={'search'}
       query={query}

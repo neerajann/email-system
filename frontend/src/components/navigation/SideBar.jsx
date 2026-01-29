@@ -62,7 +62,7 @@ const SideBar = React.memo(() => {
           <h2 className='text-lg font-bold'>inboxify</h2>
         </div>
         <button
-          className=' flex items-center  text-sm mt-5 border rounded w-full p-2 border-border  bg-input shadow-xs'
+          className=' flex items-center  text-sm mt-5 border rounded w-full p-2 border-border  bg-input shadow-xs hover:cursor-pointer'
           onClick={() => setShowComposeMail(true)}
         >
           <RiQuillPenLine className='size-6' />
@@ -100,7 +100,7 @@ const SideBar = React.memo(() => {
         </div>
         <div className='mb-25 w-full flex justify-center'>
           <button
-            className='bg-background border border-border px-4 py-2 rounded w-full font-medium text-sm flex items-center justify-center'
+            className='bg-background border border-border px-4 py-2 rounded w-full font-medium text-sm flex items-center justify-center hover:cursor-pointer'
             onClick={() => {
               setDarkMode(!darkMode)
             }}

@@ -5,26 +5,26 @@ import { useUI } from '../../contexts/UIContext'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { RxCross1 } from 'react-icons/rx'
+import ConfirmationPopupModal from '../ui/ConfirmationPopupModal'
 
 const TopBar = () => {
   const navigate = useNavigate()
   const { setUser, user } = useAuth()
   const { setShowSideBar } = useUI()
   const [query, setQuery] = useState('')
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
 
   const handleLogout = async () => {
-    const response = confirm('Are you sure you want to logout?')
-    if (response) {
-      const result = await api.post('/auth/logout')
-      if (result.data.success) setUser(null)
-      return
-    }
+    const result = await api.post('/auth/logout')
+    if (result.data.success) setUser(null)
     return
   }
-  const handleSubmit = (e) => {
+
+  const handleSearch = (e) => {
     e.preventDefault()
     navigate(`/search?q=${encodeURIComponent(query)}`)
   }
+
   return (
     <div
       className='grid grid-cols-[auto_1fr_auto] xl:grid-cols-[15.5rem_1fr_1fr] items-center py-4 bg-background border-b border-border z-50
@@ -40,7 +40,7 @@ const TopBar = () => {
         </div>
       </div>
       <div className='relative w-full'>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSearch}>
           <input
             type='search'
             placeholder='Search in mail'
@@ -62,12 +62,19 @@ const TopBar = () => {
       <div className='flex justify-end items-center gap-4 px-4 '>
         <p className='text-sm font-medium lg:block hidden'>{user}</p>
         <button
-          onClick={handleLogout}
-          className='bg-foreground text-background px-2 py-1 rounded text-sm'
+          onClick={() => setShowConfirmationModal(true)}
+          className='bg-foreground text-background px-2 py-1 rounded text-sm hover:cursor-pointer'
         >
           Logout
         </button>
       </div>
+      {showConfirmationModal && (
+        <ConfirmationPopupModal
+          setShowConfirmationModal={setShowConfirmationModal}
+          message={'Are you sure you want to logout?'}
+          handlerFunction={handleLogout}
+        />
+      )}
     </div>
   )
 }

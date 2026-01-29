@@ -2,14 +2,17 @@ const highlightText = (text = '', query = '') => {
   if (!query) return text
   const snippet = createSnippet(text, query)
   const regex = new RegExp(
-    `(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+    `(${query
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .split(/\s+/)
+      .join('|')})`,
     'gi',
   )
   const parts = snippet.split(regex)
 
   return parts.map((part, i) =>
     regex.test(part) ? (
-      <span key={i} className='bg-[#FFEB3B] text-background'>
+      <span key={i} className='bg-[#FFEB3B] text-black'>
         {part}
       </span>
     ) : (

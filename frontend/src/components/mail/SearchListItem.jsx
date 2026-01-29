@@ -11,34 +11,57 @@ import highlightText from '../../utils/highlightText'
 import useMailUpdate from '../../services/mailUpdateService'
 
 const SearchListItem = memo((props) => {
-  const { mail, query, queryKey, isSelected } = props
+  const { mail, query, queryKey, isSelected, toggleSelection } = props
   const { setShowThread } = useUI()
 
-  const mailUpdateMutation = useMailUpdate({ queryKey })
+  const mailUpdateMutation = useMailUpdate(queryKey)
   return (
     <NavLink
       to={`/search/${mail.mailboxId}?q=${query}`}
       className={({ isActive }) =>
-        `flex border-y border-border py-4 flex-1 items-center bg-background mb-2 group relative hover:shadow-sm min-w-0${
-          isActive && 'border-r border-3 '
+        `h-25 flex flex-1 items-center border border-b bg-background group relative border-border hover:shadow-sm min-w-0 ${
+          isActive && 'border-l-4'
         }`
       }
       onClick={(e) => {
         if (window.innerWidth < 1024) {
           setShowThread(true)
         }
-        mailUpdateMutation.mutate({
-          mailboxIds: [mail.mailboxId],
-          data: {
-            isRead: true,
-          },
-        })
+        if (!mail.isRead) {
+          mailUpdateMutation.mutate({
+            mailboxIds: [mail.mailboxId],
+            data: {
+              isRead: true,
+            },
+          })
+        }
       }}
     >
-      <div className=' flex items-center flex-1 px-5 sm:px-10 min-w-0 w-full'>
+      <label className='relative flex items-center ml-4 sm:ml-8 cursor-pointer p-2'>
+        <input
+          type='checkbox'
+          className='peer absolute opacity-0 h-8 w-8 cursor-pointer py-8 -left-0.5'
+          checked={isSelected}
+          onClick={(e) => e.stopPropagation()}
+          onChange={() => toggleSelection(mail.mailboxId)}
+        />
+
+        <div className='h-4 w-4 border border-border rounded bg-background peer-checked:bg-foreground peer-checked:border-foreground transition-colors pointer-events-none' />
+
+        <svg
+          className='absolute h-4 w-4 text-background opacity-0 peer-checked:opacity-100 pointer-events-none'
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke='currentColor'
+          strokeWidth='3'
+        >
+          <path d='M5 13l4 4L19 7' />
+        </svg>
+      </label>
+      <div className=' flex items-center flex-1 px-4 sm:px-8 min-w-0 w-full'>
         {/* mail content */}
-        <div className=' flex items-center flex-1 min-w-0 w-full'>
-          <div className='mr-5 sm:mr-10 shrink-0'>
+        <div className=' flex items-center flex-1 min-w-0 w-0'>
+          <div className='mr-5 sm:mr-10 shrink-0 hidden sm:inline-block'>
             {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
           </div>
           <div className='flex flex-col justify-between flex-1 min-w-0 w-0'>
@@ -57,10 +80,21 @@ const SearchListItem = memo((props) => {
                   </span>
                 )}
               </h3>
-              <span className='border border-border px-2 py-0.5 rounded-xl text-xs ml-2'>
-                {mail.labels[0].charAt(0).toUpperCase() +
-                  mail.labels[0].slice(1).toLowerCase()}
-              </span>
+
+              <div className='ml-2 flex gap-1'>
+                {mail.isDeleted ? (
+                  <span className='border border-border px-2 py-0.5 rounded-xl text-xs'>
+                    Trash
+                  </span>
+                ) : (
+                  mail.labels.map((label) => (
+                    <span className='border border-border px-2 py-0.5 rounded-xl text-xs'>
+                      {label.charAt(0).toUpperCase() +
+                        label.slice(1).toLowerCase()}
+                    </span>
+                  ))
+                )}
+              </div>
             </div>
             <h3
               className={`text-sm truncate  mb-1.5 ${
@@ -93,7 +127,7 @@ const SearchListItem = memo((props) => {
                 })
               }}
             >
-              <IoStarOutline />
+              {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
             </button>
             {/* trash mail button  */}
             <button
@@ -135,10 +169,14 @@ const SearchListItem = memo((props) => {
           </div>
 
           {/* date and time */}
-          <div className='group-hover:hidden'>
-            <p className={`text-xs ml-3 ${!mail.isRead && 'font-semibold'} `}>
+          <div className='group-hover:hidden flex flex-col gap-3 items-end'>
+            <p className={`text-xs ${!mail.isRead && 'font-semibold '}`}>
               {formatMailDate(mail.receivedAt)}
             </p>
+
+            <div className='sm:hidden'>
+              {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
+            </div>
           </div>
         </div>
       </div>
