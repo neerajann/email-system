@@ -20,7 +20,6 @@ const getInbox = async (req, reply) => {
 
     if (!emails)
       return reply.code(200).send({ message: 'No emails at the moment' })
-    console.log({ emails })
 
     return reply.send(emails)
   } catch (error) {

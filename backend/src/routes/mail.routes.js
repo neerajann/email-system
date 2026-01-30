@@ -9,6 +9,7 @@ import {
   emailSchema,
   patchMailSchema,
 } from '../schemas/mail.schema.js'
+import emailRateLimiter from '../middlewares/emailRateLimiter.js'
 
 const mailRouter = async (fastify) => {
   fastify.get('/inbox', { preHandler: verifyJWT }, mailController.getInbox)
@@ -22,15 +23,16 @@ const mailRouter = async (fastify) => {
     mailController.getStarred,
   )
   fastify.get('/search', { preHandler: verifyJWT }, mailController.searchMail)
+
   fastify.post(
     '/send',
 
-    { preHandler: verifyJWT, schema: emailSchema },
+    { preHandler: [verifyJWT, emailRateLimiter], schema: emailSchema },
     mailController.sendMail,
   )
 
   fastify.post('/attachment', {
-    preHandler: verifyJWT,
+    preHandler: [verifyJWT, emailRateLimiter],
     ...attachmentController.uploadAttachments,
   })
 

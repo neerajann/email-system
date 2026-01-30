@@ -148,11 +148,13 @@ const getMail = async (userId, id) => {
             },
           },
         },
+        inReplyTo: '$emails.inReplyTo',
         isSystem: '$emails.isSystem',
         isStarred: '$isStarred',
         isDeleted: '$isDeleted',
         isRead: '$isRead',
         receivedAt: '$emails.receivedAt',
+        messageId: '$emails.messageId',
       },
     },
   ])

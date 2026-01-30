@@ -117,7 +117,7 @@ const deliverMail = async ({
           bodyHtml,
           bodyText,
           attachments: parsedAttachments,
-          inReplyTo: olderMail.inReplyTo,
+          inReplyTo: olderMail.messageId,
           references: [...olderMail.references, olderMail.messageId],
         })
       }
