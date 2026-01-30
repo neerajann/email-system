@@ -19,6 +19,7 @@ const outboundEmailWorker = new Worker(
       emailId,
       sender,
       recipients,
+      headerTo,
       subject,
       body,
       attachments,
@@ -42,6 +43,7 @@ const outboundEmailWorker = new Worker(
         messageId,
         sender,
         recipients,
+        headerTo,
         subject,
         body,
         attachmentsRecords,
@@ -66,7 +68,7 @@ const outboundEmailWorker = new Worker(
               threadId,
               emailId,
               recipients: localRecipients,
-              parentMessageId: messageId,
+              sender,
             })
           : [],
         externalRecipients.length
@@ -74,6 +76,7 @@ const outboundEmailWorker = new Worker(
               messageId,
               sender,
               recipients: externalRecipients,
+              headerTo,
               subject,
               body,
               attachmentsRecords,

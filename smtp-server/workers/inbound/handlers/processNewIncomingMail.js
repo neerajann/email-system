@@ -1,14 +1,11 @@
 import { User, Thread, Email, Mailbox } from '@email-system/core/models'
 import htmlSanitizer from '../utils/htmlSanitizer.js'
 import uploadAttachment from '../attachments/uploadAttachment.js'
-import notifyUser from '../../notifyUser.js'
+import notifyUser from '@email-system/core/messaging'
 
 const processNewIncomingMail = async ({ mail, envelope }) => {
-  // console.log('Envelope', envelope)
   const recipientsAddress = envelope.rcptTo.map((r) => r.address)
 
-  // console.log('Mail', mail)
-  // console.log('Recipents', recipientsAddress)
   const localUsers = await User.find(
     {
       emailAddress: {
@@ -21,7 +18,7 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
       emailAddress: 1,
     },
   )
-  // console.log('localUser', localUsers)
+
   if (!localUsers.length) return
 
   const attachments = mail.attachments.length
@@ -35,23 +32,23 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
     subject: mail.subject,
     lastMessageAt: new Date(),
     messageIds: [messageId],
+    senders: {
+      name: mail.from.value[0]?.name ?? '',
+      address: mail.from.value[0].address,
+    },
   })
 
-  // console.log('Thread', thread)
   const emailAddressToName = Object.fromEntries(
     localUsers.map((u) => [u.emailAddress, u.name]),
   )
-  // console.log('emailtoname', emailAddressToName)
 
   const recipients = mail.to.value.map((p) => ({
     ...p,
     name: emailAddressToName[p.address] ?? '',
   }))
-  // console.log('recipents', recipients)
-  const sanitizedHtml = htmlSanitizer(mail.html)
-  // console.log(sanitizedHtml)
 
-  // console.log('mail.from.value[0].address')
+  const sanitizedHtml = htmlSanitizer(mail.html)
+
   const email = await Email.create({
     threadId: thread._id,
     from: {
@@ -68,9 +65,7 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
     attachments,
   })
 
-  console.log('Email', email)
-
-  await Mailbox.create(
+  const mailboxRecord = await Mailbox.create(
     localUsers.map((user) => ({
       userId: user._id,
       threadId: thread._id,
@@ -78,15 +73,30 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
       labels: ['INBOX'],
     })),
   )
-  const validUserId = localUsers.map((l) => String(l._id))
 
-  const notifications = validUserId.flatMapmap((userId) => ({
-    userId,
+  await RecipientHistory.bulkWrite(
+    localUsers.map((user) => ({
+      updateOne: {
+        filter: {
+          ownerUserId: user._id,
+          emailAddress: email.from.address,
+        },
+        update: {
+          $inc: {
+            receivedCount: 1,
+          },
+        },
+        upsert: true,
+      },
+    })),
+  )
+
+  const notifications = mailboxRecord.map((record) => ({
+    userId: String(record.userId),
     newMail: {
-      threadId: email.threadId,
-      from: email.from,
-      to: email.to,
-      subject: email.subject,
+      mailboxId: record._id,
+      from: thread.senders,
+      subject: thread.subject,
       snippet: email.body?.text?.substring(0, 200) ?? ' ',
       isSystem: false,
       messageCount: thread.messageCount,

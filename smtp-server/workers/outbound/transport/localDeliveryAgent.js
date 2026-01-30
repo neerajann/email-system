@@ -1,8 +1,19 @@
-import { Mailbox, User, Email, Thread } from '@email-system/core/models'
+import notifyUser from '@email-system/core/messaging'
+import {
+  Mailbox,
+  User,
+  Email,
+  Thread,
+  RecipientHistory,
+} from '@email-system/core/models'
 import mongoose from 'mongoose'
-import notifyUser from '../../notifyUser.js'
 
-const localDeliveryAgent = async ({ threadId, emailId, recipients }) => {
+const localDeliveryAgent = async ({
+  threadId,
+  emailId,
+  recipients,
+  sender,
+}) => {
   let localBouncedMails = []
 
   const existingUsers = await User.find(
@@ -41,21 +52,39 @@ const localDeliveryAgent = async ({ threadId, emailId, recipients }) => {
   )
 
   if (validUserIds?.length > 0) {
-    const ops = validUserIds.map((userId) => ({
-      updateOne: {
-        filter: { threadId, userId },
-        update: {
-          $set: {
-            lastMessageAt: Date.now(),
-            isRead: false,
+    Mailbox.bulkWrite(
+      validUserIds.map((userId) => ({
+        updateOne: {
+          filter: { threadId, userId },
+          update: {
+            $set: {
+              lastMessageAt: Date.now(),
+              isRead: false,
+            },
+            $addToSet: { labels: 'INBOX' },
+            $push: { emailIds: emailId },
           },
-          $addToSet: { labels: 'INBOX' },
-          $push: { emailIds: emailId },
+          upsert: true,
         },
-        upsert: true,
-      },
-    }))
-    await Mailbox.bulkWrite(ops)
+      })),
+    )
+
+    await RecipientHistory.bulkWrite(
+      existingUsers.map((user) => ({
+        updateOne: {
+          filter: {
+            ownerUserId: user._id,
+            emailAddress: sender.address,
+          },
+          update: {
+            $inc: {
+              receivedCount: 1,
+            },
+          },
+          upsert: true,
+        },
+      })),
+    )
 
     const mailboxEntries = await Mailbox.find({
       threadId,
@@ -71,10 +100,9 @@ const localDeliveryAgent = async ({ threadId, emailId, recipients }) => {
       return {
         userId: result.userId,
         newMail: {
-          threadId: threadId,
-          from: email.from,
-          to: email.to,
-          subject: email.subject,
+          mailboxId: result._id,
+          from: thread.senders,
+          subject: thread.subject,
           snippet: email.body?.text?.substring(0, 200) ?? ' ',
           isSystem: false,
           messageCount: thread.messageCount,

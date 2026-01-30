@@ -1,11 +1,16 @@
-import { Mailbox, Thread, Email } from '@email-system/core/models'
+import {
+  Mailbox,
+  Thread,
+  Email,
+  RecipientHistory,
+} from '@email-system/core/models'
 import {
   generateBounceHtml,
   generateDeliveryFailureHtml,
 } from '../assembly/DSNComposer.js'
 import { htmlToText } from 'html-to-text'
 import mongoose from 'mongoose'
-import notifyUser from '../../notifyUser.js'
+import notifyUser from '@email-system/core/messaging'
 
 const failureRecorder = async ({
   sender,
@@ -51,18 +56,30 @@ const failureRecorder = async ({
 
   if (type === 'DELIVERY') {
     for (const entry of bouncedRecipients) {
-      entry.emails.forEach((recipient) => {
-        const html = generateDeliveryFailureHtml(recipient)
-        const subject = 'Delivery Delayed: Message Could Not Be Delivered'
-        pushFailureEntry(subject, html)
-      })
+      await Promise.all(
+        entry.emails.map(async (recipient) => {
+          const html = generateDeliveryFailureHtml(recipient)
+          const subject = 'Delivery Delayed: Message Could Not Be Delivered'
+          pushFailureEntry(subject, html)
+          await RecipientHistory.findOneAndDelete({
+            ownerUserId: sender.id,
+            emailAddress: recipient,
+          })
+        }),
+      )
     }
   } else if (type === 'BOUNCE') {
-    bouncedRecipients.forEach((recipient) => {
-      const html = generateBounceHtml(recipient)
-      const subject = 'Mail Delivery Failed: Address Not Found'
-      pushFailureEntry(subject, html)
-    })
+    await Promise.all(
+      bouncedRecipients.map(async (recipient) => {
+        const html = generateBounceHtml(recipient)
+        const subject = 'Mail Delivery Failed: Address Not Found'
+        pushFailureEntry(subject, html)
+        await RecipientHistory.findOneAndDelete({
+          ownerUserId: sender.id,
+          emailAddress: recipient,
+        })
+      }),
+    )
   }
 
   const createdEmails = await Email.insertMany(failureEntries)
@@ -100,6 +117,12 @@ const failureRecorder = async ({
       $push: {
         messageIds: allMessageIds,
       },
+      $addToSet: {
+        senders: {
+          name: 'Mail Delivery Subsystem',
+          address: 'mailer-daemon@inboxify.com',
+        },
+      },
     },
     { new: true },
   )
@@ -107,22 +130,23 @@ const failureRecorder = async ({
   const lastFailedEmail = createdEmails[createdEmails.length - 1]
 
   if (!mailboxRecord.isDeleted) {
-    const notifications = {
-      userId: sender._id,
-      newMail: {
-        threadId: threadId,
-        from: lastFailedEmail.from,
-        to: lastFailedEmail.to,
-        subject: lastFailedEmail.subject,
-        snippet: lastFailedEmail.body?.text?.substring(0, 200) ?? ' ',
-        isSystem: false,
-        messageCount: thread.messageCount,
-        isRead: false,
-        isStarred: mailboxRecord.isStarred,
-        receivedAt: lastFailedEmail.receivedAt,
-        isDeleted: false,
+    const notifications = [
+      {
+        userId: sender._id,
+        newMail: {
+          mailboxId: mailboxRecord._id,
+          from: thread.senders,
+          subject: thread.subject,
+          snippet: lastFailedEmail.body?.text?.substring(0, 200) ?? ' ',
+          isSystem: false,
+          messageCount: thread.messageCount,
+          isRead: false,
+          isStarred: mailboxRecord.isStarred,
+          receivedAt: lastFailedEmail.receivedAt,
+          isDeleted: false,
+        },
       },
-    }
+    ]
     await notifyUser(notifications)
   }
 

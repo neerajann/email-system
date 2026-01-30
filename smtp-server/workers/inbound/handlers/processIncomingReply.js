@@ -1,9 +1,15 @@
-import { User, Thread, Email, Mailbox } from '@email-system/core/models'
+import {
+  User,
+  Thread,
+  Email,
+  Mailbox,
+  RecipientHistory,
+} from '@email-system/core/models'
 import uploadAttachment from '../attachments/uploadAttachment.js'
 import resolveThread from '../threading/resolveThread.js'
 import htmlSanitizer from '../utils/htmlSanitizer.js'
 import processNewIncomingMail from './processNewIncomingMail.js'
-import notifyUser from '../../notifyUser.js'
+import notifyUser from '@email-system/core/messaging'
 
 const processIncomingReply = async ({ mail, envelope }) => {
   const threadId = await resolveThread(mail)
@@ -95,10 +101,33 @@ const processIncomingReply = async ({ mail, envelope }) => {
       $set: {
         lastMessageAt: Date.now(),
       },
+      $addToSet: {
+        senders: {
+          name: email.from.name,
+          address: email.from.address,
+        },
+      },
     },
     {
       new: true,
     },
+  )
+
+  await RecipientHistory.bulkWrite(
+    localUsers.map((user) => ({
+      updateOne: {
+        filter: {
+          ownerUserId: user._id,
+          emailAddress: email.from.address,
+        },
+        update: {
+          $inc: {
+            receivedCount: 1,
+          },
+        },
+        upsert: true,
+      },
+    })),
   )
 
   const notifications = updatedMailboxes.flatMap((result) => {
@@ -106,10 +135,9 @@ const processIncomingReply = async ({ mail, envelope }) => {
     return {
       userId: result.userId,
       newMail: {
-        threadId: email.threadId,
-        from: email.from,
-        to: email.to,
-        subject: email.subject,
+        mailboxId: result._id,
+        from: thread.senders,
+        subject: thread.subject,
         snippet: email.body?.text?.substring(0, 200) ?? ' ',
         isSystem: false,
         messageCount: thread.messageCount,

@@ -4,6 +4,7 @@ import fs from 'fs'
 const smtpRelay = async ({
   sender,
   recipients,
+  headerTo,
   failureRecords = [],
   subject,
   body,
@@ -12,7 +13,6 @@ const smtpRelay = async ({
   inReplyTo,
   references,
 }) => {
-  const headerTo = recipients.join(', ')
   const output = { bounced: [], retriable: [] }
 
   const batches =
@@ -65,7 +65,6 @@ const smtpRelay = async ({
         inReplyTo: inReplyTo,
         references: references?.join(' '),
       })
-      console.log('Info:', info)
 
       if (info.rejected?.length) output.bounced.push(...info.rejected)
 
