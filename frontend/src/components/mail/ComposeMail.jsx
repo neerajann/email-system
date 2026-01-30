@@ -49,7 +49,6 @@ const ComposeMail = () => {
         recipients: Array.from(uniqueRecipents),
       }))
     }
-    console.log(validEmails.length)
 
     if (parts.length >= 1 && validEmails.length === 0) {
       setRecipents(parts[0])
@@ -80,7 +79,7 @@ const ComposeMail = () => {
           <button
             variant='ghost'
             size='icon'
-            className='border border-border p-2 rounded'
+            className='border border-border p-2 rounded cursor-pointer'
             onClick={() => {
               cancelMail({
                 attachmentsInfo,
@@ -253,11 +252,11 @@ const ComposeMail = () => {
               }
             />
 
-            <div className='flex items-center justify-between border border-border p-2 rounded w-40 '>
+            <div className='flex items-center justify-between border border-border p-2 rounded w-40 cursor-pointer'>
               <button
                 type='button'
                 onClick={() => fileInputRef.current.click()}
-                className='flex items-center  text-sm font-medium gap-2'
+                className='flex items-center  text-sm font-medium gap-2 cursor-pointer'
               >
                 <RiAttachment2 size={15} /> Attach files
               </button>
@@ -270,7 +269,7 @@ const ComposeMail = () => {
           {/* action buttons */}
           <div className='flex gap-2 pt-4'>
             <button
-              className='flex-1 text-sm font-semibold  border-border border p-2 rounded hover:scale-[0.95] active:scale-[1.02] transition-all ease-in-out'
+              className='flex-1 text-sm font-semibold  border-border border p-2 rounded hover:scale-[0.98] active:scale-[1.02] transition-all ease-in-out cursor-pointer'
               onClick={() =>
                 sendMail({
                   email,
@@ -287,7 +286,7 @@ const ComposeMail = () => {
             </button>
             <button
               variant='outline'
-              className='border font-semibold border-border px-3 py-2 rounded text-sm hover:scale-[0.95] active:scale-[1.02]'
+              className='border font-semibold border-border px-3 py-2 rounded text-sm hover:scale-[0.95] active:scale-[1.02] cursor-pointer'
               onClick={() => {
                 cancelMail({
                   attachmentsInfo,

@@ -17,7 +17,7 @@ const Thread = () => {
   const [showHidden, setShowHidden] = useState(false)
   const [showConfirmationModal, setShowConfirmationModal] = useState(false)
 
-  const { data, isError } = useQuery({
+  const { data, isError, isLoading } = useQuery({
     queryKey: ['mail', id],
     queryFn: async () => {
       const { data } = await api.get(`/mail/${id}`)
@@ -27,6 +27,7 @@ const Thread = () => {
     enabled: !!id,
     retry: 1,
   })
+
   const emails = data?.mails || []
 
   useEffect(() => {
@@ -54,6 +55,14 @@ const Thread = () => {
     navigate('..', { relative: 'path' })
   }
 
+  if (isLoading) {
+    return (
+      <div className='h-dvh w-full lg:w-auto flex flex-1 min-w-0 sm:p-7 p-2.5  items-center justify-center text-sm text-muted-foreground '>
+        Loading please wait...
+      </div>
+    )
+  }
+
   let hiddenCount = 0
   let latestMessages = []
   let oldMessage = []
@@ -64,7 +73,6 @@ const Thread = () => {
     hiddenCount = Math.max(0, emails.length - 3)
     latestMessages = emails.slice(emails.length - 2, emails.length)
   }
-  console.log(emails[0].mailboxId)
 
   return (
     <div className='h-dvh w-full lg:w-auto flex flex-1 min-w-0 sm:p-7 p-2.5  flex-col overflow-y-auto '>

@@ -6,6 +6,7 @@ import { MdOutlineFileDownload } from 'react-icons/md'
 import DOMPurify from 'dompurify'
 import Reply from './Reply'
 import QuotedBlock from './QuotedBlock'
+import Tooltip from '../ui/Tooltip'
 
 const ThreadItem = ({ email, defaultExpanded, emails }) => {
   const [showMore, setShowMore] = useState(false)
@@ -93,24 +94,28 @@ const ThreadItem = ({ email, defaultExpanded, emails }) => {
               <div
                 className={` ${showMore && 'opacity-0'} sm:opacity-100 flex items-center gap-4 text-xs text-muted-foreground flex-none `}
               >
-                <span
-                  className='border border-border p-1 rounded hover:bg-input '
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowReply({ reply: true })
-                  }}
-                >
-                  <FaReply size={15} />
-                </span>
-                <span
-                  className='border border-border p-1 rounded hover:bg-input '
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowReply({ replyAll: true })
-                  }}
-                >
-                  <FaReplyAll size={15} />
-                </span>
+                <Tooltip message='Reply' tooltipClassName='text-foreground'>
+                  <div
+                    className='border border-border p-1 rounded hover:bg-input '
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowReply({ reply: true })
+                    }}
+                  >
+                    <FaReply size={15} />
+                  </div>
+                </Tooltip>
+                <Tooltip message='Reply all' tooltipClassName='text-foreground'>
+                  <div
+                    className='border border-border p-1 rounded hover:bg-input '
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowReply({ replyAll: true })
+                    }}
+                  >
+                    <FaReplyAll size={15} />
+                  </div>
+                </Tooltip>
                 <span className='whitespace-nowrap'>
                   {formatMailDate(email.receivedAt, true)}
                 </span>
@@ -135,10 +140,15 @@ const ThreadItem = ({ email, defaultExpanded, emails }) => {
                 <span className='truncate'>
                   {email.to.map((to) => to.name || to.address).join(', ')}
                 </span>
-                <BsChevronExpand
-                  className='shrink-0 cursor-pointer'
-                  onClick={() => setShowMore(true)}
-                />
+                <Tooltip
+                  message='Expand'
+                  tooltipClassName='text-foreground top-6!'
+                >
+                  <BsChevronExpand
+                    className='shrink-0 cursor-pointer'
+                    onClick={() => setShowMore(true)}
+                  />
+                </Tooltip>
               </div>
             ) : (
               <div className='flex flex-col gap-2'>
@@ -203,13 +213,22 @@ const ThreadItem = ({ email, defaultExpanded, emails }) => {
             </div>
           )}
           {quotedText.length > 0 && (
-            <div>
-              <div
-                className='mt-6 h-3.5 rounded-2xl not w-8 border border-border flex items-center justify-center bg-input hover:cursor-pointer'
-                onClick={() => setShowQuotedBlock((prev) => !prev)}
+            <div className='mb-12'>
+              <Tooltip
+                message={
+                  showQuotedBlock
+                    ? 'Hide trimmed content'
+                    : 'Show trimmed content'
+                }
+                tooltipClassName='top-7! left-13!'
               >
-                <span className='leading-none text-xs'>•••</span>
-              </div>
+                <div
+                  className='mt-6 h-3.5 rounded-2xl not w-8 border border-border flex items-center justify-center bg-input hover:cursor-pointer'
+                  onClick={() => setShowQuotedBlock((prev) => !prev)}
+                >
+                  <span className='leading-none text-xs'>•••</span>
+                </div>
+              </Tooltip>
               {showQuotedBlock && (
                 <div className='mt-6'>
                   <QuotedBlock quotes={[...quotedText]} />

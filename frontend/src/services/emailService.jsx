@@ -40,7 +40,8 @@ const sendMail = async ({
     })
   } catch (error) {
     console.log(error)
-    toast.error(error.data.error, {
+    await cancelMail({ attachmentsInfo, email })
+    toast.error(error.response.data.error, {
       containerId: 'result',
       icon: <FiXCircle className='text-red-500' size={18} />,
     })
@@ -49,7 +50,7 @@ const sendMail = async ({
 
 const cancelMail = async ({ attachmentsInfo, controllersRef, email }) => {
   attachmentsInfo.map((id) => {
-    if (controllersRef.current[id]) {
+    if (controllersRef?.current[id]) {
       controllersRef.current[id].abort()
       delete controllersRef.current[id]
     }
@@ -94,7 +95,8 @@ const sendReply = async ({
     toast('Mail sent sucessfully')
   } catch (error) {
     console.log(error)
-    toast(error.data.error)
+    cancelMail({ attachmentsInfo, email: reply })
+    toast(error.response.data.error)
   }
 }
 export { sendMail, cancelMail, sendReply }

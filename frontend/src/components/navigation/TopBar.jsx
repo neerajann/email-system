@@ -26,17 +26,19 @@ const TopBar = () => {
   }
 
   return (
-    <div
-      className='grid grid-cols-[auto_1fr_auto] xl:grid-cols-[15.5rem_1fr_1fr] items-center py-4 bg-background border-b border-border z-50
-  '
-    >
+    <div className='grid grid-cols-[auto_1fr_auto] xl:grid-cols-[15.5rem_1fr_1fr] items-center py-4 bg-background border-b border-border z-50'>
       <div className='flex items-center gap-4 min-w-0 px-4'>
         <GiHamburgerMenu
-          className='size-6 xl:hidden'
+          className='size-6 xl:hidden cursor-pointer'
           onClick={() => setShowSideBar((p) => !p)}
         />
         <div className='hidden sm:flex items-center gap-4 '>
-          <h2 className='text-lg font-bold'>inboxify</h2>
+          <h2
+            className='text-lg font-bold cursor-pointer'
+            onClick={() => navigate('/inbox')}
+          >
+            inboxify
+          </h2>
         </div>
       </div>
       <div className='relative w-full'>

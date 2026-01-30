@@ -23,7 +23,7 @@ const ConfirmationPopupModal = ({
         <button
           variant='ghost'
           size='icon'
-          className='border border-border p-1.5 rounded absolute top-4 right-4 hover:bg-input active:scale-[1.05] transition-all ease-in-out hover:scale-[0.95]'
+          className='border border-border p-1.5 rounded absolute top-4 right-4 hover:bg-input active:scale-[1.05] transition-all ease-in-out hover:scale-[0.95] cursor-pointer'
           onClick={() => {
             setShowConfirmationModal(false)
           }}
@@ -33,13 +33,13 @@ const ConfirmationPopupModal = ({
         <h3 className='text-center'>{message}</h3>
         <div className='flex gap-10'>
           <button
-            className='border border-border px-8 py-1 rounded hover:bg-input active:scale-[1.05] transition-all ease-in-out hover:scale-[0.95]'
+            className='border border-border px-8 py-1 rounded hover:bg-input active:scale-[1.05] transition-all ease-in-out hover:scale-[0.95] cursor-pointer'
             onClick={onConfirm}
           >
             Yes
           </button>
           <button
-            className='border border-border px-8 py-1 rounded hover:bg-input active:scale-[1.05] transition-all ease-in-out hover:scale-[0.95]'
+            className='border border-border px-8 py-1 rounded hover:bg-input active:scale-[1.05] transition-all ease-in-out hover:scale-[0.95] cursor-pointer'
             onClick={() => {
               setShowConfirmationModal(false)
             }}

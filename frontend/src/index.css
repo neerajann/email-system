@@ -29,6 +29,9 @@ body {
     'Helvetica Neue',
     sans-serif;
 }
+::selection {
+  @apply bg-primary text-primary-foreground;
+}
 :root {
   /* surfaces */
   --background: #ffffff;
@@ -101,7 +104,7 @@ body {
   --shadow-color: rgb(var(--shadow-color));
   --shadow-sm: 0 1px 2px rgb(var(--shadow-color) / 0.15);
   --shadow-md: 0 4px 6px rgb(var(--shadow-color) / 0.2);
-  --shadow-lg: 0 10px 15px rgb(var(--shadow-color) / 0.25);
+  --shadow-lg: 0 10px 25px rgb(var(--shadow-color) / 0.03);
 }
 @layer base {
   body {

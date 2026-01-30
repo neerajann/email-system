@@ -14,6 +14,7 @@ import {
 import { IoTrashOutline } from 'react-icons/io5'
 import useMailUpdate from '../services/mailUpdateService'
 import SearchListItem from '../components/mail/SearchListItem'
+import Tooltip from '../components/ui/Tooltip'
 
 const didMount = { current: false }
 
@@ -154,12 +155,17 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
           className={` overflow-hidden border-x border-border relative ${showThread ? 'hidden lg:flex' : 'flex'}  min-w-0 flex-col`}
         >
           <div className='flex flex-col shadow-xs mb-3 border-b border-border bg-background relative z-[40]'>
-            <div className='flex items-center justify-between text-sm font-medium px-4 py-2 shadow-xs bg-background relative'>
-              <div className='ml-6'>
+            <div className='flex items-center justify-between text-sm  px-4 py-2 shadow-xs bg-background relative'>
+              <Tooltip
+                message='Refresh'
+                parentClassName='ml-6'
+                tooltipClassName='top-6!'
+              >
                 <button onClick={() => refetch()}>
                   <IoMdRefresh size={20} className='cursor-pointer' />
                 </button>
-              </div>
+              </Tooltip>
+
               {selectionState.isBulkMode ? (
                 <div className='flex items-center gap-2 '>
                   <span className='text-xs font-normal mr-4'>
@@ -167,41 +173,45 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
                   </span>
                   {/* trash mail button  */}
                   {mailboxType === 'trash' ? (
-                    <button
-                      className=' border border-border p-2 rounded disabled:opacity-50 cursor-pointer hover:bg-input'
-                      onClick={() => {
-                        patchMailMutation.mutate({
-                          mailboxIds: Array.from(
-                            selectionState.selectedMailboxIds,
-                          ),
-                          data: { isDeleted: false },
-                        })
-                        setSelectionState(() => ({
-                          isBulkMode: false,
-                          selectedMailboxIds: new Set([]),
-                        }))
-                      }}
-                    >
-                      <MdRestoreFromTrash />
-                    </button>
+                    <Tooltip message='Restore'>
+                      <button
+                        className=' border border-border p-2 rounded disabled:opacity-50 cursor-pointer hover:bg-input'
+                        onClick={() => {
+                          patchMailMutation.mutate({
+                            mailboxIds: Array.from(
+                              selectionState.selectedMailboxIds,
+                            ),
+                            data: { isDeleted: false },
+                          })
+                          setSelectionState(() => ({
+                            isBulkMode: false,
+                            selectedMailboxIds: new Set([]),
+                          }))
+                        }}
+                      >
+                        <MdRestoreFromTrash />
+                      </button>
+                    </Tooltip>
                   ) : (
-                    <button
-                      className='border border-border p-2 rounded disabled:opacity-50 cursor-pointer'
-                      onClick={() => {
-                        patchMailMutation.mutate({
-                          mailboxIds: Array.from(
-                            selectionState.selectedMailboxIds,
-                          ),
-                          data: { isDeleted: true },
-                        })
-                        setSelectionState((prev) => ({
-                          isBulkMode: false,
-                          selectedMailboxIds: new Set([]),
-                        }))
-                      }}
-                    >
-                      <IoTrashOutline />
-                    </button>
+                    <Tooltip message='Delete'>
+                      <button
+                        className='border border-border p-2 rounded disabled:opacity-50 cursor-pointer'
+                        onClick={() => {
+                          patchMailMutation.mutate({
+                            mailboxIds: Array.from(
+                              selectionState.selectedMailboxIds,
+                            ),
+                            data: { isDeleted: true },
+                          })
+                          setSelectionState((prev) => ({
+                            isBulkMode: false,
+                            selectedMailboxIds: new Set([]),
+                          }))
+                        }}
+                      >
+                        <IoTrashOutline />
+                      </button>
+                    </Tooltip>
                   )}
                   {/* mail read/unread button  */}
                   {mails.some(
@@ -209,44 +219,49 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
                       selectionState.selectedMailboxIds.has(mail.mailboxId) &&
                       !mail.isRead,
                   ) ? (
-                    <button
-                      className=' border border-border p-2 rounded cursor-pointer'
-                      onClick={() => {
-                        patchMailMutation.mutate({
-                          mailboxIds: Array.from(
-                            selectionState.selectedMailboxIds,
-                          ),
-                          data: { isRead: true },
-                        })
-                        setSelectionState((prev) => ({
-                          isBulkMode: false,
-                          selectedMailboxIds: new Set([]),
-                        }))
-                      }}
-                    >
-                      <MdOutlineMarkEmailRead />
-                    </button>
+                    <Tooltip message='Mark as read'>
+                      <button
+                        className=' border border-border p-2 rounded cursor-pointer'
+                        onClick={() => {
+                          patchMailMutation.mutate({
+                            mailboxIds: Array.from(
+                              selectionState.selectedMailboxIds,
+                            ),
+                            data: { isRead: true },
+                          })
+                          setSelectionState((prev) => ({
+                            isBulkMode: false,
+                            selectedMailboxIds: new Set([]),
+                          }))
+                        }}
+                      >
+                        <MdOutlineMarkEmailRead />
+                      </button>
+                    </Tooltip>
                   ) : (
-                    <button
-                      className=' border border-border p-2 rounded cursor-pointer'
-                      onClick={() => {
-                        patchMailMutation.mutate({
-                          mailboxIds: Array.from(
-                            selectionState.selectedMailboxIds,
-                          ),
-                          data: { isRead: false },
-                        })
-                        setSelectionState((prev) => ({
-                          isBulkMode: false,
-                          selectedMailboxIds: new Set([]),
-                        }))
-                      }}
-                    >
-                      <MdOutlineMarkEmailUnread />
-                    </button>
+                    <Tooltip message='Mark as unread'>
+                      <button
+                        className=' border border-border p-2 rounded cursor-pointer'
+                        onClick={() => {
+                          patchMailMutation.mutate({
+                            mailboxIds: Array.from(
+                              selectionState.selectedMailboxIds,
+                            ),
+                            data: { isRead: false },
+                          })
+                          setSelectionState((prev) => ({
+                            isBulkMode: false,
+                            selectedMailboxIds: new Set([]),
+                          }))
+                        }}
+                      >
+                        <MdOutlineMarkEmailUnread />
+                      </button>
+                    </Tooltip>
                   )}
+
                   <button
-                    className=' bg-background border border-border px-4 py-2 rounded font-normal'
+                    className=' bg-background border border-border px-4 py-2 rounded font-normal cursor-pointer'
                     onClick={() =>
                       setSelectionState(() => {
                         return {
@@ -262,7 +277,7 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
               ) : (
                 <div>
                   <button
-                    className=' bg-background border border-border px-4 py-2 rounded font-normal'
+                    className=' bg-background border border-border px-4 py-2 rounded font-normal cursor-pointer'
                     onClick={() =>
                       setSelectionState(() => {
                         const allMailboxIds = new Set(

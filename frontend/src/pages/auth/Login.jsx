@@ -104,7 +104,7 @@ const Login = () => {
               />
               <button
                 type='button'
-                className=' absolute top-1/2 right-6'
+                className=' absolute top-1/2 right-6 cursor-pointer'
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
@@ -120,7 +120,7 @@ const Login = () => {
           <button
             type='submit'
             onClick={(e) => handleSubmit(e)}
-            className='mt-5 w-full p-2 rounded-md border border-border bg-foreground text-background font-medium shadow-xs hover:scale-[0.97] transition-all active:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-ring/50'
+            className='mt-5 w-full p-2 rounded-md border border-border bg-foreground text-background font-medium shadow-xs active:scale-[1.02] transition-all ease-in-out hover:scale-[0.98] cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/50'
           >
             Login
           </button>
