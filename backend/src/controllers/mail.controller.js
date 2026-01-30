@@ -3,6 +3,7 @@ import mailBoxService from '../services/mail/mailbox.service.js'
 import fetchMailService from '../services/mail/fetch.mail.service.js'
 import handleMailError from '../utils/handleMailError.js'
 import mongoose from 'mongoose'
+import recipientsSuggestionService from '../services/mail/recipients.suggestion.service.js'
 
 const getInbox = async (req, reply) => {
   try {
@@ -122,6 +123,7 @@ const sendMail = async (req, reply) => {
     const attachments = req.body?.attachments
     const emailId = req.body?.emailId
     const mailboxId = req.body?.mailboxId
+
     await sendMailService.deliverMail({
       senderId: req.userId,
       senderAddress: req.user,
@@ -195,6 +197,24 @@ const deleteMail = async (req, reply) => {
   }
 }
 
+const getRecipientsSuggestion = async (req, reply) => {
+  try {
+    const query = req.query?.q
+    if (!query) {
+      return reply.code(400).send({
+        error: 'Missing query parameter',
+      })
+    }
+    const suggestions = await recipientsSuggestionService.suggestRecipients({
+      userId: req.userId,
+      query,
+    })
+    return reply.send(suggestions)
+  } catch (error) {
+    console.log(error)
+    handleMailError(reply, error)
+  }
+}
 export default {
   getInbox,
   getSent,
@@ -205,4 +225,5 @@ export default {
   searchMail,
   deleteMail,
   getStarred,
+  getRecipientsSuggestion,
 }

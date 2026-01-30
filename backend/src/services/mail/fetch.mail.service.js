@@ -78,8 +78,7 @@ const getMails = async ({
         messageCount: '$thread.messageCount',
         isRead: 1,
         isStarred: 1,
-        from: '$email.from',
-        to: '$email.to',
+        from: '$thread.senders',
         snippet: {
           $substrCP: ['$email.body.text', 0, 200],
         },
@@ -93,6 +92,7 @@ const getMails = async ({
   const sliced = hasMore ? mails.slice(0, limit) : mails
 
   const last = sliced[sliced.length - 1]
+
   return {
     mails: sliced,
     nextCursor: hasMore
@@ -229,8 +229,7 @@ const searchMail = async ({ query, userId, cursor, limit = 20 }) => {
         isStarred: { $first: '$mailbox.isStarred' },
         isDeleted: { $first: '$mailbox.isDeleted' },
         relevanceScore: { $max: '$score' },
-        from: { $first: '$from' },
-        to: { $first: '$to' },
+        from: { $first: '$thread.senders' },
         body: { $first: '$body.text' },
         isSystem: { $first: '$isSystem' },
         receivedAt: { $first: '$mailbox.lastMessageAt' },
@@ -252,7 +251,6 @@ const searchMail = async ({ query, userId, cursor, limit = 20 }) => {
         isRead: 1,
         isStarred: 1,
         from: 1,
-        to: 1,
         body: 1,
         labels: 1,
         isSystem: 1,

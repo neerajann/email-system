@@ -70,6 +70,13 @@ const mailRouter = async (fastify) => {
     },
     mailController.deleteMail,
   )
+  fastify.get(
+    '/recipients/suggestions',
+    {
+      preHandler: verifyJWT,
+    },
+    mailController.getRecipientsSuggestion,
+  )
 }
 
 export default mailRouter

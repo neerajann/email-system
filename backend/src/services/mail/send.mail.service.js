@@ -8,6 +8,7 @@ import {
   Email,
   Attachment,
   User,
+  RecipientHistory,
 } from '@email-system/core/models'
 import { outboundEmailQueue } from '@email-system/core/queues'
 import notifyUser from '@email-system/core/messaging'
@@ -85,7 +86,12 @@ const deliverMail = async ({
 
     if (!thread) {
       // create a new thread if it doesnot exist
-      thread = await createThread({ subject, senderAddress, recipients })
+      thread = await createThread({
+        subject,
+        senderAddress: userInfo.emailAddress,
+        senderName: userInfo.name,
+        recipients,
+      })
     } else {
       // check if all the participants are same as that of the thread
       const nextParticipants = new Set([senderAddress, ...recipients])
@@ -98,7 +104,12 @@ const deliverMail = async ({
 
       //If not create a new thread
       if (hasNewParticipants) {
-        thread = await createThread({ subject, senderAddress, recipients })
+        thread = await createThread({
+          subject,
+          senderAddress: userInfo.emailAddress,
+          senderName: userInfo.name,
+          recipients,
+        })
       }
     }
 
@@ -142,16 +153,21 @@ const deliverMail = async ({
         $inc: {
           messageCount: 1,
         },
+        $addToSet: {
+          senders: {
+            name: userInfo.name,
+            address: userInfo.emailAddress,
+          },
+        },
       })
     }
-    console.log({ recipients })
 
     var senderInRecipent = recipients.includes(senderAddress)
     const labels = senderInRecipent ? ['SENT', 'INBOX'] : ['SENT']
 
     var mailbox = await Mailbox.findOneAndUpdate(
       {
-        userId: new mongoose.Types.ObjectId(senderId),
+        userId: userInfo._id,
         threadId: thread._id,
       },
       {
@@ -172,81 +188,107 @@ const deliverMail = async ({
       },
     )
 
-    var envelopeTo = recipients.filter((r) => r != senderAddress)
-    // update mailbox or creates a new one
+    const envelopeTo = recipients.filter((r) => r != senderAddress)
+
+    if (senderInRecipent) {
+      const notifications = [
+        {
+          userId: senderId,
+          newMail: {
+            id: mailbox._id,
+            from: thread.senders,
+            subject: thread.subject,
+            snippet: email.body?.text?.substring(0, 200) ?? ' ',
+            isSystem: false,
+            messageCount: thread.messageCount,
+            isRead: false,
+            isStarred: false,
+            receivedAt: email.receivedAt,
+            isDeleted: false,
+          },
+        },
+      ]
+      notifyUser(notifications)
+    }
+
+    if (envelopeTo.length < 0) return true
+
+    // add it to history
+    await RecipientHistory.bulkWrite(
+      recipients.map((email) => ({
+        updateOne: {
+          filter: {
+            ownerUserId: userInfo._id,
+            emailAddress: email,
+          },
+          update: {
+            $inc: { sentCount: 1 },
+          },
+          upsert: true,
+        },
+      })),
+    )
+
+    // add to mail delivery queue
+    await outboundEmailQueue.add(
+      'outboundEmailQueue',
+      {
+        emailId: email._id,
+        threadId: thread._id,
+        sender: {
+          address: senderAddress,
+          name: userInfo.name,
+          id: senderId,
+        },
+        recipients: envelopeTo,
+        headerTo: recipients,
+        subject,
+        body: {
+          html: bodyHtml,
+          text: bodyText,
+        },
+        attachments,
+        messageId: messageId,
+        inReplyTo: email?.inReplyTo,
+        references: email?.references,
+      },
+      {
+        attempts: 1,
+        backoff: { type: 'exponential', delay: 5000 },
+        removeOnComplete: {
+          age: 3600,
+        },
+        removeOnFail: {
+          age: 24 * 3600,
+        },
+      },
+    )
+    return true
   } catch (error) {
     if (error.message === 'INVALID_ATTACHMENTS') throw error
     if (error.message === 'USER_NOT_FOUND') throw error
     if (error.message === 'UNAUTHORIZED_REPLY') throw error
-    console.log(error)
-    throw new Error('DATABASE_ERROR')
+    if (error instanceof mongoose.Error) throw new Error('DATABASE_ERROR')
+    throw error
   }
-
-  if (senderInRecipent) {
-    const notifications = [
-      {
-        userId: senderId,
-        newMail: {
-          id: mailbox._id,
-          from: email.from,
-          to: email.to,
-          subject: email.subject,
-          snippet: email.body?.text?.substring(0, 200) ?? ' ',
-          isSystem: false,
-          messageCount: thread.messageCount,
-          isRead: false,
-          isStarred: false,
-          receivedAt: email.receivedAt,
-          isDeleted: false,
-        },
-      },
-    ]
-    notifyUser(notifications)
-  }
-
-  if (envelopeTo.length < 0) return true
-  // add to mail delivery queue
-  await outboundEmailQueue.add(
-    'outboundEmailQueue',
-    {
-      emailId: email._id,
-      threadId: thread._id,
-      sender: {
-        address: senderAddress,
-        name: userInfo.name,
-        id: senderId,
-      },
-      recipients: envelopeTo,
-      headerTo: recipients,
-      subject,
-      body: {
-        html: bodyHtml,
-        text: bodyText,
-      },
-      attachments,
-      messageId: messageId,
-      inReplyTo: email?.inReplyTo,
-      references: email?.references,
-    },
-    {
-      attempts: 1,
-      backoff: { type: 'exponential', delay: 5000 },
-      removeOnComplete: {
-        age: 3600,
-      },
-      removeOnFail: {
-        age: 24 * 3600,
-      },
-    },
-  )
-  return true
 }
 
-const createThread = async ({ subject, senderAddress, recipients }) => {
+const createThread = async ({
+  subject,
+  senderAddress,
+  senderName,
+  recipients,
+}) => {
   return await Thread.create({
     subject: subject,
     participants: Array.from(new Set([senderAddress, ...recipients])),
     lastMessageAt: new Date(),
+    senders: [
+      {
+        name: senderName,
+        address: senderAddress,
+      },
+    ],
   })
 }
 
