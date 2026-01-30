@@ -73,7 +73,7 @@ const TopBar = () => {
       {showConfirmationModal && (
         <ConfirmationPopupModal
           setShowConfirmationModal={setShowConfirmationModal}
-          message={'Are you sure you want to logout?'}
+          message={`Logged in as ${user}. Logout?`}
           handlerFunction={handleLogout}
         />
       )}

@@ -72,10 +72,10 @@ const ThreadActionButtons = ({
       )}
       <Tooltip
         message={email.isRead ? 'Mark as unread' : 'Mark as read'}
-        tooltipClassName='left-3'
+        tooltipClassName='hidden sm:block -left-2!'
       >
         <button
-          className=' border border-border p-2 rounded mr-2 cursor-pointer hover:bg-input'
+          className=' border border-border p-2 rounded cursor-pointer hover:bg-input'
           onClick={(e) =>
             patchMail(e, {
               isRead: !email.isRead,

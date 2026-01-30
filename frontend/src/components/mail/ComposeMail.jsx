@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { RxCross2 } from 'react-icons/rx'
 import { emailPattern } from '../../utils/pattern'
 import { filesize } from 'filesize'
@@ -7,14 +7,15 @@ import { RiAttachment2 } from 'react-icons/ri'
 import { useQueryClient } from '@tanstack/react-query'
 import { handleFiles, removeAttachment } from '../../services/attachmentService'
 import { cancelMail, sendMail } from '../../services/emailService'
+import api from '../../services/api'
 
 const ComposeMail = () => {
   const controllersRef = useRef({})
   const queryClient = useQueryClient()
   const { setShowComposeMail } = useUI()
-  const [showSuggestion, setShowSuggestion] = useState(false)
   const [recipents, setRecipents] = useState('')
   const [attachmentsInfo, setAttachmentsInfo] = useState([])
+  const [suggestions, setSuggestion] = useState([])
   const [email, setEmail] = useState({
     recipients: [],
     subject: '',
@@ -27,12 +28,51 @@ const ComposeMail = () => {
   const fileInputRef = useRef(null)
   const uploadErrorRef = useRef(null)
 
-  const handleRecipentsChange = (e) => {
-    const el = e.target
-    const value = el.value
+  useEffect(() => {
+    if (recipents.length === 0) {
+      setSuggestion([])
+      return
+    }
+    const controller = new AbortController()
 
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
+    const fetchSuggesions = async () => {
+      try {
+        const { data } = await api.get(
+          `/mail/recipients/suggestions?q=${recipents}`,
+          {
+            signal: controller.signal,
+          },
+        )
+        if (data?.length) {
+          setSuggestion(data)
+          return
+        }
+      } catch (error) {
+        if (error.name === 'CanceledError') return
+        console.log(error)
+      }
+    }
+    const handler = setTimeout(() => {
+      fetchSuggesions()
+    }, 250)
+
+    if (emailPattern.test(recipents)) {
+      setSuggestion([
+        {
+          id: '0831010301ajddjlda',
+          emailAddress: recipents,
+        },
+      ])
+    }
+
+    return () => {
+      clearTimeout(handler)
+      controller.abort()
+    }
+  }, [recipents])
+
+  const handleRecipentsChange = async (e) => {
+    const value = e.target.value
 
     const parts = value.split(',').map((p) => p.trim())
 
@@ -55,8 +95,8 @@ const ComposeMail = () => {
     } else {
       setRecipents(current || '')
     }
-    setShowSuggestion(emailPattern.test(current))
   }
+  console.log(suggestions)
 
   return (
     <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] lg:p-4 '>
@@ -110,7 +150,7 @@ const ComposeMail = () => {
                   >
                     {r}
                     <RxCross2
-                      className='inline ml-1'
+                      className='inline ml-1 cursor-pointer'
                       onClick={() => {
                         setEmail({
                           ...email,
@@ -139,27 +179,38 @@ const ComposeMail = () => {
                       setRecipents('')
                       setEmail({
                         ...email,
-                        recipients: [...email.recipients, r],
+                        recipients: Array.from(
+                          new Set([...email.recipients, r]),
+                        ),
                       })
-                      setShowSuggestion(false)
                     }
                   }
                 }}
               />
             </div>
-            {showSuggestion && (
-              <div
-                className='absolute left-0 top-full mt-1 w-full bg-background border border-border rounded p-2 pl-3 text-sm shadow z-50'
-                onClick={() => {
-                  const r = [...email.recipients, recipents]
-                  setEmail({ ...email, recipients: r })
-                  setShowSuggestion(false)
-                  setRecipents('')
-                }}
-              >
-                {recipents}
-              </div>
-            )}
+            {suggestions?.length > 0 &&
+              suggestions.map((suggestion) => {
+                return (
+                  <div
+                    key={suggestion.id}
+                    className='absolute left-0 top-full mt-1 w-full bg-background border border-border rounded p-2 pl-3 text-sm shadow z-50 cursor-pointer'
+                    onClick={() => {
+                      setEmail({
+                        ...email,
+                        recipients: Array.from(
+                          new Set([
+                            ...email.recipients,
+                            suggestion.emailAddress,
+                          ]),
+                        ),
+                      })
+                      setRecipents('')
+                    }}
+                  >
+                    {suggestion.emailAddress}
+                  </div>
+                )
+              })}
             <span ref={recipentsRef} className=' text-sm text-red-500 '></span>
           </div>
           {/* subject */}

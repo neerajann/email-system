@@ -158,7 +158,7 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
             <div className='flex items-center justify-between text-sm  px-4 py-2 shadow-xs bg-background relative'>
               <Tooltip
                 message='Refresh'
-                parentClassName='ml-6'
+                parentClassName='ml-3 sm:ml-6'
                 tooltipClassName='top-6!'
               >
                 <button onClick={() => refetch()}>
@@ -173,7 +173,7 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
                   </span>
                   {/* trash mail button  */}
                   {mailboxType === 'trash' ? (
-                    <Tooltip message='Restore'>
+                    <Tooltip message=''>
                       <button
                         className=' border border-border p-2 rounded disabled:opacity-50 cursor-pointer hover:bg-input'
                         onClick={() => {

@@ -75,9 +75,7 @@ const SideBar = React.memo(() => {
                 key={item.name}
                 to={item.route}
                 className={({ isActive }) =>
-                  `flex items-center text-sm rounded mb-5 border border-border p-2 hover:shadow-sm ${
-                    isActive ? 'bg-input font-medium' : ''
-                  }`
+                  `flex items-center text-sm rounded mb-5 border border-border p-2 hover:shadow-[0_0_15px_rgb(var(--shadow-color)/0.05)] transition-shadow ease-in ${isActive ? 'bg-input font-medium' : ''}`
                 }
               >
                 {({ isActive }) => (

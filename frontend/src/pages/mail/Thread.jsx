@@ -81,7 +81,10 @@ const Thread = () => {
       >
         <div
           className='text-sm flex items-center gap-2 border w-fit px-3 py-1.5 rounded border-border cursor-pointer hover:bg-input'
-          onClick={() => setShowThread(false)}
+          onClick={() => {
+            setShowThread(false)
+            navigate('..', { relative: 'path' })
+          }}
         >
           <FaArrowLeftLong />
           Back
@@ -96,18 +99,19 @@ const Thread = () => {
       </div>
 
       <div className='mb-8 w-full'>
-        <div
-          className={`${showThread ? 'hidden lg:flex' : 'flex'} shrink-0 gap-3 ml-1 float-right`}
-        >
-          <ThreadActionButtons
-            email={emails[0]}
-            patchMail={patchMail}
-            setShowConfirmationModal={setShowConfirmationModal}
-            navigate={navigate}
-          />
+        <div className='flex items-start justify-between gap-3 mb-2'>
+          <h2 className='text-xl font-semibold'>{emails[0]?.subject}</h2>
+          <div
+            className={`${showThread ? 'hidden lg:flex' : 'flex'} shrink-0 gap-3`}
+          >
+            <ThreadActionButtons
+              email={emails[0]}
+              patchMail={patchMail}
+              setShowConfirmationModal={setShowConfirmationModal}
+              navigate={navigate}
+            />
+          </div>
         </div>
-
-        <h2 className='text-xl font-semibold'>{emails[0]?.subject}</h2>
       </div>
 
       <div className='grid gap-5 min-w-0 *:min-w-0 mb-8'>

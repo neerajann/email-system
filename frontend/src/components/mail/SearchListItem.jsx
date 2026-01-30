@@ -77,18 +77,16 @@ const SearchListItem = memo((props) => {
           <div className='flex flex-col justify-between flex-1 min-w-0 w-0'>
             <div className='flex items-center gap-1 mb-1.5  min-w-0'>
               <h3
-                className={`text-sm truncate text-foreground ${
-                  !mail.isRead && 'font-semibold'
-                }`}
+                className={`text-sm truncate ${!mail.isRead && 'font-semibold'}`}
               >
-                {mail.from.name ?? mail.from.address}
-                {mail.messageCount > 1 && (
-                  <span
-                    className={`text-muted-foreground ml-2 ${!mail.isRead && 'font-semibold'}`}
-                  >
-                    {mail.messageCount}
-                  </span>
-                )}
+                {mail.from
+                  .map((from) => {
+                    return from.name ?? from.address
+                  })
+                  .join(', ')}
+                <span className='text-muted-foreground ml-2 text-xs'>
+                  {mail.messageCount}
+                </span>
               </h3>
 
               <div className='ml-2 flex gap-1.5'>
@@ -194,9 +192,22 @@ const SearchListItem = memo((props) => {
               {formatMailDate(mail.receivedAt)}
             </p>
 
-            <div className='sm:hidden'>
+            <button
+              className='sm:hidden p-3 '
+              disabled={mail.isDeleted}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                mailUpdateMutation.mutate({
+                  mailboxIds: [mail.mailboxId],
+                  data: {
+                    isStarred: !mail.isStarred,
+                  },
+                })
+              }}
+            >
               {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
-            </div>
+            </button>
           </div>
         </div>
       </div>

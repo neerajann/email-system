@@ -10,10 +10,14 @@ const useMailUpdate = (queryKey, options = {}) => {
   } = options
 
   return useMutation({
-    mutationFn: ({ mailboxIds, data }) =>
-      api.patch('/mail', { mailboxIds, ...data }),
+    mutationFn: ({ mailboxIds, data }) => {
+      if (!mailboxIds || mailboxIds.length === 0) return Promise.resolve(null)
+
+      return api.patch('/mail', { mailboxIds, ...data })
+    },
 
     onMutate: async ({ mailboxIds, data }) => {
+      if (!mailboxIds || mailboxIds.length === 0) return
       await queryClient.cancelQueries({ queryKey })
 
       const previousData = queryClient.getQueryData(queryKey)
@@ -50,6 +54,7 @@ const useMailUpdate = (queryKey, options = {}) => {
 
     onSettled: (_data, _error, variables) => {
       const { mailboxIds } = variables
+      if (!mailboxIds || mailboxIds.length === 0) return
 
       mailboxIds.forEach((id) => {
         queryClient.invalidateQueries({ queryKey: ['mail', id] })

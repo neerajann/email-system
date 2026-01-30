@@ -76,20 +76,21 @@ const MailListItem = memo((props) => {
             {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
           </Tooltip>
           <div className='flex flex-col justify-between flex-1 min-w-0 w-0'>
+            {/* mail from */}
             <h3
-              className={`text-sm truncate text-foreground mb-1.5 ${
-                !mail.isRead && 'font-semibold'
-              }`}
+              className={`text-sm truncate mb-1.5 ${!mail.isRead && 'font-semibold'}`}
             >
-              {mail.from.name ?? mail.from.address}
-              {mail.messageCount > 1 && (
-                <span
-                  className={`text-muted-foreground ml-2 ${!mail.isRead && 'font-semibold'}`}
-                >
-                  {mail.messageCount}
-                </span>
-              )}
+              {mail?.from
+                ?.map((from) => {
+                  return from.name ?? from.address
+                })
+                .join(', ')}
+              <span className='text-muted-foreground ml-2 text-xs'>
+                {mail.messageCount}
+              </span>
             </h3>
+
+            {/* mail subject */}
             <h3
               className={`text-sm truncate  mb-1.5 ${
                 !mail.isRead && 'font-semibold'
@@ -174,13 +175,28 @@ const MailListItem = memo((props) => {
           </div>
 
           {/* date and time */}
-          <div className='group-hover:hidden flex flex-col gap-3 items-end'>
+          <div className='group-hover:hidden flex flex-col  items-end'>
             <p className={`text-xs ml-3 ${!mail.isRead && 'font-semibold'} `}>
               {formatMailDate(mail.receivedAt)}
             </p>
-            <div className='sm:hidden'>
+            {/* for smaller devices */}
+
+            <button
+              className='sm:hidden p-3 '
+              disabled={mail.isDeleted}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                mailUpdateMutation.mutate({
+                  mailboxIds: [mail.mailboxId],
+                  data: {
+                    isStarred: !mail.isStarred,
+                  },
+                })
+              }}
+            >
               {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
-            </div>
+            </button>
           </div>
         </div>
       </div>

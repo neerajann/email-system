@@ -48,7 +48,7 @@ const ThreadItem = ({ email, defaultExpanded, emails }) => {
               <h2 className=' font-semibold text-sm mr-3 shrink-0 whitespace-nowrap'>
                 {email.from.name ?? email.from.address}
               </h2>
-              <p className='text-sm  text-muted-foreground truncate break-all overflow-hidden'>
+              <p className='text-sm  text-muted-foreground truncate  overflow-hidden'>
                 {email.body.text}
               </p>
             </div>
@@ -92,7 +92,7 @@ const ThreadItem = ({ email, defaultExpanded, emails }) => {
               </div>
 
               <div
-                className={` ${showMore && 'opacity-0'} sm:opacity-100 flex items-center gap-4 text-xs text-muted-foreground flex-none `}
+                className={` ${showMore && 'opacity-0'} sm:opacity-100 flex items-center gap-4 text-xs text-muted-foreground shrink-0`}
               >
                 <Tooltip message='Reply' tooltipClassName='text-foreground'>
                   <div
@@ -105,17 +105,22 @@ const ThreadItem = ({ email, defaultExpanded, emails }) => {
                     <FaReply size={15} />
                   </div>
                 </Tooltip>
-                <Tooltip message='Reply all' tooltipClassName='text-foreground'>
-                  <div
-                    className='border border-border p-1 rounded hover:bg-input '
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setShowReply({ replyAll: true })
-                    }}
+                {email.to.length > 1 && (
+                  <Tooltip
+                    message='Reply all'
+                    tooltipClassName='text-foreground'
                   >
-                    <FaReplyAll size={15} />
-                  </div>
-                </Tooltip>
+                    <div
+                      className='border border-border p-1 rounded hover:bg-input '
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowReply({ replyAll: true })
+                      }}
+                    >
+                      <FaReplyAll size={15} />
+                    </div>
+                  </Tooltip>
+                )}
                 <span className='whitespace-nowrap'>
                   {formatMailDate(email.receivedAt, true)}
                 </span>
@@ -177,14 +182,14 @@ const ThreadItem = ({ email, defaultExpanded, emails }) => {
               dangerouslySetInnerHTML={{
                 __html: email.body.html,
               }}
-              className='mt-7 text-sm text-foreground'
+              className='mt-7 text-sm text-foreground overflow-x-auto wrap-break-word'
             />
           ) : (
             <div
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(email.body.html),
               }}
-              className='mt-7 text-sm whitespace-pre-wrap text-foreground'
+              className='mt-7 text-sm whitespace-pre-wrap text-foreground overflow-x-auto wrap-break-word'
             />
           )}
           {email.attachments.length !== 0 && (
@@ -198,9 +203,9 @@ const ThreadItem = ({ email, defaultExpanded, emails }) => {
                   return (
                     <div
                       key={attachment.id}
-                      className=' border border-border py-2 px-4 bg-input  flex items-center gap-6 rounded w-fit'
+                      className=' border border-border py-2 px-4 bg-input  flex items-center gap-6 rounded w-fit min-w-0'
                     >
-                      <span>{attachment.fileName}</span>
+                      <span className='truncate'>{attachment.fileName}</span>
                       <a
                         href={`${import.meta.env.VITE_API_URL}/mail/attachment/${attachment.id}?mailId=${email.mailId}`}
                       >
@@ -223,7 +228,7 @@ const ThreadItem = ({ email, defaultExpanded, emails }) => {
                 tooltipClassName='top-7! left-13!'
               >
                 <div
-                  className='mt-6 h-3.5 rounded-2xl not w-8 border border-border flex items-center justify-center bg-input hover:cursor-pointer'
+                  className='mt-6 h-3.5 rounded-2xl w-8 border border-border flex items-center justify-center bg-input hover:cursor-pointer'
                   onClick={() => setShowQuotedBlock((prev) => !prev)}
                 >
                   <span className='leading-none text-xs'>•••</span>
@@ -246,13 +251,15 @@ const ThreadItem = ({ email, defaultExpanded, emails }) => {
                 <FaReply />
                 Reply
               </button>
-              <button
-                className='flex items-center gap-3  border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'
-                onClick={() => setShowReply({ replyAll: true })}
-              >
-                <FaReplyAll />
-                Reply All
-              </button>
+              {email.to.length > 1 && (
+                <button
+                  className='flex items-center gap-3  border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'
+                  onClick={() => setShowReply({ replyAll: true })}
+                >
+                  <FaReplyAll />
+                  Reply All
+                </button>
+              )}
             </div>
           )}
         </div>
