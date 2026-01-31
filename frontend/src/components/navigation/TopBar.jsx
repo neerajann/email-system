@@ -1,5 +1,5 @@
 import { GiHamburgerMenu } from 'react-icons/gi'
-import api from '../../services/api'
+import api from '../../services/api.js'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUI } from '../../contexts/UIContext'
 import { useNavigate } from 'react-router-dom'

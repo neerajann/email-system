@@ -3,10 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FaArrowLeftLong } from 'react-icons/fa6'
 import { useUI } from '../../contexts/UIContext'
-import api from '../../services/api'
-import ThreadItem from '../../components/thread/ThreadItem'
-import ThreadActionButtons from '../../components/thread/ThreadActionButtons'
-import useMailUpdate from '../../services/mailUpdateService'
+import api from '../../services/api.js'
+import ThreadItem from '../../components/mail/thread/ThreadItem.jsx'
+import ThreadActionButtons from '../../components/mail/thread/ThreadActionButtons.jsx'
+import useMailUpdate from '../../hooks/mailbox/useMailUpdate.js'
 import ConfirmationPopupModal from '../../components/ui/ConfirmationPopupModal'
 
 const Thread = () => {
@@ -28,7 +28,7 @@ const Thread = () => {
     retry: 1,
   })
 
-  const emails = data?.mails || []
+  const mails = data?.mails || []
 
   useEffect(() => {
     if (isError) {
@@ -43,7 +43,7 @@ const Thread = () => {
     e.preventDefault()
     e.stopPropagation()
     patchMailMutation.mutate({
-      mailboxIds: [emails[0].mailboxId],
+      mailboxIds: [mails[0].mailboxId],
       data,
     })
   }
@@ -66,12 +66,12 @@ const Thread = () => {
   let hiddenCount = 0
   let latestMessages = []
   let oldMessage = []
-  if (!emails.length) return null
+  if (!mails.length) return null
 
-  if (emails.length > 3) {
-    oldMessage = emails.slice(0, 1)
-    hiddenCount = Math.max(0, emails.length - 3)
-    latestMessages = emails.slice(emails.length - 2, emails.length)
+  if (mails.length > 3) {
+    oldMessage = mails.slice(0, 1)
+    hiddenCount = Math.max(0, mails.length - 3)
+    latestMessages = mails.slice(mails.length - 2, mails.length)
   }
 
   return (
@@ -90,7 +90,7 @@ const Thread = () => {
           Back
         </div>
         <ThreadActionButtons
-          email={emails[0]}
+          mail={mails[0]}
           patchMail={patchMail}
           setShowConfirmationModal={setShowConfirmationModal}
           setShowThread={setShowThread}
@@ -100,15 +100,16 @@ const Thread = () => {
 
       <div className='mb-8 w-full'>
         <div className='flex items-start justify-between gap-3 mb-2'>
-          <h2 className='text-xl font-semibold'>{emails[0]?.subject}</h2>
+          <h2 className='text-xl font-semibold'>{mails[0]?.subject}</h2>
           <div
             className={`${showThread ? 'hidden lg:flex' : 'flex'} shrink-0 gap-3`}
           >
             <ThreadActionButtons
-              email={emails[0]}
+              mail={mails[0]}
               patchMail={patchMail}
               setShowConfirmationModal={setShowConfirmationModal}
               navigate={navigate}
+              setShowThread={setShowThread}
             />
           </div>
         </div>
@@ -121,9 +122,9 @@ const Thread = () => {
               return (
                 <ThreadItem
                   key={o.emailId}
-                  email={o}
+                  mail={o}
                   defaultExpanded={false}
-                  emails={emails}
+                  mails={mails}
                 />
               )
             })}
@@ -141,9 +142,9 @@ const Thread = () => {
               return (
                 <ThreadItem
                   key={latest.emailId}
-                  email={latest}
+                  mail={latest}
                   defaultExpanded={index === latestMessages.length - 1}
-                  emails={emails}
+                  mails={mails}
                 />
               )
             })}
@@ -151,13 +152,13 @@ const Thread = () => {
         )}
 
         {(showHidden || hiddenCount === 0) &&
-          emails.map((email, index) => {
+          mails.map((mail, index) => {
             return (
               <ThreadItem
-                key={email.emailId}
-                email={email}
-                defaultExpanded={index === emails.length - 1}
-                emails={emails}
+                key={mail.emailId}
+                mail={mail}
+                defaultExpanded={index === mails.length - 1}
+                mails={mails}
               />
             )
           })}
@@ -167,7 +168,7 @@ const Thread = () => {
           handlerFunction={deleteForever}
           message={'Are you sure you want to delete this mail forever?'}
           setShowConfirmationModal={setShowConfirmationModal}
-          mailboxId={emails[0].mailboxId}
+          mailboxId={mails[0].mailboxId}
         />
       )}
       <div className='h-40 w-full shrink-0'></div>

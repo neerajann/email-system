@@ -1,40 +1,26 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ToastContainer, toast } from 'react-toastify'
+import { useEffect, useMemo, useRef } from 'react'
+import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { Outlet } from 'react-router-dom'
-import MailListItem from '../components/mail/MailListItem'
+import MailListItem from '../components/mail/list/MailListItem.jsx'
 import { useUI } from '../contexts/UIContext'
-import { IoMdRefresh } from 'react-icons/io'
-import {
-  MdOutlineMarkEmailUnread,
-  MdOutlineMarkEmailRead,
-  MdRestoreFromTrash,
-} from 'react-icons/md'
-import { IoTrashOutline } from 'react-icons/io5'
-import useMailUpdate from '../services/mailUpdateService'
-import SearchListItem from '../components/mail/SearchListItem'
-import Tooltip from '../components/ui/Tooltip'
+import SearchListItem from '../components/mail/list/SearchListItem.jsx'
+import useMailboxQuery from '../hooks/mailbox/useMailboxQuery.js'
+import useMailboxToasts from '../hooks/mailbox/useMailboxToasts.js'
+import useMailboxSSE from '../hooks/mailbox/useMailboxSSE.js'
+import useInfiniteScroll from '../hooks/mailbox/useInfiniteScroll.js'
+import useBulkSelection from '../hooks/mailbox/useBulkSelection.js'
+import MailListHeader from '../components/mail/list/MailListHeader.jsx'
 
 const didMount = { current: false }
 
-const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
+const MailListLayout = ({ mailboxType, queryKey, fetchFunction, query }) => {
   const loadMoreRef = useRef(null)
   const { showThread, setUnreadCount } = useUI()
-  const queryClient = useQueryClient()
   const memoizedQueryKey = useMemo(() => queryKey, [queryKey])
 
-  const patchMailMutation = useMailUpdate(memoizedQueryKey, {
-    isInfiniteQuery: true,
-  })
-
-  const [selectionState, setSelectionState] = useState({
-    isBulkMode: false,
-    selectedMailboxIds: new Set([]),
-  })
-
   const {
-    data = [],
+    mails,
     isLoading,
     isError,
     error,
@@ -42,111 +28,25 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-  } = useInfiniteQuery({
-    queryKey: queryKey,
-    queryFn: fetchFuction,
-    staleTime: 5 * 60 * 1000,
-    initialPageParam: null,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  } = useMailboxQuery({ queryKey, fetchFunction })
+
+  useMailboxToasts({ isLoading, isError, error })
+  useMailboxSSE({ mailboxType, queryKey, didMount, refetch })
+  useInfiniteScroll({
+    ref: loadMoreRef,
+    fetchNextPage,
+    isFetchingNextPage,
+    hasNextPage,
   })
 
-  const mails = data?.pages?.flatMap((page) => page.mails) ?? []
-
-  useEffect(() => {
-    var toastId
-
-    if (isLoading) {
-      toastId = toast.loading('Loading...', {
-        containerId: 'loading',
-      })
-    }
-
-    if (isError) {
-      toast.dismiss()
-      toast.error(error.message || 'Something went wrong', {
-        containerId: 'loading',
-      })
-    }
-
-    if (!isLoading && !isError) {
-      toast.dismiss()
-    }
-
-    return () => toast.dismiss()
-  }, [isLoading, isError])
+  const { selectedIds, selectAll, toggle, clear, isBulkMode } =
+    useBulkSelection()
 
   useEffect(() => {
     if (mailboxType !== 'inbox') return
-    if (didMount.current) {
-      refetch()
-    } else {
-      didMount.current = true
-    }
-
-    const sse = new EventSource(`${import.meta.env.VITE_API_URL}/events`, {
-      withCredentials: true,
-    })
-
-    sse.onmessage = (e) => {
-      const newMail = JSON.parse(e.data)
-      handleNewMail(newMail)
-    }
-    sse.onerror = () => {
-      sse.close()
-    }
-    return () => sse.close()
-  }, [mailboxType])
-
-  useEffect(() => {
-    if (mailboxType !== 'inbox') return
-
-    const unreadCount = data?.mails?.filter((m) => !m.isRead)?.length
+    const unreadCount = mails?.filter((m) => !m.isRead)?.length
     setUnreadCount(unreadCount)
-  }, [data, mailboxType])
-
-  useEffect(() => {
-    if (!loadMoreRef.current) return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage()
-        }
-      },
-      {
-        rootMargin: '200px',
-      },
-    )
-    observer.observe(loadMoreRef.current)
-    return () => observer.disconnect()
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
-
-  const handleNewMail = (newMail) => {
-    queryClient.setQueryData(queryKey, (oldData) => {
-      if (!oldData.pages) return oldData
-
-      const updatedPages = oldData.pages.map((page, index) => {
-        const filtered = page.mails.filter(
-          (mail) => mail.mailboxId !== newMail.mailboxId,
-        )
-        if (index === 0) {
-          return { ...page, mails: [newMail, ...filtered] }
-        }
-        return { ...page, mails: filtered }
-      })
-      return { ...oldData, pages: updatedPages }
-    })
-    queryClient.invalidateQueries({ queryKey: queryKey })
-  }
-
-  const toggleSelection = useCallback((mailboxId) => {
-    setSelectionState((prev) => {
-      const next = new Set(prev.selectedMailboxIds)
-      next.has(mailboxId) ? next.delete(mailboxId) : next.add(mailboxId)
-      const isBulkMode = next.size > 0
-      return { isBulkMode, selectedMailboxIds: next }
-    })
-  }, [])
+  }, [mails, mailboxType])
 
   return (
     <div className='w-full h-full overflow-hidden min-w-0 text-sm relative'>
@@ -154,149 +54,16 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
         <div
           className={` overflow-hidden border-x border-border relative ${showThread ? 'hidden lg:flex' : 'flex'}  min-w-0 flex-col`}
         >
-          <div className='flex flex-col shadow-xs mb-3 border-b border-border bg-background relative z-[40]'>
-            <div className='flex items-center justify-between text-sm  px-4 py-2 shadow-xs bg-background relative'>
-              <Tooltip
-                message='Refresh'
-                parentClassName='ml-3 sm:ml-6'
-                tooltipClassName='top-6!'
-              >
-                <button onClick={() => refetch()}>
-                  <IoMdRefresh size={20} className='cursor-pointer' />
-                </button>
-              </Tooltip>
-
-              {selectionState.isBulkMode ? (
-                <div className='flex items-center gap-2 '>
-                  <span className='text-xs font-normal mr-4'>
-                    {selectionState.selectedMailboxIds.size} selected
-                  </span>
-                  {/* trash mail button  */}
-                  {mailboxType === 'trash' ? (
-                    <Tooltip message=''>
-                      <button
-                        className=' border border-border p-2 rounded disabled:opacity-50 cursor-pointer hover:bg-input'
-                        onClick={() => {
-                          patchMailMutation.mutate({
-                            mailboxIds: Array.from(
-                              selectionState.selectedMailboxIds,
-                            ),
-                            data: { isDeleted: false },
-                          })
-                          setSelectionState(() => ({
-                            isBulkMode: false,
-                            selectedMailboxIds: new Set([]),
-                          }))
-                        }}
-                      >
-                        <MdRestoreFromTrash />
-                      </button>
-                    </Tooltip>
-                  ) : (
-                    <Tooltip message='Delete'>
-                      <button
-                        className='border border-border p-2 rounded disabled:opacity-50 cursor-pointer'
-                        onClick={() => {
-                          patchMailMutation.mutate({
-                            mailboxIds: Array.from(
-                              selectionState.selectedMailboxIds,
-                            ),
-                            data: { isDeleted: true },
-                          })
-                          setSelectionState((prev) => ({
-                            isBulkMode: false,
-                            selectedMailboxIds: new Set([]),
-                          }))
-                        }}
-                      >
-                        <IoTrashOutline />
-                      </button>
-                    </Tooltip>
-                  )}
-                  {/* mail read/unread button  */}
-                  {mails.some(
-                    (mail) =>
-                      selectionState.selectedMailboxIds.has(mail.mailboxId) &&
-                      !mail.isRead,
-                  ) ? (
-                    <Tooltip message='Mark as read'>
-                      <button
-                        className=' border border-border p-2 rounded cursor-pointer'
-                        onClick={() => {
-                          patchMailMutation.mutate({
-                            mailboxIds: Array.from(
-                              selectionState.selectedMailboxIds,
-                            ),
-                            data: { isRead: true },
-                          })
-                          setSelectionState((prev) => ({
-                            isBulkMode: false,
-                            selectedMailboxIds: new Set([]),
-                          }))
-                        }}
-                      >
-                        <MdOutlineMarkEmailRead />
-                      </button>
-                    </Tooltip>
-                  ) : (
-                    <Tooltip message='Mark as unread'>
-                      <button
-                        className=' border border-border p-2 rounded cursor-pointer'
-                        onClick={() => {
-                          patchMailMutation.mutate({
-                            mailboxIds: Array.from(
-                              selectionState.selectedMailboxIds,
-                            ),
-                            data: { isRead: false },
-                          })
-                          setSelectionState((prev) => ({
-                            isBulkMode: false,
-                            selectedMailboxIds: new Set([]),
-                          }))
-                        }}
-                      >
-                        <MdOutlineMarkEmailUnread />
-                      </button>
-                    </Tooltip>
-                  )}
-
-                  <button
-                    className=' bg-background border border-border px-4 py-2 rounded font-normal cursor-pointer'
-                    onClick={() =>
-                      setSelectionState(() => {
-                        return {
-                          isBulkMode: false,
-                          selectedMailboxIds: new Set([]),
-                        }
-                      })
-                    }
-                  >
-                    Unselect all
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <button
-                    className=' bg-background border border-border px-4 py-2 rounded font-normal cursor-pointer'
-                    onClick={() =>
-                      setSelectionState(() => {
-                        const allMailboxIds = new Set(
-                          mails.map((d) => d.mailboxId),
-                        )
-                        return {
-                          isBulkMode: true,
-                          selectedMailboxIds: allMailboxIds,
-                        }
-                      })
-                    }
-                  >
-                    Select all
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
+          <MailListHeader
+            selectedIds={selectedIds}
+            selectAll={selectAll}
+            clear={clear}
+            refetch={refetch}
+            mailboxType={mailboxType}
+            mails={mails}
+            queryKey={memoizedQueryKey}
+            isBulkMode={isBulkMode}
+          />
           <div className='absolute top-0 left-0 right-0 z-[30] pointer-events-none'>
             <ToastContainer
               containerId={'loading'}
@@ -319,10 +86,8 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
                       queryKey={memoizedQueryKey}
                       mail={mail}
                       query={query}
-                      isSelected={selectionState.selectedMailboxIds.has(
-                        mail?.mailboxId,
-                      )}
-                      toggleSelection={toggleSelection}
+                      isSelected={selectedIds.has(mail?.mailboxId)}
+                      toggle={toggle}
                     />
                   ))
                 : mails.map((mail) => (
@@ -330,10 +95,8 @@ const MailListLayout = ({ mailboxType, queryKey, fetchFuction, query }) => {
                       key={mail.mailboxId}
                       queryKey={memoizedQueryKey}
                       mail={mail}
-                      isSelected={selectionState.selectedMailboxIds.has(
-                        mail?.mailboxId,
-                      )}
-                      toggleSelection={toggleSelection}
+                      isSelected={selectedIds.has(mail?.mailboxId)}
+                      toggle={toggle}
                     />
                   ))}
               <div

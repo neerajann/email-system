@@ -1,118 +1,51 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { RxCross2 } from 'react-icons/rx'
-import { emailPattern } from '../../utils/pattern'
-import { filesize } from 'filesize'
-import { useUI } from '../../contexts/UIContext'
+import { useUI } from '../../../contexts/UIContext.jsx'
 import { RiAttachment2 } from 'react-icons/ri'
 import { useQueryClient } from '@tanstack/react-query'
-import { handleFiles, removeAttachment } from '../../services/attachmentService'
-import { cancelMail, sendMail } from '../../services/emailService'
-import api from '../../services/api'
+import useRecipientsInput from '../../../hooks/mail/compose/useRecipientsInput.js'
+import useComposeActions from '../../../hooks/mail/compose/useComposeActions.js'
+import useAttachments from '../../../hooks/mail/shared/useAttachments.js'
+import RecipientsInput from './RecipientsInput.jsx'
+import UploadedAttachmentList from '../shared/UploadedAttachmentList.jsx'
+import useDraft from '../../../hooks/mail/shared/useDraft.js'
 
 const ComposeMail = () => {
-  const controllersRef = useRef({})
   const queryClient = useQueryClient()
   const { setShowComposeMail } = useUI()
-  const [recipents, setRecipents] = useState('')
-  const [attachmentsInfo, setAttachmentsInfo] = useState([])
-  const [suggestions, setSuggestion] = useState([])
-  const [email, setEmail] = useState({
-    recipients: [],
-    subject: '',
-    body: '',
-    attachments: [],
-  })
-
   const subjectRef = useRef(null)
-  const recipentsRef = useRef(null)
-  const fileInputRef = useRef(null)
-  const uploadErrorRef = useRef(null)
+  const recipientsRef = useRef(null)
+  const { email, setEmail } = useDraft({ subject: '' })
+  const { input, suggestions, handleChange, addRecipient, removeRecipient } =
+    useRecipientsInput({ setEmail, recipientsRef })
 
-  useEffect(() => {
-    if (recipents.length === 0) {
-      setSuggestion([])
-      return
-    }
-    const controller = new AbortController()
+  const {
+    attachmentsInfo,
+    fileInputRef,
+    uploadErrorRef,
+    controllersRef,
+    onFiles,
+    remove,
+  } = useAttachments({ email })
 
-    const fetchSuggesions = async () => {
-      try {
-        const { data } = await api.get(
-          `/mail/recipients/suggestions?q=${recipents}`,
-          {
-            signal: controller.signal,
-          },
-        )
-        if (data?.length) {
-          setSuggestion(data)
-          return
-        }
-      } catch (error) {
-        if (error.name === 'CanceledError') return
-        console.log(error)
-      }
-    }
-    const handler = setTimeout(() => {
-      fetchSuggesions()
-    }, 250)
-
-    if (emailPattern.test(recipents)) {
-      setSuggestion([
-        {
-          id: '0831010301ajddjlda',
-          emailAddress: recipents,
-        },
-      ])
-    }
-
-    return () => {
-      clearTimeout(handler)
-      controller.abort()
-    }
-  }, [recipents])
-
-  const handleRecipentsChange = async (e) => {
-    const value = e.target.value
-
-    const parts = value.split(',').map((p) => p.trim())
-
-    let current = parts.pop()
-
-    const validEmails = parts.filter((email) => emailPattern.test(email))
-
-    if (validEmails.length > 0) {
-      recipentsRef.current.textContent = ''
-      const uniqueRecipents = new Set([...email.recipients, ...validEmails])
-
-      setEmail((prev) => ({
-        ...prev,
-        recipients: Array.from(uniqueRecipents),
-      }))
-    }
-
-    if (parts.length >= 1 && validEmails.length === 0) {
-      setRecipents(parts[0])
-    } else {
-      setRecipents(current || '')
-    }
-  }
-  console.log(suggestions)
+  const { send, cancel } = useComposeActions({
+    email,
+    attachmentsInfo,
+    controllersRef,
+    setShowComposeMail,
+    queryClient,
+    subjectRef,
+    recipientsRef,
+    fileInputRef,
+    uploadErrorRef,
+  })
 
   return (
     <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] lg:p-4 '>
       <div
         className='w-full max-w-none lg:max-w-2xl h-dvh lg:h-auto lg:max-h-[90vh] flex flex-col rounded-lg border border-input overflow-hidden bg-background '
         onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => {
-          e.preventDefault()
-          handleFiles({
-            e,
-            email,
-            uploadErrorRef,
-            controllersRef,
-            setAttachmentsInfo,
-          })
-        }}
+        onDrop={onFiles}
       >
         <div className=' border-b border-input px-4 md:px-6 py-4 flex items-center justify-between '>
           <h2 className='text-lg md:text-2xl font-semibold '>Compose Email</h2>
@@ -120,21 +53,14 @@ const ComposeMail = () => {
             variant='ghost'
             size='icon'
             className='border border-border p-2 rounded cursor-pointer'
-            onClick={() => {
-              cancelMail({
-                attachmentsInfo,
-                controllersRef,
-                email,
-              })
-              setShowComposeMail(false)
-            }}
+            onClick={cancel}
           >
             <RxCross2 />
           </button>
         </div>
         <div className='flex-1 overflow-y-auto space-y-4 px-4 md:px-6 py-4'>
-          {/* recipents  */}
-          <div className='space-y-2 relative'>
+          {/* recipients */}
+          {/* <div className='space-y-2 relative'>
             <label className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 '>
               To:
             </label>
@@ -152,17 +78,13 @@ const ComposeMail = () => {
                     <RxCross2
                       className='inline ml-1 cursor-pointer'
                       onClick={() => {
-                        setEmail({
-                          ...email,
-                          recipients: email.recipients.filter(
-                            (recipent) => recipent != r,
-                          ),
-                        })
+                        removeRecipient(r)
                       }}
                     />
                   </span>
                 )
               })}
+
               <textarea
                 autoComplete='off'
                 name='recipents'
@@ -170,19 +92,13 @@ const ComposeMail = () => {
                 rows={1}
                 className=' text-base md:text-sm  flex-1 min-w-30 bg-transparent focus:outline-none resize-none overflow-hidden leading-6 border-none active:outline-none'
                 value={recipents}
-                onChange={(e) => handleRecipentsChange(e)}
+                onChange={(e) => handleChange(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault()
                     const r = recipents.replace(/\n/g, '')
                     if (emailPattern.test(r)) {
-                      setRecipents('')
-                      setEmail({
-                        ...email,
-                        recipients: Array.from(
-                          new Set([...email.recipients, r]),
-                        ),
-                      })
+                      addRecipient(r)
                     }
                   }
                 }}
@@ -195,24 +111,24 @@ const ComposeMail = () => {
                     key={suggestion.id}
                     className='absolute left-0 top-full mt-1 w-full bg-background border border-border rounded p-2 pl-3 text-sm shadow z-50 cursor-pointer'
                     onClick={() => {
-                      setEmail({
-                        ...email,
-                        recipients: Array.from(
-                          new Set([
-                            ...email.recipients,
-                            suggestion.emailAddress,
-                          ]),
-                        ),
-                      })
-                      setRecipents('')
+                      addRecipient(suggestion.emailAddress)
                     }}
                   >
                     {suggestion.emailAddress}
                   </div>
                 )
               })}
-            <span ref={recipentsRef} className=' text-sm text-red-500 '></span>
-          </div>
+            <span ref={recipientsRef} className=' text-sm text-red-500 '></span>
+          </div> */}
+          <RecipientsInput
+            recipients={email.recipients}
+            input={input}
+            suggestions={suggestions}
+            onChange={handleChange}
+            onAdd={addRecipient}
+            onRemove={removeRecipient}
+            recipientsRef={recipientsRef}
+          />
           {/* subject */}
           <div className='space-y-2'>
             <label className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 '>
@@ -252,55 +168,21 @@ const ComposeMail = () => {
               </label>
             )}
 
-            {attachmentsInfo.map((attachment, index) => {
+            {attachmentsInfo.map((attachment) => {
               return (
-                <div
-                  className='border bg-input border-border w-full flex items-center gap-x-4 justify-between text-xs font-normal p-2 rounded mb-3'
-                  key={index}
-                >
-                  <div>
-                    {attachment.name}
-                    <span className='ml-2 '>({filesize(attachment.size)})</span>
-                  </div>
-                  {attachment.progress != 100 && (
-                    <div className='flex-1 h-1.5 bg-muted rounded flex items-center'>
-                      <div
-                        className='h-full bg-foreground  rounded-sm transition-all'
-                        style={{ width: `${attachment.progress}%` }}
-                      />
-                    </div>
-                  )}
-                  <button
-                    className=' border border-border p-1 rounded'
-                    onClick={() =>
-                      removeAttachment({
-                        id: attachment.id,
-                        attachmentsInfo,
-                        setAttachmentsInfo,
-                        controllersRef,
-                        email,
-                      })
-                    }
-                  >
-                    <RxCross2 size={15} />
-                  </button>
-                </div>
+                <UploadedAttachmentList
+                  attachment={attachment}
+                  remove={remove}
+                />
               )
             })}
+
             <input
               type='file'
               ref={fileInputRef}
               multiple
               className='hidden'
-              onChange={(e) =>
-                handleFiles({
-                  e,
-                  email,
-                  uploadErrorRef,
-                  controllersRef,
-                  setAttachmentsInfo,
-                })
-              }
+              onChange={(e) => onFiles(e)}
             />
 
             <div className='flex items-center justify-between border border-border p-2 rounded w-40 cursor-pointer'>
@@ -321,31 +203,14 @@ const ComposeMail = () => {
           <div className='flex gap-2 pt-4'>
             <button
               className='flex-1 text-sm font-semibold  border-border border p-2 rounded hover:scale-[0.98] active:scale-[1.02] transition-all ease-in-out cursor-pointer'
-              onClick={() =>
-                sendMail({
-                  email,
-                  recipentsRef,
-                  subjectRef,
-                  attachmentsInfo,
-                  uploadErrorRef,
-                  setShowComposeMail,
-                  queryClient,
-                })
-              }
+              onClick={send}
             >
               Send
             </button>
             <button
               variant='outline'
               className='border font-semibold border-border px-3 py-2 rounded text-sm hover:scale-[0.95] active:scale-[1.02] cursor-pointer'
-              onClick={() => {
-                cancelMail({
-                  attachmentsInfo,
-                  controllersRef,
-                  email,
-                })
-                setShowComposeMail(false)
-              }}
+              onClick={cancel}
             >
               Cancel
             </button>

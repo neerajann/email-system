@@ -11,12 +11,12 @@ import {
 } from 'react-icons/io5'
 import React from 'react'
 import { useUI } from '../../contexts/UIContext'
-import { useAuth } from '../../contexts/AuthContext'
+import { useTheme } from '../../contexts/ThemeContext'
 
 const SideBar = React.memo(() => {
   const { showSideBar, setShowComposeMail, setShowSideBar, unreadCount } =
     useUI()
-  const { darkMode, setDarkMode } = useAuth()
+  const { darkMode, setDarkMode } = useTheme()
   const menuItems = [
     {
       name: 'Inbox',

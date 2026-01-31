@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
-import api from '../../services/api'
+import api from '../../services/api.js'
 import MailListLayout from '../../layouts/MailListLayout'
 
 const SearchPage = () => {
@@ -14,7 +14,7 @@ const SearchPage = () => {
   return (
     <MailListLayout
       queryKey={['search', query]}
-      fetchFuction={searchMails}
+      fetchFunction={searchMails}
       mailboxType={'search'}
       query={query}
     />

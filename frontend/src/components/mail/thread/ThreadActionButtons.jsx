@@ -1,13 +1,13 @@
 import {
-  MdOutlineMarkEmailUnread,
-  MdOutlineMarkEmailRead,
   MdRestoreFromTrash,
+  MdOutlineMarkEmailRead,
+  MdOutlineMarkEmailUnread,
 } from 'react-icons/md'
 import { IoStarOutline, IoTrashOutline, IoStarSharp } from 'react-icons/io5'
-import Tooltip from '../ui/Tooltip'
+import Tooltip from '../../ui/Tooltip'
 
 const ThreadActionButtons = ({
-  email,
+  mail,
   patchMail,
   setShowConfirmationModal,
   setShowThread,
@@ -15,7 +15,7 @@ const ThreadActionButtons = ({
 }) => {
   return (
     <div className='flex gap-3'>
-      {email.isDeleted ? (
+      {mail.isDeleted ? (
         <>
           <button
             className='text-xs border rounded px-2 border-border hover:bg-input cursor-pointer'
@@ -40,9 +40,9 @@ const ThreadActionButtons = ({
         </>
       ) : (
         <>
-          <Tooltip message={!email.isDeleted && 'Delete'}>
+          <Tooltip message={!mail.isDeleted && 'Delete'}>
             <button
-              disabled={email.isDeleted}
+              disabled={mail.isDeleted}
               className='border border-border p-2 rounded disabled:opacity-50 cursor-pointer hover:bg-input'
               onClick={(e) => {
                 patchMail(e, {
@@ -55,34 +55,34 @@ const ThreadActionButtons = ({
               <IoTrashOutline />
             </button>
           </Tooltip>
-          <Tooltip message={email.isStarred ? 'Starred' : 'Not starred'}>
+          <Tooltip message={mail.isStarred ? 'Starred' : 'Not starred'}>
             <button
               className=' border border-border p-2 rounded disabled:opacity-50 cursor-pointer hover:bg-input'
-              disabled={email.isDeleted}
+              disabled={mail.isDeleted}
               onClick={(e) =>
                 patchMail(e, {
-                  isStarred: !email.isStarred,
+                  isStarred: !mail.isStarred,
                 })
               }
             >
-              {email.isStarred ? <IoStarSharp /> : <IoStarOutline />}
+              {mail.isStarred ? <IoStarSharp /> : <IoStarOutline />}
             </button>
           </Tooltip>
         </>
       )}
       <Tooltip
-        message={email.isRead ? 'Mark as unread' : 'Mark as read'}
+        message={mail.isRead ? 'Mark as unread' : 'Mark as read'}
         tooltipClassName='hidden sm:block -left-2!'
       >
         <button
           className=' border border-border p-2 rounded cursor-pointer hover:bg-input'
           onClick={(e) =>
             patchMail(e, {
-              isRead: !email.isRead,
+              isRead: !mail.isRead,
             })
           }
         >
-          {email.isRead ? (
+          {mail.isRead ? (
             <MdOutlineMarkEmailUnread />
           ) : (
             <MdOutlineMarkEmailRead />

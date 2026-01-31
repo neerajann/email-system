@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import api from './api'
+import api from '../../services/api.js'
 
 const useMailUpdate = (queryKey, options = {}) => {
   const queryClient = useQueryClient()
@@ -11,7 +11,10 @@ const useMailUpdate = (queryKey, options = {}) => {
 
   return useMutation({
     mutationFn: ({ mailboxIds, data }) => {
-      if (!mailboxIds || mailboxIds.length === 0) return Promise.resolve(null)
+      console.log(mailboxIds)
+      if (!mailboxIds || mailboxIds.length === 0) {
+        return Promise.resolve(null)
+      }
 
       return api.patch('/mail', { mailboxIds, ...data })
     },

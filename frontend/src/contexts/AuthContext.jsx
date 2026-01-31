@@ -1,18 +1,9 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import api from '../services/api'
+import api from '../services/api.js'
 
 const AuthContext = createContext(null)
 
 const AuthProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(() => {
-    console.log(localStorage.getItem('dark-mode'))
-
-    if (localStorage.getItem('dark-mode')) {
-      return localStorage.getItem('dark-mode') === 'true' ? true : false
-    }
-    return window.matchMedia('(prefers-color-scheme:dark)').matches
-  })
-
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -32,21 +23,9 @@ const AuthProvider = ({ children }) => {
 
     checkAuth()
   }, [])
-  useEffect(() => {
-    const html = document.documentElement
 
-    if (darkMode) {
-      html.classList.add('dark')
-      localStorage.setItem('dark-mode', 'true')
-    } else {
-      html.classList.remove('dark')
-      localStorage.setItem('dark-mode', 'false')
-    }
-  }, [darkMode])
   const value = {
     user,
-    darkMode,
-    setDarkMode,
     setUser,
     loading,
   }

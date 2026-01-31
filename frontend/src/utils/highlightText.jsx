@@ -22,7 +22,7 @@ const highlightText = (text = '', query = '') => {
 }
 export default highlightText
 
-function createSnippet(text, query, snippetLength = 200) {
+const createSnippet = (text, query, snippetLength = 200) => {
   const regex = new RegExp(query, 'i')
   const match = text.match(regex)
 

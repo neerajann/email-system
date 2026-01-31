@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { domainEmailPattern, passwordPattern } from '../../utils/pattern'
-import api from '../../services/api'
+import { domainEmailPattern, passwordPattern } from '../../utils/pattern.js'
+import api from '../../services/api.js'
 import { Link, useNavigate } from 'react-router-dom'
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
 
