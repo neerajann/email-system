@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import api from '../services/api.js'
 
 const AuthContext = createContext(null)
@@ -10,10 +10,11 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data } = await api.get('/auth/me')
-        if (data.user) {
-          setUser(data.user.emailAddress)
-        }
+        const [{ data }] = await Promise.all([
+          api.get('/auth/me'),
+          new Promise((r) => setTimeout(r, 300)),
+        ])
+        setUser(data?.user?.emailAddress ?? null)
       } catch (e) {
         setUser(null)
       } finally {
@@ -24,11 +25,15 @@ const AuthProvider = ({ children }) => {
     checkAuth()
   }, [])
 
-  const value = {
-    user,
-    setUser,
-    loading,
-  }
+  const value = useMemo(
+    () => ({
+      user,
+      setUser,
+      loading,
+    }),
+    [user, loading],
+  )
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 const useAuth = () => useContext(AuthContext)

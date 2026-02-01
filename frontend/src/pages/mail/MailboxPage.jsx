@@ -27,6 +27,7 @@ const MailboxPage = () => {
       queryKey={config.queryKey}
       mailboxType={mailboxType}
       fetchFunction={fetchMails}
+      emptyMessage={'No emails in this folder.'}
     />
   )
 }

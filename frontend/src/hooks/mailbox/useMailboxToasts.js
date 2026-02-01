@@ -1,27 +1,18 @@
 import { useEffect } from 'react'
 import { toast } from 'react-toastify'
 
-const useMailboxToasts = ({ isLoading, isError, error }) => {
+const useMailboxToasts = ({ isError, error }) => {
   useEffect(() => {
-    if (isLoading) {
-      toast.loading('Loading...', {
-        containerId: 'loading',
-      })
-      return
-    }
-    toast.dismiss()
-
     if (isError) {
       toast.error(error.message || 'Something went wrong', {
-        containerId: 'loading',
+        containerId: 'error',
       })
     }
-
-    if (!isLoading && !isError) {
+    if (isError) {
       toast.dismiss()
     }
 
     return () => toast.dismiss()
-  }, [isLoading, isError])
+  }, [isError])
 }
 export default useMailboxToasts

@@ -4,7 +4,7 @@ import { IoStarSharp, IoStarOutline } from 'react-icons/io5'
 const StarButton = ({
   isDeleted,
   isStarred,
-  mailboxId,
+  mailboxIds,
   mailUpdateMutation,
 }) => {
   return (
@@ -16,7 +16,7 @@ const StarButton = ({
           e.preventDefault()
           e.stopPropagation()
           mailUpdateMutation.mutate({
-            mailboxIds: [mailboxId],
+            mailboxIds,
             data: {
               isStarred: !isStarred,
             },

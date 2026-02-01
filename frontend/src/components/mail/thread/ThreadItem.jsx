@@ -1,13 +1,13 @@
 import { FaReply, FaReplyAll } from 'react-icons/fa'
-import Reply from './Reply.jsx'
 import QuotedBlock from './QuotedBlock.jsx'
 import Tooltip from '../../ui/Tooltip.jsx'
 import ThreadCompactView from './ThreadCompactView.jsx'
-import useQuotedText from '../../../hooks/thread/useQuotedText.jsx'
-import useThreadState from '../../../hooks/thread/useThreadState.jsx'
+import useQuotedText from '../../../hooks/thread/useQuotedText.js'
+import useThreadState from '../../../hooks/thread/useThreadState.js'
 import ThreadHeader from './ThreadHeader.jsx'
 import ThreadBody from './ThreadBody.jsx'
 import ThreadAttachmentList from './ThreadAttachmentList.jsx'
+import Reply from '../reply/Reply.jsx'
 
 const ThreadItem = ({ mail, defaultExpanded, mails }) => {
   const {

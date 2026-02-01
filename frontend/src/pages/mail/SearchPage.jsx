@@ -17,6 +17,7 @@ const SearchPage = () => {
       fetchFunction={searchMails}
       mailboxType={'search'}
       query={query}
+      emptyMessage={'No email matched your search.'}
     />
   )
 }

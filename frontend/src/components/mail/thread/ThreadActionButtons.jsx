@@ -6,13 +6,8 @@ import {
 import { IoStarOutline, IoTrashOutline, IoStarSharp } from 'react-icons/io5'
 import Tooltip from '../../ui/Tooltip'
 
-const ThreadActionButtons = ({
-  mail,
-  patchMail,
-  setShowConfirmationModal,
-  setShowThread,
-  navigate,
-}) => {
+const ThreadActionButtons = ({ mail, patchMail, setShowConfirmationModal }) => {
+  if (!mail) return
   return (
     <div className='flex gap-3'>
       {mail.isDeleted ? (
@@ -31,8 +26,6 @@ const ThreadActionButtons = ({
                   patchMail(e, {
                     isDeleted: false,
                   })
-                  setShowThread(false)
-                  navigate('..', { relative: 'path' })
                 }}
               />
             </button>
@@ -40,21 +33,20 @@ const ThreadActionButtons = ({
         </>
       ) : (
         <>
-          <Tooltip message={!mail.isDeleted && 'Delete'}>
+          <Tooltip message={!mail?.isDeleted && 'Delete'}>
             <button
-              disabled={mail.isDeleted}
+              disabled={mail?.isDeleted}
               className='border border-border p-2 rounded disabled:opacity-50 cursor-pointer hover:bg-input'
               onClick={(e) => {
                 patchMail(e, {
                   isDeleted: true,
                 })
-                setShowThread(false)
-                navigate('..', { relative: 'path' })
               }}
             >
               <IoTrashOutline />
             </button>
           </Tooltip>
+
           <Tooltip message={mail.isStarred ? 'Starred' : 'Not starred'}>
             <button
               className=' border border-border p-2 rounded disabled:opacity-50 cursor-pointer hover:bg-input'

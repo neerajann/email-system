@@ -1,10 +1,10 @@
 import { RiAttachment2 } from 'react-icons/ri'
 import { IoTrashOutline } from 'react-icons/io5'
 import { useQueryClient } from '@tanstack/react-query'
-import UploadedAttachmentList from '../shared/UploadedAttachmentList.jsx'
 import useAttachments from '../../../hooks/mail/shared/useAttachments.js'
 import useReplyActions from '../../../hooks/mail/reply/useReplyActions.js'
 import useReplyRecipients from '../../../hooks/mail/reply/useReplyRecipients.js'
+import UploadedAttachmentList from '../shared/UploadedAttachmentList.jsx'
 import useDraft from '../../../hooks/mail/shared/useDraft.js'
 
 const Reply = ({ mail, showReply, setShowReply }) => {

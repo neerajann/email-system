@@ -1,5 +1,6 @@
 import { RxCross2 } from 'react-icons/rx'
 import { filesize } from 'filesize'
+
 const UploadedAttachmentList = ({ attachment, remove }) => {
   return (
     <div className='border bg-input border-border w-full flex items-center gap-x-4 justify-between text-xs font-normal p-2 rounded mb-3'>

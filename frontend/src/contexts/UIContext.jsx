@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useMemo, useState } from 'react'
 
 const UIContext = createContext(null)
 
@@ -7,16 +7,20 @@ const UIProvider = ({ children }) => {
   const [showComposeMail, setShowComposeMail] = useState(false)
   const [showThread, setShowThread] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const value = {
-    showSideBar,
-    setShowSideBar,
-    showComposeMail,
-    setShowComposeMail,
-    showThread,
-    setShowThread,
-    unreadCount,
-    setUnreadCount,
-  }
+  const value = useMemo(
+    () => ({
+      showSideBar,
+      setShowSideBar,
+      showComposeMail,
+      setShowComposeMail,
+      showThread,
+      setShowThread,
+      unreadCount,
+      setUnreadCount,
+    }),
+    [showSideBar, showComposeMail, showThread, unreadCount],
+  )
+
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>
 }
 const useUI = () => useContext(UIContext)

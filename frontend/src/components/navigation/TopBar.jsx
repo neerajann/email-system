@@ -9,6 +9,7 @@ import ConfirmationPopupModal from '../ui/ConfirmationPopupModal'
 
 const TopBar = () => {
   const navigate = useNavigate()
+  const { showThread } = useUI()
   const { setUser, user } = useAuth()
   const { setShowSideBar } = useUI()
   const [query, setQuery] = useState('')
@@ -25,8 +26,12 @@ const TopBar = () => {
     navigate(`/search?q=${encodeURIComponent(query)}`)
   }
 
+  console.log('top bar rendered')
+
   return (
-    <div className='grid grid-cols-[auto_1fr_auto] xl:grid-cols-[15.5rem_1fr_1fr] items-center py-4 bg-background border-b border-border z-50'>
+    <div
+      className={`${showThread ? 'hidden sm:grid' : 'grid'}  grid-cols-[auto_1fr_auto] xl:grid-cols-[15.5rem_1fr_1fr] items-center py-4 bg-background border-b border-border z-50`}
+    >
       <div className='flex items-center gap-4 min-w-0 px-4'>
         <GiHamburgerMenu
           className='size-6 xl:hidden cursor-pointer'

@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import formatMailDate from '../../../utils/formatMailDate.js'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { IoStarOutline, IoStarSharp } from 'react-icons/io5'
 import { useUI } from '../../../contexts/UIContext.jsx'
 import useMailUpdate from '../../../hooks/mailbox/useMailUpdate.js'
@@ -20,9 +20,9 @@ const BaseMailListItem = memo((props) => {
     children,
     mail,
   } = props
-  const { setShowThread } = useUI()
+  const { showThread, setShowThread } = useUI()
   const mailUpdateMutation = useMailUpdate(queryKey)
-
+  const location = useLocation()
   return (
     <NavLink
       to={navigateTo}
@@ -31,8 +31,9 @@ const BaseMailListItem = memo((props) => {
           isActive && 'border-l-4'
         }`
       }
+      state={{ from: location.pathname + location.search }}
       onClick={() => {
-        if (window.innerWidth < 1024) {
+        if (window.innerWidth < 1024 && !showThread) {
           setShowThread(true)
         }
         if (!mail.isRead) {
@@ -123,14 +124,14 @@ const BaseMailListItem = memo((props) => {
               isDeleted={mail.isDeleted}
               isStarred={mail.isStarred}
               mailUpdateMutation={mailUpdateMutation}
-              mailboxId={mail.mailboxId}
+              mailboxIds={[mail.mailboxId]}
             />
 
             {/* trash mail button  */}
             <TrashButton
               isDeleted={mail.isDeleted}
               mailUpdateMutation={mailUpdateMutation}
-              mailboxId={mail.mailboxId}
+              mailboxIds={[mail.mailboxId]}
             />
             {/* mail read/unread button  */}
             <MarkAsButton

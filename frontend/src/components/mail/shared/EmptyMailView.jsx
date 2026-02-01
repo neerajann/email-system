@@ -1,6 +1,6 @@
 const EmptyMailView = () => {
   return (
-    <div className='flex  flex-1 items-center justify-center text-muted-foreground'>
+    <div className='hidden lg:flex flex-1 items-center justify-center text-muted-foreground'>
       Select an email to view
     </div>
   )

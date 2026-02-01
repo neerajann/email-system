@@ -11,7 +11,6 @@ const useMailUpdate = (queryKey, options = {}) => {
 
   return useMutation({
     mutationFn: ({ mailboxIds, data }) => {
-      console.log(mailboxIds)
       if (!mailboxIds || mailboxIds.length === 0) {
         return Promise.resolve(null)
       }
@@ -20,33 +19,37 @@ const useMailUpdate = (queryKey, options = {}) => {
     },
 
     onMutate: async ({ mailboxIds, data }) => {
-      if (!mailboxIds || mailboxIds.length === 0) return
-      await queryClient.cancelQueries({ queryKey })
+      try {
+        if (!mailboxIds || mailboxIds.length === 0) return
+        await queryClient.cancelQueries({ queryKey })
 
-      const previousData = queryClient.getQueryData(queryKey)
+        const previousData = queryClient.getQueryData(queryKey)
 
-      queryClient.setQueryData(queryKey, (old) => {
-        if (!old) return old
+        queryClient.setQueryData(queryKey, (old) => {
+          if (!old) return old
 
-        if (isInfiniteQuery) {
-          return {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              mails: page.mails.map((mail) =>
-                mailboxIds.includes(mail.id) ? { ...mail, ...data } : mail,
-              ),
-            })),
+          if (isInfiniteQuery) {
+            return {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                mails: page.mails.map((mail) =>
+                  mailboxIds.includes(mail.id) ? { ...mail, ...data } : mail,
+                ),
+              })),
+            }
           }
-        }
 
-        const updatedMails = old.mails.map((mail) =>
-          mailboxIds.includes(mail.id) ? { ...mail, ...data } : mail,
-        )
+          const updatedMails = old.mails.map((mail) =>
+            mailboxIds.includes(mail.id) ? { ...mail, ...data } : mail,
+          )
 
-        return { ...old, mails: updatedMails }
-      })
-      return { previousData }
+          return { ...old, mails: updatedMails }
+        })
+        return { previousData }
+      } catch (error) {
+        console.log(error)
+      }
     },
 
     onError: (_err, _vars, context) => {
