@@ -1,17 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 
-const useMailboxSSE = ({ mailboxType, queryKey, didMount, refetch }) => {
+const useMailboxSSE = ({ mailboxType, queryKey }) => {
   const queryClient = useQueryClient()
 
   useEffect(() => {
     if (mailboxType !== 'inbox') return
-    if (didMount.current) {
-      refetch()
-    } else {
-      didMount.current = true
-    }
-
     const sse = new EventSource(`${import.meta.env.VITE_API_URL}/events`, {
       withCredentials: true,
     })
@@ -32,7 +26,6 @@ const useMailboxSSE = ({ mailboxType, queryKey, didMount, refetch }) => {
         })
         return { ...oldData, pages: updatedPages }
       })
-      queryClient.invalidateQueries({ queryKey: queryKey })
     }
 
     sse.onerror = () => {

@@ -35,7 +35,7 @@ const ThreadHeader = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* sender name */}
-            <h2 className='font-semibold'>
+            <h2 className='font-medium'>
               {mail.from.name ?? mail.from.address}
             </h2>
 
@@ -115,7 +115,7 @@ const ThreadHeader = ({
             {/* when header showing in detail */}
             {mail.to.map((to) => (
               <div key={to.address} className='flex gap-2 px-1'>
-                <span>{to.name ?? to.address}</span>
+                <span className='font-medium'>{to.name ?? to.address}</span>
                 {to.name && (
                   <span className='text-muted-foreground'>{to.address}</span>
                 )}

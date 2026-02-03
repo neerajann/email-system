@@ -8,6 +8,7 @@ import ThreadHeader from './ThreadHeader.jsx'
 import ThreadBody from './ThreadBody.jsx'
 import ThreadAttachmentList from './ThreadAttachmentList.jsx'
 import Reply from '../reply/Reply.jsx'
+import { memo } from 'react'
 
 const ThreadItem = ({ mail, defaultExpanded, mails }) => {
   const {
@@ -20,7 +21,8 @@ const ThreadItem = ({ mail, defaultExpanded, mails }) => {
     showQuotedBlock,
     setShowQuotedBlock,
   } = useThreadState({ defaultExpanded })
-  const { quotedText } = useQuotedText({ mail, mails })
+
+  const quotedText = useQuotedText({ mail, mails })
 
   return (
     <>
@@ -94,4 +96,4 @@ const ThreadItem = ({ mail, defaultExpanded, mails }) => {
     </>
   )
 }
-export default ThreadItem
+export default memo(ThreadItem)

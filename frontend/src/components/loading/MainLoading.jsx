@@ -1,9 +1,11 @@
 const MainLoading = () => {
   return (
     <div className='w-screen h-dvh flex flex-col items-center justify-center bg-background text-foreground gap-4'>
-      <span className='text-5xl font-semibold'>inboxify</span>
+      <span className='text-3xl lg:text-5xl font-semibold'>
+        {import.meta.env.VITE_DOMAIN_NAME.split('.')[0]}
+      </span>
 
-      <div className='w-45 h-0.5 rounded bg-muted overflow-hidden'>
+      <div className='w-30 lg:w-45 h-0.5 rounded bg-muted overflow-hidden'>
         <div className='h-full w-1/3 bg-foreground animate-[slide_1s_linear_infinite]' />
       </div>
 

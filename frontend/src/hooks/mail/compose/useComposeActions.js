@@ -1,6 +1,7 @@
 import { cancelMail, sendMail } from '../../../services/emailService'
 
 const useComposeActions = ({
+  recipients,
   email,
   attachmentsInfo,
   controllersRef,
@@ -11,14 +12,21 @@ const useComposeActions = ({
   uploadErrorRef,
 }) => {
   const send = () => {
-    if (email.recipients.length === 0) {
+    console.log(email)
+
+    if (recipients.length === 0) {
       return (recipientsRef.current.textContent =
-        'Please specify at least one recipient.')
+        'Please specify at least one recipient')
     }
     recipientsRef.current.textContent = ''
-    if (email.subject.length > 200) {
-      return (subjectRef.current.textContent = 'Subject is too long.')
+
+    if (email.subject.length === 0) {
+      return (subjectRef.current.textContent = 'Subject is required')
     }
+    if (email.subject.length > 200) {
+      return (subjectRef.current.textContent = 'Subject is too long')
+    }
+
     subjectRef.current.textContent = ''
     const incompleteUpload = attachmentsInfo.filter(
       (attachment) => !attachment.uploaded,
@@ -32,13 +40,14 @@ const useComposeActions = ({
     uploadErrorRef.current.textContent = ''
 
     sendMail({
-      email,
+      email: email,
       attachmentsInfo,
       queryClient,
-      data: email,
+      data: { ...email, recipients: recipients },
     })
     setShowComposeMail(false)
   }
+
   const cancel = () => {
     cancelMail({
       attachmentsInfo,

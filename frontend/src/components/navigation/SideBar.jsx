@@ -58,7 +58,9 @@ const SideBar = React.memo(() => {
   `}
       >
         <div className='flex sm:hidden items-center gap-4 '>
-          <h2 className='text-lg font-bold'>inboxify</h2>
+          <h2 className='text-lg font-bold'>
+            {import.meta.env.VITE_DOMAIN_NAME.split('.')[0]}
+          </h2>
         </div>
         <button
           className=' flex items-center  text-sm mt-5 border rounded w-full p-2 border-border  bg-input shadow-xs hover:cursor-pointer'

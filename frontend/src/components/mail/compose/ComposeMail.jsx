@@ -15,9 +15,9 @@ const ComposeMail = () => {
   const { setShowComposeMail } = useUI()
   const subjectRef = useRef(null)
   const recipientsRef = useRef(null)
-  const { email, setEmail } = useDraft({ subject: '' })
+  const { recipients, setRecipients, email } = useDraft({ subject: '' })
   const { input, suggestions, handleChange, addRecipient, removeRecipient } =
-    useRecipientsInput({ setEmail, recipientsRef })
+    useRecipientsInput({ setRecipients, recipientsRef })
 
   const {
     attachmentsInfo,
@@ -30,6 +30,7 @@ const ComposeMail = () => {
 
   const { send, cancel } = useComposeActions({
     email,
+    recipients,
     attachmentsInfo,
     controllersRef,
     setShowComposeMail,
@@ -121,7 +122,7 @@ const ComposeMail = () => {
             <span ref={recipientsRef} className=' text-sm text-red-500 '></span>
           </div> */}
           <RecipientsInput
-            recipients={email.recipients}
+            recipients={recipients}
             input={input}
             suggestions={suggestions}
             onChange={handleChange}
@@ -139,7 +140,7 @@ const ComposeMail = () => {
               name='subject'
               placeholder='Email subject'
               className='text-base md:text-sm  w-full my-2 bg-input text-foreground border border-border rounded-md p-2 pl-3  shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
-              onChange={(e) => setEmail({ ...email, subject: e.target.value })}
+              onChange={(e) => (email.subject = e.target.value)}
               autoComplete='off'
               autoCorrect='on'
             />
@@ -155,7 +156,7 @@ const ComposeMail = () => {
               name='body'
               rows={10}
               className='bg-background my-2 w-full border border-border text-base md:text-sm p-2 rounded-md shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
-              onChange={(e) => setEmail({ ...email, body: e.target.value })}
+              onChange={(e) => (email.body = e.target.value)}
               autoComplete='off'
               autoCorrect='on'
             />

@@ -2,11 +2,12 @@ const ThreadListSkeleton = () => {
   return (
     <>
       {/*Thread header for larger devices */}
-      <div className='mb-8 w-full hidden lg:block'>
-        <div className='flex items-start justify-between gap-3 mb-2'>
-          <div className='w-full h-8 rounded bg-muted animate-pulse' />
-          {/* hidden on smaller */}
-          <div className='hidden lg:flex'>
+      <div className='mb-8 w-full block'>
+        <div className='flex items-start justify-between gap-3 mb-2 mt-2'>
+          <div className='block lg:hidden rounded h-8 w-18 bg-muted animate-pulse' />
+          <div className='hidden lg:block w-full h-8 rounded bg-muted animate-pulse' />
+
+          <div className='flex'>
             <div className='flex gap-3'>
               <div className='w-8 h-8 rounded bg-muted animate-pulse' />
               <div className='w-8 h-8 rounded bg-muted animate-pulse' />
@@ -17,6 +18,7 @@ const ThreadListSkeleton = () => {
       </div>
 
       {/* From and recived at row */}
+      <div className='block lg:hidden w-full h-8 rounded bg-muted animate-pulse mb-4' />
 
       <div className='flex items-center justify-between min-w-0 relative mt-5'>
         <div className='flex gap-1 min-w-0  cursor-text '>

@@ -6,8 +6,10 @@ const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q')
 
-  const searchMails = async () => {
-    const res = await api.get(`/mail/search?q=${query}`)
+  const searchMails = async ({ pageParam }) => {
+    const res = await api.get(
+      `/mail/search?q=${query}${pageParam ? '&cursor=' + pageParam : ''}`,
+    )
     return res.data
   }
 

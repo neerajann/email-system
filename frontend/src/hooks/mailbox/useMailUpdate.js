@@ -34,14 +34,16 @@ const useMailUpdate = (queryKey, options = {}) => {
               pages: old.pages.map((page) => ({
                 ...page,
                 mails: page.mails.map((mail) =>
-                  mailboxIds.includes(mail.id) ? { ...mail, ...data } : mail,
+                  mailboxIds.includes(mail.mailboxId)
+                    ? { ...mail, ...data }
+                    : mail,
                 ),
               })),
             }
           }
 
           const updatedMails = old.mails.map((mail) =>
-            mailboxIds.includes(mail.id) ? { ...mail, ...data } : mail,
+            mailboxIds.includes(mail.mailboxId) ? { ...mail, ...data } : mail,
           )
 
           return { ...old, mails: updatedMails }

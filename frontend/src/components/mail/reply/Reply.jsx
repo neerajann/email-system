@@ -12,7 +12,11 @@ const Reply = ({ mail, showReply, setShowReply }) => {
 
   if (!mail) return
 
-  const { email: reply, setEmail: setReply } = useDraft({
+  const {
+    email: reply,
+    recipients,
+    setRecipients,
+  } = useDraft({
     subject: mail.subject,
   })
 
@@ -33,10 +37,10 @@ const Reply = ({ mail, showReply, setShowReply }) => {
     controllersRef,
     mailboxId: mail.mailboxId,
     emailId: mail.emailId,
-    reply,
+    reply: { ...reply, recipients },
   })
 
-  const { handleChange } = useReplyRecipients({ showReply, mail, setReply })
+  useReplyRecipients({ showReply, mail, setRecipients })
 
   return (
     <div
@@ -53,7 +57,7 @@ const Reply = ({ mail, showReply, setShowReply }) => {
           tabIndex={0}
           className='relative w-full flex flex-wrap bg-input text-foreground border gap-y-1.5 gap-x-1 border-border rounded-md items-center p-2 pl-3 text-sm shadow-xs '
         >
-          {reply?.recipients?.map((r) => {
+          {recipients?.map((r) => {
             return (
               <span
                 className=' border border-border  rounded p-1  flex items-center justify-center'
@@ -76,7 +80,7 @@ const Reply = ({ mail, showReply, setShowReply }) => {
             autoCorrect='on'
             rows={10}
             className='border border-border my-3 w-full  text-base sm:text-sm p-2 rounded-md shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
-            onChange={handleChange}
+            onChange={(e) => (reply.body = e.target.value)}
           />
         </div>
 

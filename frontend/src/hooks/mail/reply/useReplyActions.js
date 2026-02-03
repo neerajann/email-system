@@ -19,6 +19,10 @@ const useReplyActions = ({
         'Please wait until all attachments finish uploading'
       return
     }
+
+    if (reply.body.length == 0) {
+      uploadErrorRef.current.textContent = 'Cannot send an empty reply'
+    }
     uploadErrorRef.current.textContent = ''
 
     sendMail({

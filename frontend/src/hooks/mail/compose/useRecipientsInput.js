@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import api from '../../../services/api'
 import { emailPattern } from '../../../utils/pattern.js'
 
-const useRecipientsInput = ({ setEmail, recipientsRef }) => {
+const useRecipientsInput = ({ setRecipients, recipientsRef }) => {
   const [suggestions, setSuggestions] = useState([])
   const [input, setInput] = useState('')
 
@@ -11,6 +11,7 @@ const useRecipientsInput = ({ setEmail, recipientsRef }) => {
       setSuggestions([])
       return
     }
+
     const controller = new AbortController()
 
     const timer = setTimeout(async () => {
@@ -51,10 +52,7 @@ const useRecipientsInput = ({ setEmail, recipientsRef }) => {
 
     if (valid.length > 0) {
       recipientsRef.current.textContent = ''
-      setEmail((prev) => ({
-        ...prev,
-        recipients: Array.from(new Set([...prev.recipients, ...valid])),
-      }))
+      setRecipients((prev) => Array.from(new Set([...prev, ...valid])))
     }
 
     if (parts.length >= 1 && valid.length === 0) {
@@ -64,21 +62,15 @@ const useRecipientsInput = ({ setEmail, recipientsRef }) => {
     }
   }
   const addRecipient = (emailAddress) => {
-    setEmail((prev) => ({
-      ...prev,
-      recipients: Array.from(new Set([...prev.recipients, emailAddress])),
-    }))
+    setRecipients((prev) => Array.from(new Set([...prev, emailAddress])))
     recipientsRef.current.textContent = ''
     setInput('')
   }
+
   const removeRecipient = (r) => {
-    setEmail((prev) => {
-      return {
-        ...prev,
-        recipients: prev.recipients.filter((x) => x !== r),
-      }
-    })
+    setRecipients((prev) => prev.filter((x) => x !== r))
   }
+
   return {
     input,
     setInput,

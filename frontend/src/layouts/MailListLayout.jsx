@@ -1,20 +1,18 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useParams } from 'react-router-dom'
 import MailListItem from '../components/mail/list/MailListItem.jsx'
 import { useUI } from '../contexts/UIContext'
 import SearchListItem from '../components/mail/list/SearchListItem.jsx'
 import useMailboxQuery from '../hooks/mailbox/useMailboxQuery.js'
-import useMailboxToasts from '../hooks/mailbox/useMailboxToasts.js'
+import useMailboxToasts from '../hooks/mailbox/useMailboxToasts.jsx'
 import useMailboxSSE from '../hooks/mailbox/useMailboxSSE.js'
 import useInfiniteScroll from '../hooks/mailbox/useInfiniteScroll.js'
 import useBulkSelection from '../hooks/mailbox/useBulkSelection.js'
 import MailListHeader from '../components/mail/list/MailListHeader.jsx'
 import MailListSkeleton from '../components/loading/skeleton/MailListSkeleton.jsx'
 import { AnimatePresence, motion } from 'framer-motion'
-
-const didMount = { current: false }
 
 const MailListLayout = ({
   mailboxType,
@@ -23,9 +21,10 @@ const MailListLayout = ({
   query,
   emptyMessage,
 }) => {
-  const loadMoreRef = useRef(null)
-  const { showThread, setUnreadCount } = useUI()
+  const { setUnreadCount } = useUI()
   const memoizedQueryKey = useMemo(() => queryKey, [queryKey])
+  const { id } = useParams()
+  const hasThreadOpen = !!id
 
   const {
     mails,
@@ -39,9 +38,8 @@ const MailListLayout = ({
   } = useMailboxQuery({ queryKey, fetchFunction })
 
   useMailboxToasts({ isError, error })
-  useMailboxSSE({ mailboxType, queryKey, didMount, refetch })
-  useInfiniteScroll({
-    ref: loadMoreRef,
+  useMailboxSSE({ mailboxType, queryKey })
+  const loadMoreRef = useInfiniteScroll({
     fetchNextPage,
     isFetchingNextPage,
     hasNextPage,
@@ -60,7 +58,7 @@ const MailListLayout = ({
     <div className='w-full h-full overflow-hidden min-w-0 text-sm relative'>
       <div className='grid lg:grid-cols-2 overflow-hidden  grid-cols-1 h-full min-w-0 '>
         <div
-          className={` overflow-hidden border-x border-border relative ${showThread ? 'hidden lg:flex' : 'flex'}  min-w-0 flex-col`}
+          className={` overflow-hidden border-x border-border relative min-w-0 ${hasThreadOpen ? 'hidden lg:grid' : 'grid'}  grid-rows-[auto_1fr]`}
         >
           <MailListHeader
             selectedIds={selectedIds}
@@ -78,49 +76,47 @@ const MailListLayout = ({
               position='top-center'
               style={{ top: '80px' }}
               className='relative! w-full!  left-0! right-0! transform-none! pointer-events-none'
-              toastClassName='pointer-events-auto !bg-background border border-border !text-foreground text-sm'
-              hideProgressBar={false}
-              closeOnClick
-              pauseOnHover
+              toastClassName='pointer-events-auto !bg-background border border-border !text-foreground text-sm !rounded-lg'
+              hideProgressBar={true}
+              autoClose={2000}
             />
           </div>
 
-          <div className='relative h-full'>
+          <AnimatePresence mode='wait'>
             {/* Skeleton */}
             {isLoading && (
-              <AnimatePresence mode='wait'>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <MailListSkeleton />
-                </motion.div>
-              </AnimatePresence>
+              <motion.div
+                key='skeleton'
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0.2 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+              >
+                <MailListSkeleton />
+              </motion.div>
             )}
             {/* Mail list */}
             {!isLoading && mails?.length > 0 && (
-              <AnimatePresence mode='wait'>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <div className='absolute inset-0 h-full flex-1 min-w-0 grid auto-rows-auto gap-4 overflow-y-auto content-start pb-8'>
-                    {mailboxType === 'search'
-                      ? mails.map((mail) => (
-                          <SearchListItem
-                            key={mail.mailboxId}
-                            queryKey={memoizedQueryKey}
-                            mail={mail}
-                            query={query}
-                            isSelected={selectedIds.has(mail?.mailboxId)}
-                            toggle={toggle}
-                          />
-                        ))
-                      : mails.map((mail) => (
+              <motion.div
+                className='min-w-0 min-h-0 overflow-y-auto overflow-x-hidden'
+                initial={{ opacity: 0.4 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2, ease: 'easeIn' }}
+                key='maillist'
+              >
+                <div className='grid auto-rows-auto gap-4 content-start p-1.5 pb-6'>
+                  {mailboxType === 'search'
+                    ? mails.map((mail) => (
+                        <SearchListItem
+                          key={mail.mailboxId}
+                          queryKey={memoizedQueryKey}
+                          mail={mail}
+                          query={query}
+                          isSelected={selectedIds.has(mail?.mailboxId)}
+                          toggle={toggle}
+                        />
+                      ))
+                    : mails.map((mail) => {
+                        return (
                           <MailListItem
                             key={mail.mailboxId}
                             queryKey={memoizedQueryKey}
@@ -128,47 +124,38 @@ const MailListLayout = ({
                             isSelected={selectedIds.has(mail?.mailboxId)}
                             toggle={toggle}
                           />
-                        ))}
-                    {isFetchingNextPage && (
-                      <AnimatePresence mode='wait'>
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.5, ease: 'easeInOut' }}
-                        >
-                          <MailListSkeleton />
-                        </motion.div>
-                      </AnimatePresence>
-                    )}
-                    <div
-                      className='w-full min-h-5 h-5 text-sm flex items-center justify-center'
-                      ref={loadMoreRef}
-                    ></div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
+                        )
+                      })}
+                  {isFetchingNextPage && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      key='fetchingnextskeleton'
+                    >
+                      <MailListSkeleton />
+                    </motion.div>
+                  )}
+                  {/* observer to fetch next pages */}
+                  <div
+                    ref={loadMoreRef}
+                    className='w-full h-20 pointer-events-none select-none'
+                  />
+                </div>
+              </motion.div>
             )}
-            {/* Empty state */}
+            {/* Empty list */}
             {!isLoading && mails?.length === 0 && (
-              <AnimatePresence mode='wait'>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5, ease: 'easeInOut' }}
-                >
-                  <div className='absolute inset-0 flex items-center justify-center text-sm text-muted-foreground'>
-                    {emptyMessage}
-                  </div>
-                </motion.div>
-              </AnimatePresence>
+              <div className='absolute inset-0 flex items-center justify-center text-sm text-muted-foreground'>
+                {emptyMessage}
+              </div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
 
         <div
-          className={` lg:flex min-w-0 w-full ${showThread ? 'flex' : 'hidden'}`}
+          className={`lg:flex  min-w-0 w-full ${hasThreadOpen ? 'flex' : 'hidden'}`}
         >
           <Outlet />
         </div>

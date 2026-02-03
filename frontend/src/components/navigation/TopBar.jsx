@@ -2,14 +2,15 @@ import { GiHamburgerMenu } from 'react-icons/gi'
 import api from '../../services/api.js'
 import { useAuth } from '../../contexts/AuthContext'
 import { useUI } from '../../contexts/UIContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { RxCross1 } from 'react-icons/rx'
 import ConfirmationPopupModal from '../ui/ConfirmationPopupModal'
 
 const TopBar = () => {
   const navigate = useNavigate()
-  const { showThread } = useUI()
+  const { id } = useParams()
+  const hasThreadOpen = !!id
   const { setUser, user } = useAuth()
   const { setShowSideBar } = useUI()
   const [query, setQuery] = useState('')
@@ -26,11 +27,9 @@ const TopBar = () => {
     navigate(`/search?q=${encodeURIComponent(query)}`)
   }
 
-  console.log('top bar rendered')
-
   return (
     <div
-      className={`${showThread ? 'hidden sm:grid' : 'grid'}  grid-cols-[auto_1fr_auto] xl:grid-cols-[15.5rem_1fr_1fr] items-center py-4 bg-background border-b border-border z-50`}
+      className={`${hasThreadOpen ? 'hidden lg:grid' : 'grid'}  grid-cols-[auto_1fr_auto] xl:grid-cols-[15.5rem_1fr_1fr] items-center py-4 bg-background border-b border-border z-50`}
     >
       <div className='flex items-center gap-4 min-w-0 px-4'>
         <GiHamburgerMenu
@@ -42,7 +41,7 @@ const TopBar = () => {
             className='text-lg font-bold cursor-pointer'
             onClick={() => navigate('/inbox')}
           >
-            inboxify
+            {import.meta.env.VITE_DOMAIN_NAME.split('.')[0]}
           </h2>
         </div>
       </div>

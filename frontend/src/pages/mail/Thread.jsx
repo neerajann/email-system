@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { FaArrowLeftLong } from 'react-icons/fa6'
-import { useUI } from '../../contexts/UIContext'
 import ThreadItem from '../../components/mail/thread/ThreadItem.jsx'
 import ThreadActionButtons from '../../components/mail/thread/ThreadActionButtons.jsx'
 import ConfirmationPopupModal from '../../components/ui/ConfirmationPopupModal'
@@ -13,7 +12,6 @@ import ThreadListSkeleton from '../../components/loading/skeleton/ThreadListSkel
 import { AnimatePresence, motion } from 'framer-motion'
 
 const Thread = () => {
-  const { showThread, setShowThread } = useUI()
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -33,9 +31,9 @@ const Thread = () => {
 
   useEffect(() => {
     if (isError) {
-      navigate('..', { relative: 'path' })
+      navigate('..')
     }
-  }, [isError, navigate])
+  }, [isError])
 
   const { oldMessage, hiddenCount, latestMessages } = useThreadMessages({
     mails,
@@ -43,32 +41,27 @@ const Thread = () => {
 
   return (
     <div className='relative h-dvh w-full lg:w-auto flex flex-1  flex-col overflow-y-auto min-w-0 sm:p-7 p-2.5'>
-      {isLoading ? (
-        <AnimatePresence mode='wait'>
+      <AnimatePresence mode='wait'>
+        {isLoading ? (
           <motion.div
-            initial={{ opacity: 0 }}
+            key='skeleton'
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeIn' }}
+            exit={{ opacity: 0.5 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
           >
             <ThreadListSkeleton />
           </motion.div>
-        </AnimatePresence>
-      ) : (
-        <AnimatePresence mode='wait'>
+        ) : (
           <motion.div
-            initial={{ opacity: 0 }}
+            key='mailcontent'
+            initial={{ opacity: 0.3 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeIn' }}
+            transition={{ duration: 0.2, ease: 'easIn' }}
           >
-            <div
-              className={` ${showThread ? 'flex lg:hidden' : 'hidden'} items-center justify-between mb-7 mt-2`}
-            >
+            <div className='flex lg:hidden items-center justify-between mb-7 mt-2'>
               <div
                 className='text-sm flex items-center gap-2 border w-fit px-3 py-1.5 rounded border-border cursor-pointer hover:bg-input'
                 onClick={() => {
-                  setShowThread(false)
                   if (location.state?.from) {
                     navigate(location.state.from)
                   } else {
@@ -83,7 +76,6 @@ const Thread = () => {
                 mail={mails[0]}
                 patchMail={patchMail}
                 setShowConfirmationModal={setShowConfirmationModal}
-                setShowThread={setShowThread}
                 navigate={navigate}
               />
             </div>
@@ -93,15 +85,12 @@ const Thread = () => {
               <div className='flex items-start justify-between gap-3 mb-2'>
                 <h2 className='text-xl font-semibold'>{mails[0]?.subject}</h2>
                 {/* hidden on smaller */}
-                <div
-                  className={`${showThread ? 'hidden lg:flex' : 'flex'} shrink-0 gap-3`}
-                >
+                <div className='hidden lg:flex  shrink-0 gap-3'>
                   <ThreadActionButtons
                     mail={mails[0]}
                     patchMail={patchMail}
                     setShowConfirmationModal={setShowConfirmationModal}
                     navigate={navigate}
-                    setShowThread={setShowThread}
                   />
                 </div>
               </div>
@@ -162,29 +151,18 @@ const Thread = () => {
             </div>
 
             {showConfirmationModal && (
-              <AnimatePresence>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 1, ease: 'easeInOut' }}
-                >
-                  <ConfirmationPopupModal
-                    handlerFunction={deleteForever}
-                    message={
-                      'Are you sure you want to delete this mail forever?'
-                    }
-                    setShowConfirmationModal={setShowConfirmationModal}
-                    mailboxId={mails[0].mailboxId}
-                  />
-                </motion.div>
-              </AnimatePresence>
+              <ConfirmationPopupModal
+                handlerFunction={deleteForever}
+                message={'Are you sure you want to delete this mail forever?'}
+                setShowConfirmationModal={setShowConfirmationModal}
+                mailboxId={mails[0].mailboxId}
+              />
             )}
 
             <div className='h-40 w-full shrink-0'></div>
           </motion.div>
-        </AnimatePresence>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   )
 }

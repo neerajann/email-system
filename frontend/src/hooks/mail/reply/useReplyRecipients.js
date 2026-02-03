@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useAuth } from '../../../contexts/AuthContext'
 
-const useReplyRecipients = ({ showReply, mail, setReply }) => {
+const useReplyRecipients = ({ showReply, mail, setRecipients }) => {
   const { user } = useAuth()
 
   useEffect(() => {
@@ -13,17 +13,10 @@ const useReplyRecipients = ({ showReply, mail, setReply }) => {
         .map((r) => r.address)
 
       recipents.push(mail.from.address)
-      setReply((prev) => ({ ...prev, recipients: recipents }))
+      setRecipients(recipents)
     } else if (showReply?.reply) {
-      setReply((prev) => ({ ...prev, recipients: [mail.from.address] }))
+      setRecipients([mail.from.address])
     }
   }, [])
-
-  const handleChange = (e) => {
-    setReply((prev) => ({ ...prev, body: e.target.value }))
-  }
-  return {
-    handleChange,
-  }
 }
 export default useReplyRecipients

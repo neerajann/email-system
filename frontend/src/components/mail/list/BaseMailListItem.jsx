@@ -2,7 +2,6 @@ import { memo } from 'react'
 import formatMailDate from '../../../utils/formatMailDate.js'
 import { NavLink, useLocation } from 'react-router-dom'
 import { IoStarOutline, IoStarSharp } from 'react-icons/io5'
-import { useUI } from '../../../contexts/UIContext.jsx'
 import useMailUpdate from '../../../hooks/mailbox/useMailUpdate.js'
 import Tooltip from '../../ui/Tooltip.jsx'
 import StarButton from '../../ui/buttons/StarButton.jsx'
@@ -20,9 +19,9 @@ const BaseMailListItem = memo((props) => {
     children,
     mail,
   } = props
-  const { showThread, setShowThread } = useUI()
   const mailUpdateMutation = useMailUpdate(queryKey)
   const location = useLocation()
+
   return (
     <NavLink
       to={navigateTo}
@@ -33,9 +32,6 @@ const BaseMailListItem = memo((props) => {
       }
       state={{ from: location.pathname + location.search }}
       onClick={() => {
-        if (window.innerWidth < 1024 && !showThread) {
-          setShowThread(true)
-        }
         if (!mail.isRead) {
           mailUpdateMutation.mutate({
             mailboxIds: [mail.mailboxId],

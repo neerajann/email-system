@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 const useDraft = ({ subject }) => {
-  const [email, setEmail] = useState({
-    recipients: [],
+  const [recipients, setRecipients] = useState([])
+
+  const email = useRef({
     subject: subject || '',
     body: '',
     attachments: [],
   })
-  return { email, setEmail }
+
+  return { recipients, setRecipients, email: email.current }
 }
 export default useDraft

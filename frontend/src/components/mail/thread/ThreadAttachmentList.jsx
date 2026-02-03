@@ -11,18 +11,30 @@ const ThreadAttachmentList = ({ mail }) => {
           </span>
           <div className='flex gap-5 min-w-0 flex-wrap mt-4'>
             {mail.attachments.map((attachment) => {
+              const viewUrl = `${import.meta.env.VITE_API_URL}/mail/attachment/${attachment.id}?emailId=${mail.emailId}&q=view`
+              const downloadUrl = `${import.meta.env.VITE_API_URL}/mail/attachment/${attachment.id}?emailId=${mail.emailId}`
               return (
-                <div
+                <a
                   key={attachment.id}
-                  className=' border border-border py-2 px-4 bg-input  flex items-center gap-6 rounded w-fit min-w-0'
+                  href={viewUrl}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='border border-border py-2 px-4 bg-input flex items-center gap-6 rounded w-fit min-w-0'
                 >
                   <span className='truncate'>{attachment.fileName}</span>
-                  <a
-                    href={`${import.meta.env.VITE_API_URL}/mail/attachment/${attachment.id}?emailId=${mail.emailId}`}
+
+                  <button
+                    type='button'
+                    className='shrink-0 cursor-pointer'
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      window.open(downloadUrl, '_self')
+                    }}
                   >
                     <MdOutlineFileDownload size={18} />
-                  </a>
-                </div>
+                  </button>
+                </a>
               )
             })}
           </div>

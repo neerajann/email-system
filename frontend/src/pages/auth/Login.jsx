@@ -5,42 +5,47 @@ import api from '../../services/api.js'
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { useRef } from 'react'
 
 const Login = () => {
   const navigate = useNavigate()
   const { setUser } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({
+  const formData = useRef({
     emailAddress: '',
     password: '',
   })
 
-  const [submitErrors, setSubmitErrors] = useState([])
+  const [submitErrors, setSubmitErrors] = useState({})
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    console.log(formData.current)
 
-    const newErrors = {}
-
-    if (!formData.emailAddress.length) {
-      newErrors.emailAddress = 'Email address is required.'
-    } else if (!domainEmailPattern.test(formData.emailAddress)) {
-      newErrors.emailAddress = 'Invalid email address.'
+    if (!formData.current.emailAddress.length) {
+      setSubmitErrors({
+        emailAddress: 'Email address is required.',
+      })
+      return
+    } else if (!domainEmailPattern.test(formData.current.emailAddress)) {
+      setSubmitErrors({
+        emailAddress: 'Invalid email address.',
+      })
+      return
     }
 
-    if (!formData.password.trim().length) {
-      newErrors.password = 'Password is required.'
+    if (!formData.current.password.trim().length) {
+      setSubmitErrors({
+        password: 'Password is required.',
+      })
+      return
     }
-
-    setSubmitErrors(newErrors)
-
-    if (Object.keys(newErrors).length > 0) return
 
     try {
-      const { data } = await api.post('/auth/login', formData)
+      const { data } = await api.post('/auth/login', formData.current)
 
       if (data.success) {
-        setUser(formData.emailAddress)
+        setUser(formData.current.emailAddress)
         navigate('/inbox')
       }
     } catch (error) {
@@ -52,10 +57,10 @@ const Login = () => {
 
   return (
     <div className='w-screen h-dvh flex items-center justify-center'>
-      <div className='bg-background border-border p-10 rounded-lg border flex-col max-w-150 w-full lg:w-1/2 m-5 lg:p-20 '>
+      <div className='bg-background border-border p-5 rounded-lg border flex-col max-w-150 w-full lg:w-1/2  py-12 lg:p-20 '>
         <div>
           <h1 className='sm:text-2xl text-xl font-semibold text-center mb-8'>
-            Welcome back to Inboxify
+            Welcome back to {import.meta.env.VITE_DOMAIN_NAME.split('.')[0]}
           </h1>
         </div>
 
@@ -63,7 +68,7 @@ const Login = () => {
           <div>
             <label
               htmlFor='emailAddress'
-              className='block font-medium text-base md:text-sm  mb-3'
+              className='block  font-medium text-base md:text-sm  mb-3'
             >
               Email address
             </label>
@@ -71,19 +76,16 @@ const Login = () => {
             <input
               type='email'
               name='emailAddress'
-              placeholder='you@inboxify.com'
+              placeholder={`you@${import.meta.env.VITE_DOMAIN_NAME}`}
               className='text-base md:text-sm  w-full bg-input text-foreground border border-border rounded-md p-2 pl-3  shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
-              onChange={(e) =>
-                setFormData({ ...formData, emailAddress: e.target.value })
-              }
+              onChange={(e) => (formData.current.emailAddress = e.target.value)}
             />
-
-            {submitErrors.emailAddress && (
-              <span className=' text-red-500 text-sm mt-3 block'>
-                {submitErrors.emailAddress}
-              </span>
-            )}
           </div>
+          {submitErrors.emailAddress && (
+            <span className=' text-red-500 text-sm mt-3 block'>
+              {submitErrors.emailAddress}
+            </span>
+          )}
 
           <div>
             <label
@@ -98,9 +100,7 @@ const Login = () => {
                 name='password'
                 placeholder='*************'
                 className='text-base md:text-sm w-full h-10 bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
+                onChange={(e) => (formData.current.password = e.target.value)}
               />
               <button
                 type='button'
