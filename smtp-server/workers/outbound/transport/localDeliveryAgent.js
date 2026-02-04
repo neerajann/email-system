@@ -21,8 +21,6 @@ const localDeliveryAgent = async ({
     { _id: 1, emailAddress: 1, name: 1 },
   )
 
-  console.log('exisiting users:', existingUsers)
-
   const emailToNameMap = existingUsers.reduce((acc, user) => {
     acc[user.emailAddress] = user.name
     return acc
@@ -93,6 +91,9 @@ const localDeliveryAgent = async ({
 
     const thread = await Thread.findById(threadId, {
       messageCount: 1,
+      senders: 1,
+      subject: 1,
+      _id: 0,
     })
 
     const notifications = mailboxEntries.flatMap((result) => {

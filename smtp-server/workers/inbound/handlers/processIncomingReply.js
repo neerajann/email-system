@@ -6,13 +6,15 @@ import {
   RecipientHistory,
 } from '@email-system/core/models'
 import uploadAttachment from '../attachments/uploadAttachment.js'
-import resolveThread from '../threading/resolveThread.js'
+import resolveThreadContext from '../threading/resolveThreadContext.js'
 import htmlSanitizer from '../utils/htmlSanitizer.js'
 import processNewIncomingMail from './processNewIncomingMail.js'
 import notifyUser from '@email-system/core/messaging'
 
 const processIncomingReply = async ({ mail, envelope }) => {
-  const threadId = await resolveThread(mail)
+  const { threadId, parentReferences, parentMessageId } =
+    await resolveThreadContext(mail)
+
   if (!threadId) return processNewIncomingMail(mail, envelope)
 
   const recipientsAddress = envelope.rcptTo.map((r) => r.address)
@@ -35,7 +37,7 @@ const processIncomingReply = async ({ mail, envelope }) => {
     ? await uploadAttachment(mail.attachments)
     : []
 
-  messageId =
+  const messageId =
     mail?.messageId ?? `<${crypto.randomUUID()}@${process.env.DOMAIN_NAME}>`
 
   const emailAddressToName = Object.fromEntries(
@@ -63,6 +65,8 @@ const processIncomingReply = async ({ mail, envelope }) => {
     },
     messageId,
     attachments,
+    inReplyTo: parentMessageId,
+    references: [...parentReferences, parentMessageId],
   })
 
   const userIds = localUsers.map((l) => l._id)
@@ -88,21 +92,16 @@ const processIncomingReply = async ({ mail, envelope }) => {
     userId: { $in: userIds },
     threadId,
   })
-
+  const senderMapkey = email.from.address.replace(/\./g, '_')
   const thread = await Thread.findByIdAndUpdate(
     threadId,
     {
-      $push: {
-        messageIds: messageId,
-      },
       $inc: {
         messageCount: 1,
       },
       $set: {
         lastMessageAt: Date.now(),
-      },
-      $addToSet: {
-        senders: {
+        [`senders.${senderMapkey}`]: {
           name: email.from.name,
           address: email.from.address,
         },
@@ -129,6 +128,8 @@ const processIncomingReply = async ({ mail, envelope }) => {
       },
     })),
   )
+
+  console.log('thread from reply', thread)
 
   const notifications = updatedMailboxes.flatMap((result) => {
     if (result.isDeleted) return []

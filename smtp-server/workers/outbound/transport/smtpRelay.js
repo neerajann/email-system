@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer'
 import dns from 'dns/promises'
 import fs from 'fs'
+
 const smtpRelay = async ({
   sender,
   recipients,
@@ -15,6 +16,7 @@ const smtpRelay = async ({
 }) => {
   const output = { bounced: [], retriable: [] }
 
+  console.log(attachmentsRecords)
   const batches =
     failureRecords.length > 0
       ? failureRecords
@@ -75,6 +77,7 @@ const smtpRelay = async ({
         output.retriable.push({ emails: pending, mxCache })
       }
     } catch (err) {
+      console.log(err)
       const isPermanent = err?.responseCode >= 500
 
       if (isPermanent) {
@@ -103,10 +106,14 @@ const groupRecipientsByDomain = async (recipients) => {
 const resolveMx = async (domain) => {
   try {
     const mx = await dns.resolveMx(domain)
+    console.log(mx)
+
     if (mx.length) {
       return mx.sort((a, b) => a.priority - b.priority).map((m) => m.exchange)
     }
-  } catch {}
+  } catch (error) {
+    console.log(error)
+  }
   return await dns.resolve4(domain).catch(() => [])
 }
 export default smtpRelay

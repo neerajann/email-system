@@ -31,7 +31,6 @@ const outboundEmailWorker = new Worker(
       failureRecords = [],
     } = job.data
 
-    console.log(job.data)
     let retriable = []
     let externalBounced = []
     let localBounced = []

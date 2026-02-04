@@ -110,18 +110,13 @@ const failureRecorder = async ({
     {
       $set: {
         lastMessageAt: new Date(),
-      },
-      $inc: {
-        messageCount: createdEmails?.length,
-      },
-      $push: {
-        messageIds: allMessageIds,
-      },
-      $addToSet: {
-        senders: {
+        ['senders.mailer-daemon@inboxify_com']: {
           name: 'Mail Delivery Subsystem',
           address: 'mailer-daemon@inboxify.com',
         },
+      },
+      $inc: {
+        messageCount: createdEmails?.length,
       },
     },
     { new: true },

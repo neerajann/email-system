@@ -1,7 +1,7 @@
 import { Attachment } from '@email-system/core/models'
 
 const loadAttachmentMetadata = async (attachments) => {
-  return await Attachment.updateMany(
+  await Attachment.updateMany(
     {
       _id: { $in: attachments },
     },
@@ -10,10 +10,12 @@ const loadAttachmentMetadata = async (attachments) => {
         status: 'attached',
       },
     },
-    {
-      new: true,
-    },
   )
+  return Attachment.find({
+    _id: {
+      $in: attachments,
+    },
+  })
 }
 
 export default loadAttachmentMetadata

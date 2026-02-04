@@ -2,9 +2,10 @@ import { User, Thread, Email, Mailbox } from '@email-system/core/models'
 import htmlSanitizer from '../utils/htmlSanitizer.js'
 import uploadAttachment from '../attachments/uploadAttachment.js'
 import notifyUser from '@email-system/core/messaging'
+import { RecipientHistory } from '@email-system/core/models'
 
 const processNewIncomingMail = async ({ mail, envelope }) => {
-  const recipientsAddress = envelope.rcptTo.map((r) => r.address)
+  const recipientsAddress = envelope?.rcptTo.map((r) => r.address)
 
   const localUsers = await User.find(
     {
@@ -28,14 +29,21 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
   const messageId =
     mail?.messageId ?? `<${crypto.randomUUID()}@${process.env.DOMAIN_NAME}>`
 
+  const senderMap = new Map()
+  const senderMapkey = mail.from.value[0].address.replace(/\./g, '_')
+
+  senderMap.set(senderMapkey, {
+    name: mail.from.value[0]?.name ?? '',
+    address: mail.from.value[0].address,
+  })
+
+  const mailToAddresses = mail.to.value.map((t) => t.address)
+
   const thread = await Thread.insertOne({
     subject: mail.subject,
     lastMessageAt: new Date(),
-    messageIds: [messageId],
-    senders: {
-      name: mail.from.value[0]?.name ?? '',
-      address: mail.from.value[0].address,
-    },
+    senders: senderMap,
+    participants: [mail.from.value[0].address, ...mailToAddresses],
   })
 
   const emailAddressToName = Object.fromEntries(
@@ -90,6 +98,7 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
       },
     })),
   )
+  console.log('Thread object', thread)
 
   const notifications = mailboxRecord.map((record) => ({
     userId: String(record.userId),

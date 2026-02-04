@@ -12,7 +12,7 @@ const inboundEmailWorker = new Worker(
   async (job) => {
     const { envelope, mail } = job.data
     if (!mail) return
-    console.log(job.data)
+    console.log('new incoming mail')
     if (mail.inReplyTo || mail.references?.length) {
       await processIncomingReply({ mail, envelope })
     } else {
@@ -23,7 +23,7 @@ const inboundEmailWorker = new Worker(
     connection,
     concurrency: 5,
     attempts: 1,
-  }
+  },
 )
 
 inboundEmailWorker.on('completed', (job) => {
