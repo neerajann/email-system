@@ -100,6 +100,7 @@ const uploadAttachments = {
 }
 
 const downloadAttachment = async (req, reply) => {
+  const q = req.query?.q || 'download'
   const attachmentId = req.params.id
   const emailId = req.query.emailId.trim()
 
@@ -111,10 +112,17 @@ const downloadAttachment = async (req, reply) => {
   if (!attachment) {
     return reply.code(404).send({ error: 'Not found' })
   }
-  reply.header(
-    'Content-Disposition',
-    `attachment; filename=${attachment.originalName}`,
-  )
+  if (q === 'view') {
+    reply.header(
+      'Content-Disposition',
+      `inline; filename=${attachment.originalName}`,
+    )
+  } else {
+    reply.header(
+      'Content-Disposition',
+      `attachment; filename=${attachment.originalName}`,
+    )
+  }
 
   return reply.send(fs.createReadStream(attachment.path))
 }

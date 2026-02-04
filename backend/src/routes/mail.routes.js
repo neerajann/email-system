@@ -48,12 +48,6 @@ const mailRouter = async (fastify) => {
     attachmentController.downloadAttachment,
   )
 
-  fastify.get(
-    '/:id',
-    { preHandler: [verifyJWT, verifyObjectId] },
-    mailController.getMail,
-  )
-
   fastify.patch(
     '/',
     {
@@ -63,19 +57,26 @@ const mailRouter = async (fastify) => {
     mailController.patchMail,
   )
 
-  fastify.delete(
-    '/:id',
-    {
-      preHandler: [verifyJWT, verifyObjectId],
-    },
-    mailController.deleteMail,
-  )
   fastify.get(
     '/recipients/suggestions',
     {
       preHandler: verifyJWT,
     },
     mailController.getRecipientsSuggestion,
+  )
+
+  fastify.get(
+    '/:id',
+    { preHandler: [verifyJWT, verifyObjectId] },
+    mailController.getMail,
+  )
+
+  fastify.delete(
+    '/:id',
+    {
+      preHandler: [verifyJWT, verifyObjectId],
+    },
+    mailController.deleteMail,
   )
 }
 

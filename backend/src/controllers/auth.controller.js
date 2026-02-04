@@ -36,12 +36,12 @@ const loginUser = async (req, reply) => {
   }
 }
 
-const logoutUser = (req, reply) => {
+const logoutUser = async (req, reply) => {
   reply.clearCookie(process.env.JWT_COOKIE_NAME)
   return reply.code(200).send({ success: 'Logged out successfully' })
 }
 
-const checkUser = (req, reply) => {
+const checkUser = async (req, reply) => {
   const jwtToken = req.cookies?.[process.env.JWT_COOKIE_NAME]
   if (!jwtToken)
     return reply.send({
