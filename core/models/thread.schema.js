@@ -15,16 +15,18 @@ const threadSchema = new mongoose.Schema(
     participants: {
       type: [String],
     },
-    senders: [
-      {
-        name: {
-          type: String,
+    senders: {
+      type: Map,
+      of: new mongoose.Schema(
+        {
+          name: String,
+          address: String,
         },
-        address: {
-          type: String,
+        {
+          _id: false,
         },
-      },
-    ],
+      ),
+    },
   },
   { timestamps: true },
 )
