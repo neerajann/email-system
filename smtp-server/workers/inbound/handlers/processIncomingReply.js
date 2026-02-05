@@ -84,6 +84,9 @@ const processIncomingReply = async ({ mail, envelope }) => {
       },
       $set: { lastMessageAt: new Date(), isRead: false },
       $addToSet: { labels: 'INBOX' },
+      $setOnInsert: {
+        subject: email.subject,
+      },
     },
     { upsert: true, new: true },
   )
@@ -92,15 +95,12 @@ const processIncomingReply = async ({ mail, envelope }) => {
     userId: { $in: userIds },
     threadId,
   })
+
   const senderMapkey = email.from.address.replace(/\./g, '_')
   const thread = await Thread.findByIdAndUpdate(
     threadId,
     {
-      $inc: {
-        messageCount: 1,
-      },
       $set: {
-        lastMessageAt: Date.now(),
         [`senders.${senderMapkey}`]: {
           name: email.from.name,
           address: email.from.address,
@@ -129,8 +129,6 @@ const processIncomingReply = async ({ mail, envelope }) => {
     })),
   )
 
-  console.log('thread from reply', thread)
-
   const notifications = updatedMailboxes.flatMap((result) => {
     if (result.isDeleted) return []
     return {
@@ -138,13 +136,13 @@ const processIncomingReply = async ({ mail, envelope }) => {
       newMail: {
         mailboxId: result._id,
         from: thread.senders,
-        subject: thread.subject,
+        subject: result.subject,
         snippet: email.body?.text?.substring(0, 200) ?? ' ',
         isSystem: false,
-        messageCount: thread.messageCount,
+        messageCount: result.emailIds.length,
         isRead: false,
         isStarred: result.isStarred,
-        receivedAt: email.receivedAt,
+        receivedAt: result.lastMessageAt,
         isDeleted: false,
       },
     }

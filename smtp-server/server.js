@@ -12,36 +12,30 @@ await connectDB()
 const server = new SMTPServer({
   allowInsecureAuth: true,
   authOptional: true,
-  size: 10 * 1024 * 1024,
+  size: 17 * 1024 * 1024,
   banner: 'Welcome to ' + process.env.DOMAIN_NAME,
 
   onConnect(session, cb) {
-    console.log('Connected')
     cb()
   },
 
   onMailFrom(address, session, cb) {
-    console.log('Mail from')
     if (!emailPattern.test(address.address)) {
-      console.log('Invalid address')
       return cb(
-        new Error('553 5.1.7 Sender address rejected: invalid address syntax')
+        new Error('553 5.1.7 Sender address rejected: invalid address syntax'),
       )
     }
     if (domainEmailPattern.test(address.address)) {
       return cb(
         new Error(
-          '553 5.7.1 Sender address rejected: This domain does not permit SMTP submission. Please use the web interface.'
-        )
+          '553 5.7.1 Sender address rejected: This domain does not permit SMTP submission. Please use the authorized application.',
+        ),
       )
     }
-
-    console.log('Mail from done')
     cb()
   },
 
   async onRcptTo(address, session, cb) {
-    console.log('Rcpt to')
     if (!domainEmailPattern.test(address.address)) {
       return cb(new Error('550 Doesnot belong to this domain'))
     }
@@ -50,11 +44,10 @@ const server = new SMTPServer({
       {
         emailAddress: address.address,
       },
-      { _id: 1 }
+      { _id: 1 },
     )
 
     if (!user) {
-      console.log('User Doesnot exist')
       return cb(new Error('550 User doesnot exist'))
     }
     cb()
@@ -63,29 +56,36 @@ const server = new SMTPServer({
   async onData(stream, session, cb) {
     try {
       let raw = await readStream(stream)
-      const result = await authenticate(raw, {
-        ip: session.remoteAddress,
-        sender: session.envelope.mailFrom.address,
-      })
-      if (result?.dmarc?.status?.result === 'pass') {
+      if (process.env.SECURE === 'true') {
+        const result = await authenticate(raw, {
+          ip: session.remoteAddress,
+          sender: session.envelope.mailFrom.address,
+        })
+        if (result?.dmarc?.status?.result === 'pass') {
+          const parsedMail = await simpleParser(raw)
+          addToInboundQueue(session.envelope, parsedMail)
+          raw = null
+          return cb()
+        }
+        raw = null
+        const domain = result?.dmarc?.domain ?? result?.spf?.domain
+        if (domain)
+          return cb(
+            new Error(
+              `550 5.7.1 DMARC fail: SPF and DKIM failed or were not aligned for domain ${domain}`,
+            ),
+          )
+        return cb(
+          new Error(
+            '550 5.7.1 Authentication required: DMARC validation failed or missing',
+          ),
+        )
+      } else {
         const parsedMail = await simpleParser(raw)
         addToInboundQueue(session.envelope, parsedMail)
         raw = null
         return cb()
       }
-      raw = null
-      const domain = result?.dmarc?.domain ?? result?.spf?.domain
-      if (domain)
-        return cb(
-          new Error(
-            `550 5.7.1 DMARC fail: SPF and DKIM failed or were not aligned for domain ${domain}`
-          )
-        )
-      return cb(
-        new Error(
-          '550 5.7.1 Authentication required: DMARC validation failed or missing'
-        )
-      )
     } catch (error) {
       console.error('SMTP Data Error:', error)
       return cb(new Error('Message rejected due to processing error'))
@@ -100,6 +100,7 @@ const readStream = async (stream) => {
   }
   return Buffer.concat(chunks)
 }
+
 const addToInboundQueue = async (envelope, parsedMail) => {
   await inboundEmailQueue.add(
     'inboundEmailQeue',
@@ -116,7 +117,7 @@ const addToInboundQueue = async (envelope, parsedMail) => {
       removeOnFail: {
         age: 24 * 3600,
       },
-    }
+    },
   )
   return true
 }

@@ -91,8 +91,6 @@ const outboundEmailWorker = new Worker(
     }
 
     const bouncedMails = [...localBounced, ...externalBounced]
-    console.log('Bounced mails', bouncedMails)
-    console.log('Retriable', retriable)
 
     if (bouncedMails.length) {
       await failureRecorder({

@@ -1,4 +1,7 @@
-const generateBounceHtml = (recipient) => {
+const generateBounceHtml = ({
+  recipient,
+  errorMessage = '550 5.1.1 Recipient address rejected',
+}) => {
   const accentColor = '#d93025'
 
   return `
@@ -38,7 +41,7 @@ const generateBounceHtml = (recipient) => {
           border: 1px solid currentColor; 
           border-radius: 4px; 
           font-family: monospace;">
-          550 5.1.1 Recipient address rejected
+          ${errorMessage}
         </code>
       </div>
 

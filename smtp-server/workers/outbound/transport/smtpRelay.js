@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer'
 import dns from 'dns/promises'
 import fs from 'fs'
+import getTransporterCache from './getTransporterCache'
 
 const smtpRelay = async ({
   sender,
@@ -16,7 +17,6 @@ const smtpRelay = async ({
 }) => {
   const output = { bounced: [], retriable: [] }
 
-  console.log(attachmentsRecords)
   const batches =
     failureRecords.length > 0
       ? failureRecords
@@ -35,13 +35,7 @@ const smtpRelay = async ({
       continue
     }
 
-    const currentHost = mxCache[0]
-    const transporter = nodemailer.createTransport({
-      host: currentHost,
-      port: 25,
-      connectionTimeout: 5000,
-      tls: { rejectUnauthorized: false },
-    })
+    const transporter = getTransporterCache({ mxHost: mxCache[0] })
 
     try {
       const info = await transporter.sendMail({
@@ -59,16 +53,22 @@ const smtpRelay = async ({
           filename: r.originalName,
           path: r.path,
         })),
-        dkim: {
-          domainName: process.env.DOMAIN_NAME,
-          keySelector: 'default',
-          privateKey: fs.readFileSync('./inboxify.private', 'utf8'),
-        },
+        dkim:
+          process.env.SECURE === 'true'
+            ? {
+                domainName: process.env.DOMAIN_NAME,
+                keySelector: 'default',
+                privateKey: fs.readFileSync('./dkim.private', 'utf8'),
+              }
+            : undefined,
         inReplyTo: inReplyTo,
         references: references?.join(' '),
       })
 
-      if (info.rejected?.length) output.bounced.push(...info.rejected)
+      if (info.rejected?.length)
+        output.bounced.push({
+          addresses: [...info.rejected],
+        })
 
       const handled = new Set([...info.accepted, ...info.rejected])
       const pending = emails.filter((e) => !handled.has(e))
@@ -81,7 +81,10 @@ const smtpRelay = async ({
       const isPermanent = err?.responseCode >= 500
 
       if (isPermanent) {
-        output.bounced.push(...emails)
+        output.bounced.push({
+          addresses: [...emails],
+          errorMessage: err.message,
+        })
       } else {
         const rotated =
           mxCache.length > 1 ? [...mxCache.slice(1), mxCache[0]] : mxCache

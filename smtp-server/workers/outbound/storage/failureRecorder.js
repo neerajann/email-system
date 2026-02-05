@@ -69,17 +69,22 @@ const failureRecorder = async ({
       )
     }
   } else if (type === 'BOUNCE') {
-    await Promise.all(
-      bouncedRecipients.map(async (recipient) => {
-        const html = generateBounceHtml(recipient)
-        const subject = 'Mail Delivery Failed: Address Not Found'
-        pushFailureEntry(subject, html)
-        await RecipientHistory.findOneAndDelete({
-          ownerUserId: sender.id,
-          emailAddress: recipient,
-        })
-      }),
-    )
+    for (const entry of bouncedRecipients) {
+      await Promise.all(
+        entry.addresses.map(async (recipient) => {
+          const html = generateBounceHtml({
+            recipient,
+            errrorMessage: entry.errrorMessage,
+          })
+          const subject = 'Mail Delivery Failed: Address Not Found'
+          pushFailureEntry(subject, html)
+          await RecipientHistory.findOneAndDelete({
+            ownerUserId: sender.id,
+            emailAddress: recipient,
+          })
+        }),
+      )
+    }
   }
 
   const createdEmails = await Email.insertMany(failureEntries)
@@ -101,6 +106,9 @@ const failureRecorder = async ({
       $addToSet: {
         labels: { $each: ['SYSTEM', 'INBOX'] },
       },
+      $setOnInsert: {
+        subject: createdEmails[0].subject,
+      },
     },
     { upsert: true, new: true },
   )
@@ -109,14 +117,10 @@ const failureRecorder = async ({
     threadId,
     {
       $set: {
-        lastMessageAt: new Date(),
         ['senders.mailer-daemon@inboxify_com']: {
           name: 'Mail Delivery Subsystem',
           address: 'mailer-daemon@inboxify.com',
         },
-      },
-      $inc: {
-        messageCount: createdEmails?.length,
       },
     },
     { new: true },
@@ -127,21 +131,23 @@ const failureRecorder = async ({
   if (!mailboxRecord.isDeleted) {
     const notifications = [
       {
-        userId: sender._id,
+        userId: sender.id,
         newMail: {
           mailboxId: mailboxRecord._id,
           from: thread.senders,
-          subject: thread.subject,
+          subject: mailboxRecord.subject,
           snippet: lastFailedEmail.body?.text?.substring(0, 200) ?? ' ',
           isSystem: false,
-          messageCount: thread.messageCount,
+          messageCount: mailboxRecord.emailIds.length,
           isRead: false,
           isStarred: mailboxRecord.isStarred,
-          receivedAt: lastFailedEmail.receivedAt,
+          receivedAt: mailboxRecord.lastMessageAt,
           isDeleted: false,
         },
       },
     ]
+    console.log('Notfications', notifications)
+
     await notifyUser(notifications)
   }
 

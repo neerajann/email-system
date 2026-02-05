@@ -45,9 +45,9 @@ const localDeliveryAgent = async ({
   )
   const validEmailAddresses = existingUsers.map((u) => u.emailAddress)
 
-  localBouncedMails.push(
-    ...recipients.filter((r) => !validEmailAddresses.includes(r)),
-  )
+  localBouncedMails.push({
+    addresses: recipients.filter((r) => !validEmailAddresses.includes(r)),
+  })
 
   if (validUserIds?.length > 0) {
     Mailbox.bulkWrite(
@@ -59,7 +59,9 @@ const localDeliveryAgent = async ({
               lastMessageAt: Date.now(),
               isRead: false,
             },
-            $addToSet: { labels: 'INBOX' },
+            $setOnInsert: {
+              subject: email.subject,
+            },
             $push: { emailIds: emailId },
           },
           upsert: true,
@@ -90,9 +92,7 @@ const localDeliveryAgent = async ({
     })
 
     const thread = await Thread.findById(threadId, {
-      messageCount: 1,
       senders: 1,
-      subject: 1,
       _id: 0,
     })
 
@@ -103,13 +103,13 @@ const localDeliveryAgent = async ({
         newMail: {
           mailboxId: result._id,
           from: thread.senders,
-          subject: thread.subject,
+          subject: result.subject,
           snippet: email.body?.text?.substring(0, 200) ?? ' ',
           isSystem: false,
-          messageCount: thread.messageCount,
+          messageCount: result.emailIds.length,
           isRead: false,
           isStarred: result.isStarred,
-          receivedAt: email.receivedAt,
+          receivedAt: result.lastMessageAt,
           isDeleted: false,
         },
       }

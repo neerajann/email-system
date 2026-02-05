@@ -40,8 +40,6 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
   const mailToAddresses = mail.to.value.map((t) => t.address)
 
   const thread = await Thread.insertOne({
-    subject: mail.subject,
-    lastMessageAt: new Date(),
     senders: senderMap,
     participants: [mail.from.value[0].address, ...mailToAddresses],
   })
@@ -79,6 +77,7 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
       threadId: thread._id,
       emailIds: [email._id],
       labels: ['INBOX'],
+      subject: email.subject,
     })),
   )
 
@@ -98,20 +97,19 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
       },
     })),
   )
-  console.log('Thread object', thread)
 
   const notifications = mailboxRecord.map((record) => ({
     userId: String(record.userId),
     newMail: {
       mailboxId: record._id,
       from: thread.senders,
-      subject: thread.subject,
+      subject: record.subject,
       snippet: email.body?.text?.substring(0, 200) ?? ' ',
       isSystem: false,
-      messageCount: thread.messageCount,
+      messageCount: record.emailIds.length,
       isRead: false,
       isStarred: false,
-      receivedAt: email.receivedAt,
+      receivedAt: record.lastMessageAt,
       isDeleted: false,
     },
   }))
