@@ -122,7 +122,6 @@ const sendMail = async (req, reply) => {
     const body = req.body?.body
     const attachments = req.body?.attachments
     const emailId = req.body?.emailId
-    const mailboxId = req.body?.mailboxId
 
     await sendMailService.deliverMail({
       senderId: req.userId,
@@ -132,7 +131,6 @@ const sendMail = async (req, reply) => {
       body,
       attachments,
       emailId,
-      mailboxId,
     })
     reply.code(200).send({ success: 'Mail has been sent.' })
   } catch (error) {

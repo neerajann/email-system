@@ -21,7 +21,6 @@ const deliverMail = async ({
   body,
   attachments,
   emailId,
-  mailboxId,
 }) => {
   let thread = null
 
@@ -61,103 +60,71 @@ const deliverMail = async ({
       throw new Error('INVALID_ATTACHMENTS')
     }
 
-    // check if mailbox exists
-    if (mailboxId && emailId) {
-      const result = await Mailbox.findOne(
+    if (emailId) {
+      //find older email id
+      const olderMail = await Email.findById(emailId).populate('threadId')
+      const isAuthorized =
+        olderMail?.threadId?.participants?.includes(senderAddress)
+
+      if (!isAuthorized) throw new Error('UNAUTHORIZED_REPLY')
+
+      //creates a new reply email using the older mail message id
+      var email = await createEmail({
+        threadId: olderMail.threadId,
+        senderAddress,
+        senderName: userInfo.name,
+        recipients,
+        messageId,
+        subject: `Re: ${olderMail.subject.trim().replace(/^(Re:\s*)+/i, '')}`,
+        bodyHtml,
+        bodyText,
+        attachments: parsedAttachments,
+        inReplyTo: olderMail.messageId,
+        references: [...olderMail.references, olderMail.messageId],
+      })
+
+      const senderMapkey = userInfo.emailAddress.replace(/\./g, '_')
+      thread = await Thread.findByIdAndUpdate(
+        email.threadId,
         {
-          _id: new mongoose.Types.ObjectId(mailboxId),
-          emailIds: new mongoose.Types.ObjectId(emailId),
+          $set: {
+            [`senders.${senderMapkey}`]: {
+              name: userInfo.name,
+              address: userInfo.emailAddress,
+            },
+          },
+          $addToSet: {
+            participants: {
+              $each: recipients,
+            },
+          },
         },
         {
-          threadId: 1,
+          new: true,
         },
-      ).populate('threadId')
-      if (!result) throw new Error('UNAUTHORIZED_REPLY')
-
-      thread = result.threadId
-      var threadId = result.threadId._id
-    }
-
-    if (!thread) {
-      // create a new thread if it doesnot exist
+      )
+    } else {
+      //normal case when emailId is not present
       thread = await createThread({
-        subject,
-        senderAddress: userInfo.emailAddress,
+        senderAddress,
         senderName: userInfo.name,
         recipients,
       })
-    } else {
-      // check if all the participants are same as that of the thread
-      const nextParticipants = new Set([senderAddress, ...recipients])
-      const prevParticipants = new Set([...thread.participants])
-      const hasNewParticipants = [...nextParticipants].some(
-        (p) => !prevParticipants.has(p),
-      )
 
-      //If not create a new thread
-      if (hasNewParticipants) {
-        thread = await createThread({
-          subject,
-          senderAddress: userInfo.emailAddress,
-          senderName: userInfo.name,
-          recipients,
-        })
-      }
-    }
-
-    if (emailId) {
-      //find older email id
-      const olderMail = await Email.findById(emailId)
-
-      if (olderMail) {
-        //creates a new reply email using the older mail message id
-        var email = await createEmail({
-          threadId: thread._id,
-          senderAddress,
-          senderName: userInfo.name,
-          recipients,
-          messageId,
-          subject: `Re: ${thread.subject}`,
-          bodyHtml,
-          bodyText,
-          attachments: parsedAttachments,
-          inReplyTo: olderMail.messageId,
-          references: [...olderMail.references, olderMail.messageId],
-        })
-      }
-    } else {
-      //normal case when emailId is not present
       var email = await createEmail({
         threadId: thread._id,
         senderAddress,
         senderName: userInfo.name,
         recipients,
         messageId,
-        subject: thread.subject,
+        subject: subject,
         bodyHtml,
         bodyText,
         attachments: parsedAttachments,
       })
     }
 
-    //update message count if it was valid reply mail
-    if (thread._id.equals(threadId)) {
-      const senderMapkey = userInfo.emailAddress.replace(/\./g, '_')
-      await Thread.findByIdAndUpdate(threadId, {
-        $inc: {
-          messageCount: 1,
-        },
-        $set: {
-          lastMessageAt: Date.now(),
-          [`senders.${senderMapkey}`]: {
-            name: userInfo.name,
-            address: userInfo.emailAddress,
-          },
-        },
-      })
-    }
-
-    var senderInRecipent = recipients.includes(senderAddress)
+    const senderInRecipent = recipients.includes(senderAddress)
     const labels = senderInRecipent ? ['SENT', 'INBOX'] : ['SENT']
 
     var mailbox = await Mailbox.findOneAndUpdate(
@@ -176,39 +143,16 @@ const deliverMail = async ({
         $push: {
           emailIds: email._id,
         },
+        $setOnInsert: {
+          subject: email.subject,
+        },
       },
       {
         upsert: true,
         new: true,
       },
     )
-
-    const envelopeTo = recipients.filter((r) => r != senderAddress)
-
-    if (senderInRecipent) {
-      const notifications = [
-        {
-          userId: senderId,
-          newMail: {
-            mailboxId: mailbox._id,
-            from: thread.senders,
-            subject: thread.subject,
-            snippet: email.body?.text?.substring(0, 200) ?? ' ',
-            isSystem: false,
-            messageCount: thread.messageCount,
-            isRead: false,
-            isStarred: false,
-            receivedAt: email.receivedAt,
-            isDeleted: false,
-          },
-        },
-      ]
-      notifyUser(notifications)
-    }
-
-    if (envelopeTo.length < 0) return true
-
-    // add it to history
+    // add recipients to history
     await RecipientHistory.bulkWrite(
       recipients.map((email) => ({
         updateOne: {
@@ -223,6 +167,30 @@ const deliverMail = async ({
         },
       })),
     )
+
+    if (senderInRecipent) {
+      const notifications = [
+        {
+          userId: senderId,
+          newMail: {
+            mailboxId: mailbox._id,
+            from: thread.senders,
+            subject: mailbox.subject,
+            snippet: email.body?.text?.substring(0, 200) ?? ' ',
+            isSystem: false,
+            messageCount: mailbox.emailIds.length,
+            isRead: false,
+            isStarred: false,
+            receivedAt: mailbox.lastMessageAt,
+            isDeleted: false,
+          },
+        },
+      ]
+      await notifyUser(notifications)
+    }
+
+    const envelopeTo = recipients.filter((r) => r != senderAddress)
+    if (envelopeTo.length < 0) return
 
     // add to mail delivery queue
     await outboundEmailQueue.add(
@@ -258,23 +226,14 @@ const deliverMail = async ({
         },
       },
     )
-    return true
   } catch (error) {
     console.log(error)
-    if (error.message === 'INVALID_ATTACHMENTS') throw error
-    if (error.message === 'USER_NOT_FOUND') throw error
-    if (error.message === 'UNAUTHORIZED_REPLY') throw error
     if (error instanceof mongoose.Error) throw new Error('DATABASE_ERROR')
     throw error
   }
 }
 
-const createThread = async ({
-  subject,
-  senderAddress,
-  senderName,
-  recipients,
-}) => {
+const createThread = async ({ senderAddress, senderName, recipients }) => {
   const senderMap = new Map()
   const senderMapkey = senderAddress.replace(/\./g, '_')
   senderMap.set(senderMapkey, {
@@ -283,9 +242,7 @@ const createThread = async ({
   })
 
   return await Thread.create({
-    subject: subject,
     participants: Array.from(new Set([senderAddress, ...recipients])),
-    lastMessageAt: new Date(),
     senders: senderMap,
   })
 }
@@ -303,15 +260,24 @@ const createEmail = async ({
   inReplyTo,
   references,
 }) => {
+  const recipientsMap = recipients.map((recipient) => {
+    if (recipient === senderAddress) {
+      return {
+        address: senderAddress,
+        name: senderName,
+      }
+    }
+    return {
+      address: recipient,
+    }
+  })
   const email = {
     threadId: threadId,
     from: {
       address: senderAddress,
       name: senderName,
     },
-    to: recipients.map((r) => ({
-      address: r,
-    })),
+    to: recipientsMap,
     messageId: messageId,
     subject: subject,
     body: {

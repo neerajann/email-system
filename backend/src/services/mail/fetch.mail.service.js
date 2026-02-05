@@ -50,6 +50,9 @@ const getMails = async ({
     {
       $addFields: {
         lastEmailId: { $arrayElemAt: ['$emailIds', -1] },
+        messageCount: {
+          $size: { $ifNull: ['$emailIds', []] },
+        },
       },
     },
     {
@@ -74,8 +77,8 @@ const getMails = async ({
       $project: {
         _id: 0,
         mailboxId: '$_id',
-        subject: '$thread.subject',
-        messageCount: '$thread.messageCount',
+        subject: '$subject',
+        messageCount: 1,
         isRead: 1,
         isStarred: 1,
         from: '$thread.senders',
@@ -83,7 +86,7 @@ const getMails = async ({
           $substrCP: ['$email.body.text', 0, 200],
         },
         isSystem: '$email.isSystem',
-        receivedAt: '$email.receivedAt',
+        receivedAt: '$lastMessageAt',
         isDeleted: 1,
       },
     },
@@ -145,6 +148,7 @@ const getMail = async (userId, id) => {
             in: {
               id: '$$attachment._id',
               fileName: '$$attachment.originalName',
+              size: '$$attachment.size',
             },
           },
         },
@@ -209,6 +213,13 @@ const searchMail = async ({ query, userId, cursor, limit = 20 }) => {
       $match: mailboxMatch,
     },
     {
+      $addFields: {
+        messageCount: {
+          $size: { $ifNull: ['$mailbox.emailIds', []] },
+        },
+      },
+    },
+    {
       $lookup: {
         from: 'threads',
         localField: 'mailbox.threadId',
@@ -222,8 +233,8 @@ const searchMail = async ({ query, userId, cursor, limit = 20 }) => {
       $group: {
         _id: '$thread._id',
         mailboxId: { $first: '$mailbox._id' },
-        subject: { $first: '$thread.subject' },
-        messageCount: { $first: '$thread.messageCount' },
+        subject: { $first: '$mailbox.subject' },
+        messageCount: { $first: '$messageCount' },
         isRead: { $first: '$mailbox.isRead' },
         labels: { $first: '$mailbox.labels' },
         isStarred: { $first: '$mailbox.isStarred' },

@@ -56,13 +56,6 @@ const emailSchema = {
           pattern: 'Invalid email id',
         },
       },
-      mailboxId: {
-        type: 'string',
-        pattern: mongooseObjectIdPattern.source,
-        errorMessage: {
-          pattern: 'Invalid mailboxId',
-        },
-      },
     },
 
     errorMessage: {
