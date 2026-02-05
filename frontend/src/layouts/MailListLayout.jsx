@@ -69,6 +69,7 @@ const MailListLayout = ({
             mails={mails}
             queryKey={memoizedQueryKey}
             isBulkMode={isBulkMode}
+            hasThreadOpen={hasThreadOpen}
           />
           <div className='absolute top-0 left-0 right-0 z-[30] pointer-events-none'>
             <ToastContainer

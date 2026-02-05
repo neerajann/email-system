@@ -1,4 +1,3 @@
-import { FaReply, FaReplyAll } from 'react-icons/fa'
 import QuotedBlock from './QuotedBlock.jsx'
 import Tooltip from '../../ui/Tooltip.jsx'
 import ThreadCompactView from './ThreadCompactView.jsx'
@@ -9,6 +8,8 @@ import ThreadBody from './ThreadBody.jsx'
 import ThreadAttachmentList from './ThreadAttachmentList.jsx'
 import Reply from '../reply/Reply.jsx'
 import { memo } from 'react'
+import { LuReply, LuReplyAll, LuForward } from 'react-icons/lu'
+import Forward from '../forward/forward.jsx'
 
 const ThreadItem = ({ mail, defaultExpanded, mails }) => {
   const {
@@ -20,6 +21,8 @@ const ThreadItem = ({ mail, defaultExpanded, mails }) => {
     setShowReply,
     showQuotedBlock,
     setShowQuotedBlock,
+    showForward,
+    setShowForward,
   } = useThreadState({ defaultExpanded })
 
   const quotedText = useQuotedText({ mail, mails })
@@ -36,6 +39,7 @@ const ThreadItem = ({ mail, defaultExpanded, mails }) => {
             setExpand={setExpand}
             setShowMore={setShowMore}
             setShowReply={setShowReply}
+            setShowForward={setShowForward}
             showMore={showMore}
             mail={mail}
           />
@@ -69,12 +73,12 @@ const ThreadItem = ({ mail, defaultExpanded, mails }) => {
           )}
 
           {defaultExpanded && (
-            <div className='mt-8 flex items-center gap-6 text-sm'>
+            <div className='mt-8 flex items-center gap-4 text-sm'>
               <button
                 className='flex items-center gap-3 border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'
                 onClick={() => setShowReply({ reply: true })}
               >
-                <FaReply />
+                <LuReply size={16} />
                 Reply
               </button>
               {mail.to.length > 1 && (
@@ -82,10 +86,17 @@ const ThreadItem = ({ mail, defaultExpanded, mails }) => {
                   className='flex items-center gap-3  border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'
                   onClick={() => setShowReply({ replyAll: true })}
                 >
-                  <FaReplyAll />
+                  <LuReplyAll size={16} />
                   Reply All
                 </button>
               )}
+              <button
+                className='flex items-center gap-3  border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'
+                onClick={() => setShowForward(true)}
+              >
+                <LuForward size={16} />
+                Forward
+              </button>
             </div>
           )}
         </div>
@@ -93,6 +104,7 @@ const ThreadItem = ({ mail, defaultExpanded, mails }) => {
       {showReply && (
         <Reply setShowReply={setShowReply} mail={mail} showReply={showReply} />
       )}
+      {showForward && <Forward setShowForward={setShowForward} mail={mail} />}
     </>
   )
 }

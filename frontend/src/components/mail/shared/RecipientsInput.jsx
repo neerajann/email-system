@@ -1,5 +1,6 @@
 import { RxCross2 } from 'react-icons/rx'
 import { emailPattern } from '../../../utils/pattern'
+import Tooltip from '../../ui/Tooltip'
 
 const RecipientsInput = ({
   recipients,
@@ -26,10 +27,12 @@ const RecipientsInput = ({
               key={r}
             >
               {r}
-              <RxCross2
-                className='inline ml-1 cursor-pointer'
-                onClick={() => onRemove(r)}
-              />
+              <Tooltip message='Remove'>
+                <RxCross2
+                  className='inline ml-1 cursor-pointer'
+                  onClick={() => onRemove(r)}
+                />
+              </Tooltip>
             </span>
           )
         })}
@@ -52,16 +55,17 @@ const RecipientsInput = ({
           }}
         />
       </div>
-
-      {suggestions.map((s) => (
-        <div
-          key={s.id}
-          className='absolute left-0 top-full mt-1 w-full bg-background border border-border rounded p-2 pl-3 text-sm shadow z-50 cursor-pointer'
-          onClick={() => onAdd(s.emailAddress)}
-        >
-          {s.emailAddress}
-        </div>
-      ))}
+      <div className='absolute left-0 top-full w-full z-50 text-sm bg-background'>
+        {suggestions.map((s) => (
+          <div
+            key={s.id}
+            className=' w-full cursor-pointer border rounded border-border p-2 pl-3 bg-background mt-1.5 hover:bg-muted '
+            onClick={() => onAdd(s.emailAddress)}
+          >
+            {s.emailAddress}
+          </div>
+        ))}
+      </div>
       <span ref={recipientsRef} className=' text-sm text-red-500 '></span>
     </div>
   )

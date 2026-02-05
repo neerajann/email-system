@@ -20,7 +20,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log(formData.current)
 
     if (!formData.current.emailAddress.length) {
       setSubmitErrors({
@@ -57,9 +56,9 @@ const Login = () => {
 
   return (
     <div className='w-screen h-dvh flex items-center justify-center'>
-      <div className='bg-background border-border p-5 rounded-lg border flex-col max-w-150 w-full lg:w-1/2  py-12 lg:p-20 '>
+      <div className='bg-background border-border p-7 rounded-lg border flex-col max-w-150 w-full lg:w-1/2 py-12 lg:p-20 mx-2 sm:mx-0 '>
         <div>
-          <h1 className='sm:text-2xl text-xl font-semibold text-center mb-8'>
+          <h1 className='text-2xl font-semibold text-center mb-8'>
             Welcome back to {import.meta.env.VITE_DOMAIN_NAME.split('.')[0]}
           </h1>
         </div>
@@ -90,21 +89,21 @@ const Login = () => {
           <div>
             <label
               htmlFor='password'
-              className='block font-medium text-base md:text-sm  mb-3'
+              className='block font-medium text-base md:text-sm '
             >
               Password
             </label>
-            <div className='relative'>
+            <div className='relative mt-3'>
               <input
                 type={showPassword ? 'text' : 'password'}
                 name='password'
                 placeholder='*************'
-                className='text-base md:text-sm w-full h-10 bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+                className='text-base md:text-sm w-full h-10 bg-input text-foreground border border-border rounded-md  p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
                 onChange={(e) => (formData.current.password = e.target.value)}
               />
               <button
                 type='button'
-                className=' absolute top-1/2 right-6 cursor-pointer'
+                className=' absolute top-1/2 right-3 cursor-pointer -translate-y-1/2 w-10 h-10 flex items-center justify-center'
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}

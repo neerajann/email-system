@@ -4,11 +4,13 @@ import {
   removeAttachment,
 } from '../../../services/attachmentService'
 
-const useAttachments = ({ email }) => {
+const useAttachments = ({ email, uploadedAttachments }) => {
   const controllersRef = useRef({})
   const fileInputRef = useRef(null)
   const uploadErrorRef = useRef(null)
-  const [attachmentsInfo, setAttachmentsInfo] = useState([])
+  const [attachmentsInfo, setAttachmentsInfo] = useState(
+    uploadedAttachments || [],
+  )
 
   const onFiles = (e) =>
     handleFiles({

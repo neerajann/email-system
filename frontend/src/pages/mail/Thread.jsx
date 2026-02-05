@@ -27,7 +27,7 @@ const Thread = () => {
 
   const mails = data?.mails || []
 
-  const { patchMail, deleteForever } = useThreadActions({ mails, id })
+  const { patchMail, deleteForever } = useThreadActions({ mails, id, location })
 
   useEffect(() => {
     if (isError) {

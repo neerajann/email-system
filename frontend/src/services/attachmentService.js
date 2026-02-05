@@ -45,7 +45,7 @@ const uploadFiles = async ({
     ...prev,
     ...filesWithId.map(({ file, id }) => ({
       id,
-      name: file.name,
+      fileName: file.name,
       size: file.size,
       progress: 0,
       uploaded: false,
@@ -113,7 +113,17 @@ const removeAttachment = ({
     delete controllersRef.current[id]
   }
 
-  setAttachmentsInfo((prev) => prev.filter((att) => att.id !== id))
+  setAttachmentsInfo((prev) =>
+    prev.map((att) => {
+      if (att.id === id) {
+        return {
+          ...att,
+          removed: true,
+        }
+      }
+      return att
+    }),
+  )
 
   if (attachment.uploaded) {
     api

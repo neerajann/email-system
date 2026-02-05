@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import Tooltip from '../Tooltip'
 import { IoTrashOutline } from 'react-icons/io5'
 
@@ -6,7 +7,9 @@ const TrashButton = ({
   mailboxIds,
   mailUpdateMutation,
   options,
+  hasThreadOpen,
 }) => {
+  const navigate = useNavigate()
   return (
     <Tooltip message={!isDeleted && 'Delete'}>
       <button
@@ -22,6 +25,9 @@ const TrashButton = ({
             },
           })
           options && options()
+          if (hasThreadOpen) {
+            navigate('..', { relative: 'path' })
+          }
         }}
       >
         <IoTrashOutline />

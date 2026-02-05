@@ -1,7 +1,14 @@
 import { MdRestoreFromTrash } from 'react-icons/md'
 import Tooltip from '../Tooltip'
+import { useNavigate } from 'react-router-dom'
 
-const RestoreButton = ({ mailUpdateMutation, options, mailboxIds }) => {
+const RestoreButton = ({
+  mailUpdateMutation,
+  options,
+  mailboxIds,
+  hasThreadOpen,
+}) => {
+  const navigate = useNavigate()
   return (
     <Tooltip message='Restore mail'>
       <button
@@ -12,6 +19,9 @@ const RestoreButton = ({ mailUpdateMutation, options, mailboxIds }) => {
             data: { isDeleted: false },
           })
           options && options()
+          if (hasThreadOpen) {
+            navigate('..', { relative: 'path' })
+          }
         }}
       >
         <MdRestoreFromTrash />

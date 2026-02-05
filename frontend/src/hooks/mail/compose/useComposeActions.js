@@ -12,13 +12,14 @@ const useComposeActions = ({
   uploadErrorRef,
 }) => {
   const send = () => {
-    console.log(email)
+    uploadErrorRef.current.textContent = ''
+    subjectRef.current.textContent = ''
+    recipientsRef.current.textContent = ''
 
     if (recipients.length === 0) {
       return (recipientsRef.current.textContent =
         'Please specify at least one recipient')
     }
-    recipientsRef.current.textContent = ''
 
     if (email.subject.length === 0) {
       return (subjectRef.current.textContent = 'Subject is required')
@@ -27,17 +28,13 @@ const useComposeActions = ({
       return (subjectRef.current.textContent = 'Subject is too long')
     }
 
-    subjectRef.current.textContent = ''
-    const incompleteUpload = attachmentsInfo.filter(
-      (attachment) => !attachment.uploaded,
-    )
+    const incompleteUpload = attachmentsInfo.some((a) => !a.uploaded)
 
     if (incompleteUpload.length) {
       uploadErrorRef.current.textContent =
         'Please wait until all attachments finish uploading'
       return
     }
-    uploadErrorRef.current.textContent = ''
 
     sendMail({
       email: email,

@@ -1,32 +1,36 @@
-import { RiAttachment2 } from 'react-icons/ri'
-import { IoTrashOutline } from 'react-icons/io5'
 import { useQueryClient } from '@tanstack/react-query'
 import useAttachments from '../../../hooks/mail/shared/useAttachments.js'
-import useReplyActions from '../../../hooks/mail/reply/useReplyActions.js'
-import useReplyRecipients from '../../../hooks/mail/reply/useReplyRecipients.js'
 import UploadedAttachmentList from '../shared/UploadedAttachmentList.jsx'
 import useDraft from '../../../hooks/mail/shared/useDraft.js'
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import RecipientsInput from '../shared/RecipientsInput.jsx'
 import useRecipientsInput from '../../../hooks/mail/shared/useRecipientsInput.js'
 import DiscardMailButton from '../../ui/buttons/DiscardMailButton.jsx'
 import UploadAttachmentButton from '../../ui/buttons/UploadAttachmentButton.jsx'
+import useComposeActions from '../../../hooks/mail/compose/useComposeActions.js'
 
-const Reply = ({ mail, showReply, setShowReply }) => {
+const Forward = ({ mail, setShowForward }) => {
   const queryClient = useQueryClient()
   const recipientsRef = useRef(null)
 
   if (!mail) return
 
-  const {
-    email: reply,
-    recipients,
-    setRecipients,
-  } = useDraft({
-    subject: mail.subject,
-  })
+  const forwardMailBody = `
+  ---------- Forwarded message --------- </br>
+  From:${mail.from?.name} ${mail.from.address}</br>
+  Date:${mail.receivedAt}</br>
+  Subject:${mail.subject}</br>
+  To:${mail.to.map((r) => r.address).toString()}</br>
+  </br>
+  </br>
+  ${mail.body.html}
+  `
 
-  useReplyRecipients({ showReply, mail, setRecipients })
+  const { email, recipients, setRecipients } = useDraft({
+    subject: `Fwd: ${mail.subject}`,
+    body: forwardMailBody,
+    attachments: mail.attachments,
+  })
 
   const { input, suggestions, handleChange, addRecipient, removeRecipient } =
     useRecipientsInput({ setRecipients, recipientsRef })
@@ -38,18 +42,18 @@ const Reply = ({ mail, showReply, setShowReply }) => {
     controllersRef,
     onFiles,
     remove,
-  } = useAttachments({ email: reply })
+  } = useAttachments({ email, uploadedAttachments: mail.attachments })
 
-  const { send, cancel } = useReplyActions({
+  const { send, cancel } = useComposeActions({
+    recipients,
+    recipientsRef,
+    email,
+    setShowComposeMail: setShowForward,
+    queryClient,
     attachmentsInfo,
     uploadErrorRef,
-    recipientsRef,
-    setShowReply,
-    queryClient,
     controllersRef,
-    mailboxId: mail.mailboxId,
-    emailId: mail.emailId,
-    recipients,
+    subjectRef: uploadErrorRef,
   })
 
   return (
@@ -58,9 +62,7 @@ const Reply = ({ mail, showReply, setShowReply }) => {
       onDragOver={(e) => e.preventDefault()}
       onDrop={onFiles}
     >
-      <div className='text-sm font-semibold mb-5'>
-        {showReply.reply ? 'Reply' : 'Reply All'}
-      </div>
+      <div className='text-sm font-semibold mb-5'>Forward</div>
       <div className='space-y-6'>
         {/* recipents  */}
         <RecipientsInput
@@ -73,19 +75,17 @@ const Reply = ({ mail, showReply, setShowReply }) => {
           recipientsRef={recipientsRef}
         />
 
-        {/* reply email body  */}
+        {/* Forward email body  */}
         <div className='space-y-6'>
           <label className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 '>
             Message:
           </label>
-          <textarea
-            placeholder='Write your reply...'
-            name='body'
-            autoComplete='off'
-            autoCorrect='on'
-            rows={10}
-            className='border border-border my-3 w-full  text-base sm:text-sm p-2 rounded-md shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
-            onChange={(e) => (reply.body = e.target.value)}
+          <div
+            contentEditable
+            suppressContentEditableWarning
+            className='border border-border my-3 w-full min-h-50 text-base sm:text-sm p-4 rounded-md shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+            onInput={(e) => (email.body = e.currentTarget.innerHTML)}
+            dangerouslySetInnerHTML={{ __html: email.body }}
           />
         </div>
 
@@ -115,11 +115,11 @@ const Reply = ({ mail, showReply, setShowReply }) => {
         <div className='flex gap-2 pt-4 justify-between'>
           <button
             className=' text-sm font-semibold  border-border border py-2 px-10 rounded hover:scale-[0.95] active:scale-[1.02] transition-all ease-in-out hover:bg-input cursor-pointer'
-            onClick={() => send(reply)}
+            onClick={() => send(email)}
           >
             Send
           </button>
-          <div className='flex '>
+          <div className='flex items-center'>
             <input
               type='file'
               ref={fileInputRef}
@@ -132,11 +132,11 @@ const Reply = ({ mail, showReply, setShowReply }) => {
               onClick={() => fileInputRef.current.click()}
             />
 
-            <DiscardMailButton onClick={() => cancel(reply)} />
+            <DiscardMailButton onClick={() => cancel(email)} />
           </div>
         </div>
       </div>
     </div>
   )
 }
-export default Reply
+export default Forward

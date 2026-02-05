@@ -3,7 +3,7 @@ import useMailUpdate from '../mailbox/useMailUpdate.js'
 import { useNavigate } from 'react-router-dom'
 import api from '../../services/api.js'
 
-const useThreadActions = ({ mails, id }) => {
+const useThreadActions = ({ mails, id, location }) => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
@@ -20,7 +20,11 @@ const useThreadActions = ({ mails, id }) => {
       data,
     })
 
-    if (data?.isDeleted) {
+    if (
+      data?.isDeleted ||
+      (data?.isStarred && location.state.from === '/starred') ||
+      data?.isDeleted === false
+    ) {
       navigate('..', { relative: 'path' })
     }
   }

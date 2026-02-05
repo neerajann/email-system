@@ -21,6 +21,7 @@ const BaseMailListItem = memo((props) => {
   } = props
   const mailUpdateMutation = useMailUpdate(queryKey)
   const location = useLocation()
+  const senders = Object.values(mail?.from) ?? []
 
   return (
     <NavLink
@@ -85,9 +86,9 @@ const BaseMailListItem = memo((props) => {
               <h3
                 className={`text-sm truncate ${!mail.isRead && 'font-semibold'}`}
               >
-                {mail.from
-                  .map((f) => {
-                    return f.name ?? f.address
+                {senders
+                  ?.map((s) => {
+                    return s.name ?? s.address
                   })
                   .join(', ')}
                 {mail.messageCount > 1 && (

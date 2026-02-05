@@ -7,9 +7,15 @@ const useReplyActions = ({
   controllersRef,
   mailboxId,
   emailId,
-  reply,
+  recipients,
+  recipientsRef,
 }) => {
-  const send = () => {
+  const send = (reply) => {
+    if (recipients.length === 0) {
+      recipientsRef.current.textContent =
+        'Please specify at least one recipient'
+      return
+    }
     const incompleteUpload = attachmentsInfo.filter(
       (attachment) => !attachment.uploaded,
     )
@@ -22,6 +28,7 @@ const useReplyActions = ({
 
     if (reply.body.length == 0) {
       uploadErrorRef.current.textContent = 'Cannot send an empty reply'
+      return
     }
     uploadErrorRef.current.textContent = ''
 
@@ -32,13 +39,14 @@ const useReplyActions = ({
       queryClient,
       data: {
         ...reply,
+        recipients,
         emailId,
         mailboxId,
       },
     })
     setShowReply(false)
   }
-  const cancel = () => {
+  const cancel = (reply) => {
     setShowReply(false)
     cancelMail({
       attachmentsInfo,

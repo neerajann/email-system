@@ -24,16 +24,17 @@ const cancelMail = async ({ attachmentsInfo, controllersRef, email }) => {
       }
     })
 
-    if (email.attachments.length > 0) {
-      api.delete('/mail/attachment', {
-        data: {
-          attachments: email.attachments,
-        },
-      })
-    }
-  } catch (error) {
-    handleApiError(error)
-  }
+    const uploadedAttachments = attachmentsInfo
+      .filter((a) => a.uploaded === true && a.removed !== true)
+      .map((a) => a.id)
+    if (uploadedAttachments.length === 0) return
+
+    api.delete('/mail/attachment', {
+      data: {
+        attachments: uploadedAttachments,
+      },
+    })
+  } catch (error) {}
 }
 
 export { sendMail, cancelMail }

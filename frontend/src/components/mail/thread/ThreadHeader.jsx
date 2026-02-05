@@ -1,7 +1,7 @@
-import { FaReply, FaReplyAll } from 'react-icons/fa6'
 import Tooltip from '../../ui/Tooltip'
 import { BsChevronExpand } from 'react-icons/bs'
 import formatMailDate from '../../../utils/formatMailDate'
+import { LuReplyAll, LuReply, LuForward } from 'react-icons/lu'
 
 const ThreadHeader = ({
   setExpand,
@@ -9,6 +9,7 @@ const ThreadHeader = ({
   mail,
   setShowReply,
   setShowMore,
+  setShowForward,
 }) => {
   return (
     <>
@@ -47,7 +48,7 @@ const ThreadHeader = ({
 
           {/* the right side of from row */}
           <div
-            className={` ${showMore && 'opacity-0'} sm:opacity-100 flex items-center gap-4 text-xs text-muted-foreground shrink-0`}
+            className={` ${showMore && 'opacity-0'} sm:opacity-100 flex items-center gap-3 text-xs text-muted-foreground shrink-0`}
           >
             {/* Reply button */}
             <Tooltip message='Reply' tooltipClassName='text-foreground'>
@@ -58,7 +59,7 @@ const ThreadHeader = ({
                   setShowReply({ reply: true })
                 }}
               >
-                <FaReply size={15} />
+                <LuReply size={16} />
               </div>
             </Tooltip>
             {/* Reply all button */}
@@ -71,10 +72,21 @@ const ThreadHeader = ({
                     setShowReply({ replyAll: true })
                   }}
                 >
-                  <FaReplyAll size={15} />
+                  <LuReplyAll size={16} />
                 </div>
               </Tooltip>
             )}
+            <Tooltip message='Forward' tooltipClassName='text-foreground'>
+              <div
+                className='border border-border p-1 rounded hover:bg-input '
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowForward(true)
+                }}
+              >
+                <LuForward size={16} />
+              </div>
+            </Tooltip>
             <span className='whitespace-nowrap'>
               {formatMailDate(mail.receivedAt, true)}
             </span>

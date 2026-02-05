@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react'
 
-const useDraft = ({ subject }) => {
+const useDraft = ({ subject, body, attachments }) => {
   const [recipients, setRecipients] = useState([])
 
   const email = useRef({
     subject: subject || '',
-    body: '',
-    attachments: [],
+    body: body || '',
+    attachments: attachments || [],
   })
 
   return { recipients, setRecipients, email: email.current }

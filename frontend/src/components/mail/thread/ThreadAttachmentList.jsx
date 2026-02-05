@@ -1,4 +1,6 @@
 import { MdOutlineFileDownload } from 'react-icons/md'
+import { filesize } from 'filesize'
+import Tooltip from '../../ui/Tooltip'
 
 const ThreadAttachmentList = ({ mail }) => {
   return (
@@ -21,19 +23,23 @@ const ThreadAttachmentList = ({ mail }) => {
                   rel='noopener noreferrer'
                   className='border border-border py-2 px-4 bg-input flex items-center gap-6 rounded w-fit min-w-0'
                 >
-                  <span className='truncate'>{attachment.fileName}</span>
-
-                  <button
-                    type='button'
-                    className='shrink-0 cursor-pointer'
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      window.open(downloadUrl, '_self')
-                    }}
-                  >
-                    <MdOutlineFileDownload size={18} />
-                  </button>
+                  <div>
+                    <span className='truncate'>{attachment.fileName}</span>
+                    <span className='ml-2'>({filesize(attachment.size)})</span>
+                  </div>
+                  <Tooltip message={'Download attachment'}>
+                    <button
+                      type='button'
+                      className='shrink-0 cursor-pointer'
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        window.open(downloadUrl, '_self')
+                      }}
+                    >
+                      <MdOutlineFileDownload size={18} />
+                    </button>
+                  </Tooltip>
                 </a>
               )
             })}

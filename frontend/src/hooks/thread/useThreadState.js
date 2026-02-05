@@ -5,6 +5,8 @@ const useThreadState = ({ defaultExpanded }) => {
   const [expand, setExpand] = useState(defaultExpanded)
   const [showReply, setShowReply] = useState(false)
   const [showQuotedBlock, setShowQuotedBlock] = useState(false)
+  const [showForward, setShowForward] = useState(false)
+
   return {
     showMore,
     setShowMore,
@@ -14,6 +16,8 @@ const useThreadState = ({ defaultExpanded }) => {
     setShowReply,
     showQuotedBlock,
     setShowQuotedBlock,
+    showForward,
+    setShowForward,
   }
 }
 export default useThreadState

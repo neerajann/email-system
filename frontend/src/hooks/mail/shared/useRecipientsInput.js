@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import api from '../../../services/api'
+import api from '../../../services/api.js'
 import { emailPattern } from '../../../utils/pattern.js'
 
 const useRecipientsInput = ({ setRecipients, recipientsRef }) => {

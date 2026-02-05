@@ -3,12 +3,13 @@ import { RxCross2 } from 'react-icons/rx'
 import { useUI } from '../../../contexts/UIContext.jsx'
 import { RiAttachment2 } from 'react-icons/ri'
 import { useQueryClient } from '@tanstack/react-query'
-import useRecipientsInput from '../../../hooks/mail/compose/useRecipientsInput.js'
+import useRecipientsInput from '../../../hooks/mail/shared/useRecipientsInput.js'
 import useComposeActions from '../../../hooks/mail/compose/useComposeActions.js'
 import useAttachments from '../../../hooks/mail/shared/useAttachments.js'
-import RecipientsInput from './RecipientsInput.jsx'
+import RecipientsInput from '../shared/RecipientsInput.jsx'
 import UploadedAttachmentList from '../shared/UploadedAttachmentList.jsx'
 import useDraft from '../../../hooks/mail/shared/useDraft.js'
+import Tooltip from '../../ui/Tooltip.jsx'
 
 const ComposeMail = () => {
   const queryClient = useQueryClient()
@@ -50,77 +51,20 @@ const ComposeMail = () => {
       >
         <div className=' border-b border-input px-4 md:px-6 py-4 flex items-center justify-between '>
           <h2 className='text-lg md:text-2xl font-semibold '>Compose Email</h2>
-          <button
-            variant='ghost'
-            size='icon'
-            className='border border-border p-2 rounded cursor-pointer'
-            onClick={cancel}
-          >
-            <RxCross2 />
-          </button>
+          <Tooltip message='Discard mail' tooltipClassName='-left-0! mt-1'>
+            <button
+              variant='ghost'
+              size='icon'
+              className='border border-border p-2 rounded cursor-pointer'
+              onClick={cancel}
+            >
+              <RxCross2 />
+            </button>
+          </Tooltip>
         </div>
         <div className='flex-1 overflow-y-auto space-y-4 px-4 md:px-6 py-4'>
           {/* recipients */}
-          {/* <div className='space-y-2 relative'>
-            <label className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 '>
-              To:
-            </label>
-            <div
-              tabIndex={0}
-              className='relative w-full flex flex-wrap bg-input text-foreground border gap-y-1.5 gap-x-1 border-border rounded-md items-center p-2 pl-3 text-sm shadow-xs focus-within:outline-none focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/50 my-2'
-            >
-              {email.recipients.map((r) => {
-                return (
-                  <span
-                    className=' border border-border  rounded p-1  flex items-center justify-center'
-                    key={r}
-                  >
-                    {r}
-                    <RxCross2
-                      className='inline ml-1 cursor-pointer'
-                      onClick={() => {
-                        removeRecipient(r)
-                      }}
-                    />
-                  </span>
-                )
-              })}
 
-              <textarea
-                autoComplete='off'
-                name='recipents'
-                placeholder='recipent@example.com'
-                rows={1}
-                className=' text-base md:text-sm  flex-1 min-w-30 bg-transparent focus:outline-none resize-none overflow-hidden leading-6 border-none active:outline-none'
-                value={recipents}
-                onChange={(e) => handleChange(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    const r = recipents.replace(/\n/g, '')
-                    if (emailPattern.test(r)) {
-                      addRecipient(r)
-                    }
-                  }
-                }}
-              />
-            </div>
-            {suggestions?.length > 0 &&
-              suggestions.map((suggestion) => {
-                return (
-                  <div
-                    key={suggestion.id}
-                    className='absolute left-0 top-full mt-1 w-full bg-background border border-border rounded p-2 pl-3 text-sm shadow z-50 cursor-pointer'
-                    onClick={() => {
-                      addRecipient(suggestion.emailAddress)
-                    }}
-                  >
-                    {suggestion.emailAddress}
-                  </div>
-                )
-              })}
-            <span ref={recipientsRef} className=' text-sm text-red-500 '></span>
-          </div> */}
           <RecipientsInput
             recipients={recipients}
             input={input}
@@ -172,6 +116,7 @@ const ComposeMail = () => {
             {attachmentsInfo.map((attachment) => {
               return (
                 <UploadedAttachmentList
+                  key={attachment.id}
                   attachment={attachment}
                   remove={remove}
                 />

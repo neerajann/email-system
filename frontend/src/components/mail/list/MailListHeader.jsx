@@ -14,6 +14,7 @@ const MailListHeader = ({
   isBulkMode,
   mails,
   selectAll,
+  hasThreadOpen,
 }) => {
   const mailUpdateMutation = useMailUpdate(queryKey, {
     isInfiniteQuery: true,
@@ -43,6 +44,7 @@ const MailListHeader = ({
                 mailUpdateMutation={mailUpdateMutation}
                 mailboxIds={Array.from(selectedIds)}
                 options={clear}
+                hasThreadOpen={hasThreadOpen}
               />
             ) : (
               <TrashButton
@@ -50,6 +52,7 @@ const MailListHeader = ({
                 isDeleted={false}
                 mailboxIds={Array.from(selectedIds)}
                 options={clear}
+                hasThreadOpen={hasThreadOpen}
               />
             )}
             {/* mail read/unread button  */}
