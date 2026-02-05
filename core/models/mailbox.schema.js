@@ -20,6 +20,9 @@ const mailBoxSchema = new mongoose.Schema(
       ref: 'Thread',
       required: true,
     },
+    subject: {
+      type: String,
+    },
     labels: {
       type: [String],
       default: ['INBOX'],
