@@ -8,6 +8,7 @@
     "./models": "./models/index.js",
     "./queues": "./queues/index.js",
     "./utils": "./utils/pattern.js",
-    "./messaging": "./messaging/notifyUser.js"
+    "./messaging": "./messaging/notifyUser.js",
+    "./redis": "./redis/index.js"
   }
 }
