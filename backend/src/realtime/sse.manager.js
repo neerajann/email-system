@@ -26,13 +26,11 @@ const removeClient = ({ userId, reply }) => {
 subscriber.on('pmessage', (pattern, channel, message) => {
   const userId = channel.split(':')[1]
   const userClients = clients.get(userId)
-  console.log('Incoming message:', message)
 
   if (userClients) {
     for (const reply of userClients) {
       reply.raw.write(`data:${message}\n\n`)
     }
-    console.log('Notification sent')
   }
 })
 

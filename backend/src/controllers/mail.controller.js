@@ -1,4 +1,4 @@
-import sendMailService from '../services/mail/send.mail.service.js'
+import deliverMail from '../services/mail/deliver/deliverMail.service.js'
 import mailBoxService from '../services/mail/mailbox.service.js'
 import fetchMailService from '../services/mail/fetch.mail.service.js'
 import handleMailError from '../utils/handleMailError.js'
@@ -123,7 +123,7 @@ const sendMail = async (req, reply) => {
     const attachments = req.body?.attachments
     const emailId = req.body?.emailId
 
-    await sendMailService.deliverMail({
+    await deliverMail({
       senderId: req.userId,
       senderAddress: req.user,
       recipients,
@@ -132,6 +132,7 @@ const sendMail = async (req, reply) => {
       attachments,
       emailId,
     })
+
     reply.code(200).send({ success: 'Mail has been sent.' })
   } catch (error) {
     handleMailError(reply, error)

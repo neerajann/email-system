@@ -36,11 +36,13 @@ fastify.setErrorHandler((error, req, reply) => {
 
 await connectDB()
 
-await fastify.register(cors, {
-  origin: process.env.ORIGIN_ADDRESS,
-  credentials: true,
-  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-})
+if (process.env.ENABLE_CORS === 'true') {
+  await fastify.register(cors, {
+    origin: process.env.ALLOWED_ORIGIN,
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  })
+}
 
 await fastify.register(cookieParser)
 
@@ -69,5 +71,5 @@ fastify.listen(
       console.log(err)
     }
     console.log('Server running on port 80')
-  }
+  },
 )

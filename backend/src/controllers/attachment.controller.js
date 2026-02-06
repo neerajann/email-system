@@ -129,7 +129,6 @@ const downloadAttachment = async (req, reply) => {
 
 const deleteAttachments = async (req, reply) => {
   try {
-    console.log(req.body)
     const response = await attachmentService.deleteAttachments(
       req.body.attachments,
     )

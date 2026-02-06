@@ -28,7 +28,6 @@ const fetchAttachmentRecord = async ({ userId, emailId, attachmentId }) => {
   const userIdObject = new mongoose.Types.ObjectId(userId)
   const emailIdObject = new mongoose.Types.ObjectId(emailId)
   const attachmentIdObject = new mongoose.Types.ObjectId(attachmentId)
-  console.log(userIdObject + ' ' + emailIdObject + ' ' + attachmentIdObject)
 
   const mailboxExists = await Mailbox.exists({
     userId: userIdObject,
@@ -40,8 +39,6 @@ const fetchAttachmentRecord = async ({ userId, emailId, attachmentId }) => {
     attachments: attachmentIdObject,
   })
 
-  console.log('emailHasAttachment', emailHasAttachment)
-  console.log('Mailboexits', mailboxExists)
   if (!mailboxExists || !emailHasAttachment) {
     return null
   }
