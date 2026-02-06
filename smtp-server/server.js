@@ -6,8 +6,15 @@ import { User } from '@email-system/core/models'
 import connectDB from '@email-system/core/config'
 import { domainEmailPattern, emailPattern } from '@email-system/core/utils'
 import { inboundEmailQueue } from '@email-system/core/queues'
+import { createRedisClient } from '@email-system/core/redis'
 
 await connectDB()
+const redis = createRedisClient()
+
+const MAX_CONN_PER_MIN = Number(process.env.MAX_CONN_PER_MIN ?? 3)
+const MAX_RCPT_COUNT = Number(process.env.MAX_RCPT_COUNT ?? 30)
+const MAX_MSG_PER_CONN = Number(process.env.MAX_MSG_PER_CONN ?? 50)
+const MAX_DMRAC_FAILURE = Number(process.env.MAX_DMRAC_FAILURE ?? 5)
 
 const server = new SMTPServer({
   allowInsecureAuth: true,
@@ -15,7 +22,20 @@ const server = new SMTPServer({
   size: 17 * 1024 * 1024,
   banner: 'Welcome to ' + process.env.DOMAIN_NAME,
 
-  onConnect(session, cb) {
+  async onConnect(session, cb) {
+    const isGreyListed = await redis.get(`greylist:${session.remoteAddress}`)
+    if (isGreyListed) {
+      return cb(new Error('421 Temporary failure, try again later'))
+    }
+
+    const key = `smtp:conn:${session.remoteAddress}`
+    const count = await redis.incr(key)
+    if (count === 1) {
+      await redis.expire(key, 60)
+    }
+    if (count > MAX_CONN_PER_MIN) {
+      return cb(new Error('421 Too many connections, try later'))
+    }
     cb()
   },
 
@@ -36,6 +56,11 @@ const server = new SMTPServer({
   },
 
   async onRcptTo(address, session, cb) {
+    session.rcptCount = (session.rcptCount || 0) + 1
+    if (session.rcptCount > MAX_RCPT_COUNT) {
+      return cb(new Error('452 Too many recipients'))
+    }
+
     if (!domainEmailPattern.test(address.address)) {
       return cb(new Error('550 Doesnot belong to this domain'))
     }
@@ -50,24 +75,44 @@ const server = new SMTPServer({
     if (!user) {
       return cb(new Error('550 User doesnot exist'))
     }
+
     cb()
   },
 
   async onData(stream, session, cb) {
+    session.msgCount = (session.msgCount || 0) + 1
+
+    if (session.msgCount > MAX_MSG_PER_CONN) {
+      return cb(new Error('452 Too many messages'))
+    }
     try {
       let raw = await readStream(stream)
+
       if (process.env.SECURE === 'true') {
         const result = await authenticate(raw, {
           ip: session.remoteAddress,
           sender: session.envelope.mailFrom.address,
         })
+
         if (result?.dmarc?.status?.result === 'pass') {
           const parsedMail = await simpleParser(raw)
           addToInboundQueue(session.envelope, parsedMail)
-          raw = null
           return cb()
         }
-        raw = null
+
+        const key = `dmarc:failures:ip:${session.remoteAddress}`
+        const count = await redis.incr(key)
+        if (count === 1) await redis.expire(key, 10 * 60)
+        if (count > MAX_DMRAC_FAILURE) {
+          await redis.set(
+            `greylist:${session.remoteAddress}`,
+            true,
+            'EX',
+            60 * 60,
+          )
+          return callback(new Error('421 Temporary failure, try again later'))
+        }
+
         const domain = result?.dmarc?.domain ?? result?.spf?.domain
         if (domain)
           return cb(
@@ -121,5 +166,10 @@ const addToInboundQueue = async (envelope, parsedMail) => {
   )
   return true
 }
+
+server.on('error', (error, socket) => {
+  socket.end('421 Connection error\r\n')
+  console.warn(error)
+})
 
 server.listen(25, () => console.log('Server listening on port 25'))

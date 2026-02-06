@@ -1,7 +1,6 @@
-import nodemailer from 'nodemailer'
 import dns from 'dns/promises'
 import fs from 'fs'
-import getTransporterCache from './getTransporterCache'
+import getTransporterCache from './getTransporterCache.js'
 
 const smtpRelay = async ({
   sender,

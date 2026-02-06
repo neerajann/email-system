@@ -45,9 +45,13 @@ const localDeliveryAgent = async ({
   )
   const validEmailAddresses = existingUsers.map((u) => u.emailAddress)
 
-  localBouncedMails.push({
-    addresses: recipients.filter((r) => !validEmailAddresses.includes(r)),
-  })
+  const bounced = recipients.filter((r) => !validEmailAddresses.includes(r))
+
+  if (bounced.length > 0) {
+    localBouncedMails.push({
+      addresses: [bounced],
+    })
+  }
 
   if (validUserIds?.length > 0) {
     Mailbox.bulkWrite(
@@ -58,6 +62,9 @@ const localDeliveryAgent = async ({
             $set: {
               lastMessageAt: Date.now(),
               isRead: false,
+            },
+            $addToSet: {
+              labels: 'INBOX',
             },
             $setOnInsert: {
               subject: email.subject,

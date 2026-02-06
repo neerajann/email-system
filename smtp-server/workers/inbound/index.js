@@ -1,10 +1,11 @@
 import '../../config/env.js'
 import connectDB from '@email-system/core/config'
-import connection from '../connection.js'
+import { createRedisClient } from '@email-system/core/redis'
 import { Worker } from 'bullmq'
 import processIncomingReply from './handlers/processIncomingReply.js'
 import processNewIncomingMail from './handlers/processNewIncomingMail.js'
 
+const redis = createRedisClient()
 await connectDB()
 
 const inboundEmailWorker = new Worker(
@@ -20,7 +21,7 @@ const inboundEmailWorker = new Worker(
     }
   },
   {
-    connection,
+    connection: redis,
     concurrency: 5,
     attempts: 1,
   },

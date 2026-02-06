@@ -4,12 +4,13 @@ import failureRecorder from './storage/failureRecorder.js'
 import loadAttachmentMetadata from './assembly/loadAttachmentMetadata.js'
 import localDeliveryAgent from './transport/localDeliveryAgent.js'
 import smtpRelay from './transport/smtpRelay.js'
-import connection from '../connection.js'
+import { createRedisClient } from '@email-system/core/redis'
 import { domainEmailPattern } from '@email-system/core/utils'
 import connectDB from '@email-system/core/config'
 import { outboundEmailQueue } from '@email-system/core/queues'
 
 await connectDB()
+const redis = createRedisClient()
 
 const outboundEmailWorker = new Worker(
   'outboundEmailQueue',
@@ -92,6 +93,8 @@ const outboundEmailWorker = new Worker(
 
     const bouncedMails = [...localBounced, ...externalBounced]
 
+    console.log('bouncedMails', bouncedMails)
+
     if (bouncedMails.length) {
       await failureRecorder({
         sender,
@@ -128,8 +131,8 @@ const outboundEmailWorker = new Worker(
     }
   },
   {
-    connection,
-    concurrency: 5,
+    connection: redis,
+    concurrency: 10,
     attempts: 1,
   },
 )
