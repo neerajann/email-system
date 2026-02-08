@@ -9,7 +9,7 @@ import ThreadAttachmentList from './ThreadAttachmentList.jsx'
 import Reply from '../reply/Reply.jsx'
 import { memo } from 'react'
 import { LuReply, LuReplyAll, LuForward } from 'react-icons/lu'
-import Forward from '../forward/forward.jsx'
+import Forward from '../forward/Forward.jsx'
 
 const ThreadItem = ({ mail, defaultExpanded, mails }) => {
   const {

@@ -38,7 +38,6 @@ const RecipientsInput = ({
         })}
         <textarea
           autoComplete='off'
-          name='recipents'
           placeholder='recipent@example.com'
           rows={1}
           className=' text-base md:text-sm  flex-1 min-w-30 bg-transparent focus:outline-none resize-none overflow-hidden leading-6 border-none active:outline-none'

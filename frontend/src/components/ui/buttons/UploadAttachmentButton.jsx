@@ -7,7 +7,7 @@ const UploadAttachmentButton = ({ onClick }) => {
       <button
         type='button'
         onClick={onClick}
-        className='hover:scale-[0.95] active:scale-[1.02] cursor-pointer hover:bg-input px-3 rounded'
+        className='hover:scale-[0.95] active:scale-[1.02] cursor-pointer hover:bg-input px-2.5 py-1.5 rounded'
       >
         <RiAttachment2 size={16} />
       </button>

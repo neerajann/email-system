@@ -72,13 +72,21 @@ const Login = () => {
               Email address
             </label>
 
-            <input
-              type='email'
-              name='emailAddress'
-              placeholder={`you@${import.meta.env.VITE_DOMAIN_NAME}`}
-              className='text-base md:text-sm  w-full bg-input text-foreground border border-border rounded-md p-2 pl-3  shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
-              onChange={(e) => (formData.current.emailAddress = e.target.value)}
-            />
+            <div className='relative  mt-3'>
+              <input
+                type='email'
+                name='emailAddress'
+                placeholder='Enter your username'
+                className='text-base md:text-sm w-full bg-input text-foreground border border-border rounded-md p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
+                onChange={(e) =>
+                  (formData.current.emailAddress =
+                    e.target.value + `@${import.meta.env.VITE_DOMAIN_NAME}`)
+                }
+              />
+              <span className='absolute top-1/2 right-3.5 -translate-y-1/2 text-sm '>
+                @{import.meta.env.VITE_DOMAIN_NAME}
+              </span>
+            </div>
           </div>
           {submitErrors.emailAddress && (
             <span className=' text-red-500 text-sm mt-3 block'>

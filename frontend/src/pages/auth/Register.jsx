@@ -98,7 +98,7 @@ const Register = () => {
               <input
                 type='email'
                 name='emailAddress'
-                placeholder='Create an address'
+                placeholder='Create an username'
                 className='text-base md:text-sm w-full bg-input text-foreground border border-border rounded-md p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
                 onChange={(e) =>
                   (formData.current.emailAddress =

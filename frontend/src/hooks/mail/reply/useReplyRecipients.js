@@ -15,7 +15,11 @@ const useReplyRecipients = ({ showReply, mail, setRecipients }) => {
       recipents.push(mail.from.address)
       setRecipients(recipents)
     } else if (showReply?.reply) {
-      setRecipients([mail.from.address])
+      if (mail.from.address === user) {
+        setRecipients(mail.to.map((r) => r.address))
+      } else {
+        setRecipients([mail.from.address])
+      }
     }
   }, [])
 }
