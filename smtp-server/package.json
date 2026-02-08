@@ -1,13 +1,10 @@
 {
   "name": "smtp-server",
   "version": "1.0.0",
-  "description": "",
   "main": "server.js",
   "scripts": {
-    "server": "nodemon server.js",
-    "worker:incoming": "nodemon workers/inbound/index.js",
-    "worker:outgoing": "nodemon workers/outbound/index.js",
-    "dev": "concurrently \"npm run server\" \"npm run worker:incoming\" \"npm run worker:outgoing\""
+    "dev": "cross-env NODE_ENV=development nodemon server.js",
+    "start": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -15,11 +12,16 @@
   "type": "module",
   "dependencies": {
     "@email-system/core": "*",
-    "dotenv": "^17.2.3",
+    "ioredis": "^5.9.2",
+    "mailauth": "^4.13.0",
     "mailparser": "^3.9.1",
     "mongoose": "^9.0.2",
-    "nodemon": "^3.1.11",
     "sanitize-html": "^2.17.0",
     "smtp-server": "^3.18.0"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.2.4",
+    "nodemon": "^3.1.11"
   }
 }

@@ -1,7 +1,13 @@
-import './config/env.js'
+if (process.env.NODE_ENV === 'development') {
+  await import('dotenv/config')
+}
+if (!process.env.DOMAIN_NAME) {
+  throw new Error('Missing DOMAIN_NAME')
+}
+
 import { SMTPServer } from 'smtp-server'
 import { simpleParser } from 'mailparser'
-import { authenticate, dmarc } from 'mailauth'
+import { authenticate } from 'mailauth'
 import { User } from '@email-system/core/models'
 import connectDB from '@email-system/core/config'
 import { domainEmailPattern, emailPattern } from '@email-system/core/utils'
@@ -11,6 +17,7 @@ import { createRedisClient } from '@email-system/core/redis'
 await connectDB()
 const redis = createRedisClient()
 
+const PORT = process.env.PORT || 25
 const MAX_CONN_PER_MIN = Number(process.env.MAX_CONN_PER_MIN ?? 3)
 const MAX_RCPT_COUNT = Number(process.env.MAX_RCPT_COUNT ?? 30)
 const MAX_MSG_PER_CONN = Number(process.env.MAX_MSG_PER_CONN ?? 50)
@@ -23,6 +30,18 @@ const server = new SMTPServer({
   banner: 'Welcome to ' + process.env.DOMAIN_NAME,
 
   async onConnect(session, cb) {
+    if (
+      process.env.SECURE === 'true' &&
+      session.clientHostname.startsWith('[') &&
+      session.clientHostname.endsWith(']')
+    ) {
+      return cb(
+        new Error(
+          '550 5.7.1 Client does not have a PTR record, refusing connection',
+        ),
+      )
+    }
+
     const isGreyListed = await redis.get(`greylist:${session.remoteAddress}`)
     if (isGreyListed) {
       return cb(new Error('421 Temporary failure, try again later'))
@@ -110,7 +129,7 @@ const server = new SMTPServer({
             'EX',
             60 * 60,
           )
-          return callback(new Error('421 Temporary failure, try again later'))
+          return cb(new Error('421 Temporary failure, try again later'))
         }
 
         const domain = result?.dmarc?.domain ?? result?.spf?.domain
@@ -167,9 +186,8 @@ const addToInboundQueue = async (envelope, parsedMail) => {
   return true
 }
 
-server.on('error', (error, socket) => {
-  socket.end('421 Connection error\r\n')
-  console.warn(error)
+server.on('error', (error) => {
+  console.log(error)
 })
 
-server.listen(25, () => console.log('Server listening on port 25'))
+server.listen(PORT, () => console.log(`Smtp server listening on port ${PORT}`))
