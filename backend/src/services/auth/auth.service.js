@@ -2,6 +2,8 @@ import bcrypt from 'bcrypt'
 import { User } from '@email-system/core/models'
 import jwt from 'jsonwebtoken'
 
+const JWT_EXPIRY = process.env.JWT_EXPIRY || '10d'
+
 const registerUserService = async ({ name, emailAddress, password }) => {
   const existingUser = await User.findOne({
     emailAddress: emailAddress,
@@ -33,7 +35,7 @@ const loginUserService = async (emailAddress, password) => {
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: process.env.JWT_EXPIRY,
+      expiresIn: JWT_EXPIRY,
     },
   )
 }

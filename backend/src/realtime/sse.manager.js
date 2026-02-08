@@ -1,8 +1,14 @@
 import IORedis from 'ioredis'
 
+const REDIS_PORT = process.env.REDIS_PORT
+
+if (!process.env.REDIS_HOST) {
+  throw new Error('Missing  REDIS_HOST')
+}
+
 const subscriber = new IORedis({
   host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
+  port: REDIS_PORT,
 })
 
 const clients = new Map()

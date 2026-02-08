@@ -6,7 +6,7 @@ const connect = (req, reply) => {
   reply.raw.setHeader('Connection', 'keep-alive')
   reply.raw.setHeader(
     'Access-Control-Allow-Origin',
-    `${process.env.ORIGIN_ADDRESS}`,
+    `${process.env.ALLOWED_ORIGIN}`,
   )
   reply.raw.setHeader('Access-Control-Allow-Credentials', 'true')
   reply.raw.flushHeaders?.()

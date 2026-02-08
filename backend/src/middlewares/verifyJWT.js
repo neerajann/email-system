@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken'
+const JWT_COOKIE_NAME = process.env.JWT_COOKIE_NAME || 'token'
 
 const verifyJWT = async (req, reply) => {
-  const jwtToken = req.cookies?.[process.env.JWT_COOKIE_NAME]
+  const jwtToken = req.cookies?.[JWT_COOKIE_NAME]
   if (!jwtToken) {
     return reply
       .code(403)
@@ -15,7 +16,7 @@ const verifyJWT = async (req, reply) => {
       req.userId = decoded._id
       return
     }
-    reply.clearCookie(process.env.JWT_COOKIE_NAME)
+    reply.clearCookie(JWT_COOKIE_NAME)
     return reply
       .code(403)
       .send({ error: 'You are not autheticated.Please login first' })

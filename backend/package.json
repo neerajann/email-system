@@ -4,11 +4,11 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js",
+    "dev": "cross-env NODE_ENV=development nodemon server.js",
     "start": "node server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Neerajan",
   "license": "ISC",
   "type": "module",
   "dependencies": {
@@ -20,12 +20,16 @@
     "ajv-errors": "^3.0.0",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.66.4",
-    "dotenv": "^17.2.3",
     "fastify": "^5.6.2",
     "html-to-text": "^9.0.5",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.0.0",
     "mongoose": "^9.0.2",
     "sanitize-html": "^2.17.0"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.2.4",
+    "nodemon": "^3.1.11"
   }
 }

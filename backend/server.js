@@ -7,6 +7,12 @@ import cookieParser from '@fastify/cookie'
 import ajvErrors from 'ajv-errors'
 import fastifyMultipart from '@fastify/multipart'
 
+const PORT = process.env.PORT || 3000
+
+if (!process.env.DOMAIN_NAME) {
+  throw new Error('Missing DOMAIN_NAME')
+}
+
 const fastify = Fastify({
   ajv: {
     customOptions: {
@@ -63,13 +69,13 @@ fastify.setNotFoundHandler((req, reply) => {
 
 fastify.listen(
   {
-    port: 80,
+    port: PORT,
     host: '0.0.0.0',
   },
   (err) => {
     if (err) {
       console.log(err)
     }
-    console.log('Server running on port 80')
+    console.log(`Backend server listening on port ${PORT}`)
   },
 )
