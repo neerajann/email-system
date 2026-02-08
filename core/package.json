@@ -10,5 +10,10 @@
     "./utils": "./utils/pattern.js",
     "./messaging": "./messaging/notifyUser.js",
     "./redis": "./redis/index.js"
+  },
+  "dependencies": {
+    "bullmq": "^5.67.3",
+    "ioredis": "^5.9.2",
+    "mongoose": "^9.1.6"
   }
 }

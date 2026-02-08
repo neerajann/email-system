@@ -1,9 +1,14 @@
 import { Queue } from 'bullmq'
 
+if (!process.env.REDIS_HOST) {
+  throw new Error('Missing REDIS_HOST')
+}
+const REDIS_PORT = process.env.REDIS_PORT || 6379
+
 const outboundEmailQueue = new Queue('outboundEmailQueue', {
   connection: {
     host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT,
+    port: REDIS_PORT,
     retryStrategy: () => null,
     enableOfflineQueue: false,
   },

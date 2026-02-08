@@ -1,0 +1,26 @@
+{
+  "name": "email-system",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "core",
+    "backend",
+    "smtp-server",
+    "dns-server",
+    "inbound-worker",
+    "outbound-worker"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:smtp": "npm run dev --workspace=smtp-server",
+    "dev:dns": "npm run dev --workspace=dns-server",
+    "dev:inbound-worker": "npm run dev --workspace=inbound-worker",
+    "dev:outbound-worker": "npm run dev --workspace=outbound-worker",
+    "start:backend": "npm start --workspace=backend",
+    "start:smtp": "npm start --workspace=smtp-server",
+    "start:dns": "npm start --workspace=dns-server",
+    "start:inbound-worker": "npm start --workspace=inbound-worker",
+    "start:outbound-worker": "npm start --workspace=outbound-worker"
+  }
+}
