@@ -6,7 +6,7 @@ const useMailboxSSE = ({ mailboxType, queryKey }) => {
 
   useEffect(() => {
     if (mailboxType !== 'inbox') return
-    const sse = new EventSource(`${import.meta.env.VITE_API_URL}/events`, {
+    const sse = new EventSource('/api/events/', {
       withCredentials: true,
     })
 
