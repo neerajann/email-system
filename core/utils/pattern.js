@@ -1,5 +1,4 @@
 const domain = process.env.DOMAIN_NAME
-
 const escapedDomain = domain.replace(/\./g, '\\.')
 
 const domainEmailPattern = new RegExp(`^[a-zA-Z0-9.]+@${escapedDomain}$`)

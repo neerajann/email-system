@@ -1,24 +1,17 @@
 import { Queue } from 'bullmq'
+import { createRedisClient } from '../redis/index.js'
 
-if (!process.env.REDIS_HOST) {
-  throw new Error('Missing REDIS_HOST')
-}
-const REDIS_PORT = process.env.REDIS_PORT || 6379
+const createOutboundEmailQueue = async (connection) => {
+  const outboundEmailQueue = new Queue('outboundEmailQueue', {
+    connection: connection ?? createRedisClient(),
+  })
 
-const outboundEmailQueue = new Queue('outboundEmailQueue', {
-  connection: {
-    host: process.env.REDIS_HOST,
-    port: REDIS_PORT,
-    retryStrategy: () => null,
-    enableOfflineQueue: false,
-  },
-})
-
-try {
-  await outboundEmailQueue.waitUntilReady()
-  console.log('Redis connected')
-} catch (err) {
-  throw new Error('Couldnot connect to redis server')
+  try {
+    await outboundEmailQueue.waitUntilReady()
+    return outboundEmailQueue
+  } catch (err) {
+    throw new Error("Couldn't connect to redis server")
+  }
 }
 
-export default outboundEmailQueue
+export default createOutboundEmailQueue
