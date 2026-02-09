@@ -1,21 +1,16 @@
-if (process.env.NODE_ENV === 'development') {
-  await import('dotenv/config')
-}
-if (!process.env.DOMAIN_NAME) {
-  throw new Error('Missing DOMAIN_NAME')
-}
-
+import './config/env.js'
 import { SMTPServer } from 'smtp-server'
 import { simpleParser } from 'mailparser'
 import { authenticate } from 'mailauth'
 import { User } from '@email-system/core/models'
 import connectDB from '@email-system/core/config'
 import { domainEmailPattern, emailPattern } from '@email-system/core/utils'
-import { inboundEmailQueue } from '@email-system/core/queues'
+import { createInboundEmailQueue } from '@email-system/core/queues'
 import { createRedisClient } from '@email-system/core/redis'
 
-await connectDB()
 const redis = createRedisClient()
+const inboundEmailQueue = createInboundEmailQueue(redis)
+await connectDB()
 
 const PORT = process.env.PORT || 25
 const MAX_CONN_PER_MIN = Number(process.env.MAX_CONN_PER_MIN ?? 3)
@@ -190,4 +185,4 @@ server.on('error', (error) => {
   console.log(error)
 })
 
-server.listen(PORT, () => console.log(`Smtp server listening on port ${PORT}`))
+server.listen(PORT, () => console.log(`SMTP server listening on port ${PORT}`))
