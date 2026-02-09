@@ -4,7 +4,7 @@ import uploadAttachment from '../attachments/uploadAttachment.js'
 import notifyUser from '@email-system/core/messaging'
 import { RecipientHistory } from '@email-system/core/models'
 
-const processNewIncomingMail = async ({ mail, envelope }) => {
+const processNewIncomingMail = async ({ mail, envelope, redis }) => {
   const recipientsAddress = envelope?.rcptTo.map((r) => r.address)
 
   const localUsers = await User.find(
@@ -114,6 +114,6 @@ const processNewIncomingMail = async ({ mail, envelope }) => {
     },
   }))
 
-  await notifyUser(notifications)
+  await notifyUser(notifications, redis)
 }
 export default processNewIncomingMail

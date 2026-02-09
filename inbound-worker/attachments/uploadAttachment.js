@@ -4,9 +4,15 @@ import { fileURLToPath } from 'url'
 import { Attachment } from '@email-system/core/models'
 
 const uploadAttachment = async (attachments) => {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url))
-  const uploadDir = path.join(__dirname, '../../../../data/attachments/')
+  const getDataDir = () => {
+    if (process.env.DATA_DIR) {
+      return process.env.DATA_DIR
+    }
+    const __dirname = path.dirname(fileURLToPath(import.meta.url))
+    return path.join(__dirname, '../../data/')
+  }
 
+  const uploadDir = path.join(getDataDir(), 'attachments')
   await fs.promises.mkdir(uploadDir, {
     recursive: true,
   })

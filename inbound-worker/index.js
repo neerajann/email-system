@@ -1,10 +1,4 @@
-if (process.env.NODE_ENV === 'development') {
-  await import('dotenv/config')
-}
-if (!process.env.DOMAIN_NAME) {
-  throw new Error('Missing DOMAIN_NAME')
-}
-
+import './config/env.js'
 import connectDB from '@email-system/core/config'
 import { createRedisClient } from '@email-system/core/redis'
 import { Worker } from 'bullmq'
@@ -19,11 +13,10 @@ const inboundEmailWorker = new Worker(
   async (job) => {
     const { envelope, mail } = job.data
     if (!mail) return
-    console.log('new incoming mail')
     if (mail.inReplyTo || mail.references?.length) {
-      await processIncomingReply({ mail, envelope })
+      await processIncomingReply({ mail, envelope, redis })
     } else {
-      await processNewIncomingMail({ mail, envelope })
+      await processNewIncomingMail({ mail, envelope, redis })
     }
   },
   {
@@ -32,6 +25,8 @@ const inboundEmailWorker = new Worker(
     attempts: 1,
   },
 )
+
+console.log('Inbound worker is ready')
 
 inboundEmailWorker.on('completed', (job) => {
   console.log('Completed', job.id)

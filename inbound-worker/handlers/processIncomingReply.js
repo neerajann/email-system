@@ -11,11 +11,11 @@ import htmlSanitizer from '../utils/htmlSanitizer.js'
 import processNewIncomingMail from './processNewIncomingMail.js'
 import notifyUser from '@email-system/core/messaging'
 
-const processIncomingReply = async ({ mail, envelope }) => {
+const processIncomingReply = async ({ mail, envelope, redis }) => {
   const { threadId, parentReferences, parentMessageId } =
     await resolveThreadContext(mail)
 
-  if (!threadId) return processNewIncomingMail({ mail, envelope })
+  if (!threadId) return processNewIncomingMail({ mail, envelope, redis })
 
   const recipientsAddress = envelope.rcptTo.map((r) => r.address)
 
@@ -147,6 +147,6 @@ const processIncomingReply = async ({ mail, envelope }) => {
       },
     }
   })
-  await notifyUser(notifications)
+  await notifyUser(notifications, redis)
 }
 export default processIncomingReply
