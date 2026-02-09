@@ -1,7 +1,9 @@
+import redis from '../../../config/redis.js'
 import { Mailbox, RecipientHistory } from '@email-system/core/models'
-import { outboundEmailQueue } from '@email-system/core/queues'
 import notifyUser from '@email-system/core/messaging'
+import { createOutboundEmailQueue } from '@email-system/core/queues'
 
+const outboundEmailQueue = createOutboundEmailQueue(redis)
 const updateSenderMailbox = async ({
   userId,
   threadId,
@@ -72,7 +74,7 @@ const sendNotfication = async ({ senderId, thread, mailbox, email }) => {
       },
     },
   ]
-  await notifyUser(notifications)
+  await notifyUser(notifications, redis)
 }
 
 const queueOutboundEmail = async ({

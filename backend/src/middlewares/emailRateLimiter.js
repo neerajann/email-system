@@ -1,9 +1,7 @@
-import Redis from 'ioredis'
+import redis from '../config/redis.js'
 
-const redis = new Redis({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-})
+const USER_HOURLY_EMAIL_LIMIT =
+  Number(process.env.USER_HOURLY_EMAIL_LIMIT) || 50
 
 const emailRateLimiter = async (req, reply) => {
   const key = `user:${req.userId}:rate_limit`
@@ -14,7 +12,7 @@ const emailRateLimiter = async (req, reply) => {
     return
   }
 
-  if (count > 50) {
+  if (count > USER_HOURLY_EMAIL_LIMIT) {
     return reply.code(429).send({
       error: 'Rate limit exceeded. Please retry later.',
     })

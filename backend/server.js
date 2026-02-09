@@ -1,5 +1,5 @@
-import Fastify from 'fastify'
 import './src/config/env.js'
+import Fastify from 'fastify'
 import connectDB from '@email-system/core/config'
 import router from './src/routes/index.js'
 import cors from '@fastify/cors'
@@ -8,10 +8,6 @@ import ajvErrors from 'ajv-errors'
 import fastifyMultipart from '@fastify/multipart'
 
 const PORT = process.env.PORT || 3000
-
-if (!process.env.DOMAIN_NAME) {
-  throw new Error('Missing DOMAIN_NAME')
-}
 
 const fastify = Fastify({
   ajv: {
