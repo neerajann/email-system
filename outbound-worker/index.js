@@ -1,10 +1,4 @@
-if (process.env.NODE_ENV === 'development') {
-  await import('dotenv/config')
-}
-if (!process.env.DOMAIN_NAME) {
-  throw new Error('Missing DOMAIN_NAME')
-}
-
+import './config/env.js'
 import { Worker } from 'bullmq'
 import failureRecorder from './storage/failureRecorder.js'
 import loadAttachmentMetadata from './assembly/loadAttachmentMetadata.js'
@@ -13,10 +7,11 @@ import smtpRelay from './transport/smtpRelay.js'
 import { createRedisClient } from '@email-system/core/redis'
 import { domainEmailPattern } from '@email-system/core/utils'
 import connectDB from '@email-system/core/config'
-import { outboundEmailQueue } from '@email-system/core/queues'
+import { createOutboundEmailQueue } from '@email-system/core/queues'
 
-await connectDB()
 const redis = createRedisClient()
+const outboundEmailQueue = createOutboundEmailQueue(redis)
+await connectDB()
 
 const outboundEmailWorker = new Worker(
   'outboundEmailQueue',
@@ -75,6 +70,7 @@ const outboundEmailWorker = new Worker(
               emailId,
               recipients: localRecipients,
               sender,
+              redis,
             })
           : [],
         externalRecipients.length
@@ -99,8 +95,6 @@ const outboundEmailWorker = new Worker(
 
     const bouncedMails = [...localBounced, ...externalBounced]
 
-    console.log('bouncedMails', bouncedMails)
-
     if (bouncedMails.length) {
       await failureRecorder({
         sender,
@@ -109,6 +103,7 @@ const outboundEmailWorker = new Worker(
         bouncedRecipients: bouncedMails,
         type: 'BOUNCE',
         parentMessageId: messageId,
+        redis,
       })
     }
 
@@ -133,6 +128,7 @@ const outboundEmailWorker = new Worker(
         bouncedRecipients: retriable,
         type: 'DELIVERY',
         parentMessageId: messageId,
+        redis,
       })
     }
   },
@@ -142,6 +138,8 @@ const outboundEmailWorker = new Worker(
     attempts: 1,
   },
 )
+
+console.log('Outbound worker is ready')
 
 outboundEmailWorker.on('completed', (job) => {
   console.log('Job Completed', job.id)

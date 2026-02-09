@@ -19,6 +19,7 @@ const failureRecorder = async ({
   bouncedRecipients,
   type,
   parentMessageId,
+  redis,
 }) => {
   let failureEntries = []
   const allMessageIds = []
@@ -146,9 +147,8 @@ const failureRecorder = async ({
         },
       },
     ]
-    console.log('Notfications', notifications)
 
-    await notifyUser(notifications)
+    await notifyUser(notifications, redis)
   }
 
   return true

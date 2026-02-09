@@ -13,6 +13,7 @@ const localDeliveryAgent = async ({
   emailId,
   recipients,
   sender,
+  redis,
 }) => {
   let localBouncedMails = []
 
@@ -121,7 +122,7 @@ const localDeliveryAgent = async ({
         },
       }
     })
-    await notifyUser(notifications)
+    await notifyUser(notifications, redis)
   }
 
   return localBouncedMails
