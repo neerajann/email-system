@@ -13,8 +13,8 @@ const ThreadAttachmentList = ({ mail }) => {
           </span>
           <div className='flex gap-5 min-w-0 flex-wrap mt-4'>
             {mail.attachments.map((attachment) => {
-              const viewUrl = `${import.meta.env.VITE_API_URL}/mail/attachment/${attachment.id}?emailId=${mail.emailId}&q=view`
-              const downloadUrl = `${import.meta.env.VITE_API_URL}/mail/attachment/${attachment.id}?emailId=${mail.emailId}`
+              const viewUrl = `${import.meta.env.VITE_API_URL || '/api'}/mail/attachment/${attachment.id}?emailId=${mail.emailId}&q=view`
+              const downloadUrl = `${import.meta.env.VITE_API_URL || '/api'}/mail/attachment/${attachment.id}?emailId=${mail.emailId}`
               return (
                 <a
                   key={attachment.id}

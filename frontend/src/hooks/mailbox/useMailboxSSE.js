@@ -6,9 +6,12 @@ const useMailboxSSE = ({ mailboxType, queryKey }) => {
 
   useEffect(() => {
     if (mailboxType !== 'inbox') return
-    const sse = new EventSource('/api/events/', {
-      withCredentials: true,
-    })
+    const sse = new EventSource(
+      `${import.meta.env.VITE_API_URL || '/api'}/events`,
+      {
+        withCredentials: true,
+      },
+    )
 
     sse.onmessage = (e) => {
       const newMail = JSON.parse(e.data)

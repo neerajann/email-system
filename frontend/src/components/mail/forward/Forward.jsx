@@ -29,7 +29,7 @@ const Forward = ({ mail, setShowForward }) => {
   const { email, recipients, setRecipients } = useDraft({
     subject: `Fwd: ${mail.subject}`,
     body: forwardMailBody,
-    attachments: mail.attachments,
+    attachments: mail.attachments.map((a) => a.id),
   })
 
   const { input, suggestions, handleChange, addRecipient, removeRecipient } =
