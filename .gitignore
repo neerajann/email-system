@@ -144,3 +144,6 @@ vite.config.ts.timestamp-*
 *.private
 *.key
 *.pem
+
+#data folder
+data/

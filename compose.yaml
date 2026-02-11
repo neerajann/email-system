@@ -1,0 +1,83 @@
+services:
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - mongodb-data:/data/db
+    restart: unless-stopped
+  redis:
+    image: redis:latest
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    env_file:
+      - .env
+      - ./backend/.env
+    environment:
+      - DATA_DIR=/app/data/
+    depends_on:
+      - redis
+      - mongodb
+    volumes:
+      - app-data:/app/data/
+    restart: on-failure:5
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+      args:
+        VITE_DOMAIN_NAME: ${VITE_DOMAIN_NAME}
+    env_file:
+      - .env
+    ports:
+      - 80:80
+    depends_on:
+      - backend
+    restart: on-failure:5
+
+  smtp-server:
+    build:
+      context: .
+      dockerfile: ./smtp-server/Dockerfile
+    ports:
+      - 25:25
+    env_file:
+      - .env
+      - ./smtp-server/.env
+    depends_on:
+      - redis
+      - mongodb
+    restart: on-failure:5
+
+  outbound-worker:
+    build:
+      context: .
+      dockerfile: ./outbound-worker/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - mongodb
+    restart: on-failure:5
+
+  inbound-worker:
+    build:
+      context: .
+      dockerfile: ./inbound-worker/Dockerfile
+    env_file:
+      - .env
+    environment:
+      - DATA_DIR=/app/data/
+    depends_on:
+      - redis
+      - mongodb
+    volumes:
+      - app-data:/app/data/
+    restart: on-failure:5
+
+volumes:
+  mongodb-data: {}
+  app-data: {}
