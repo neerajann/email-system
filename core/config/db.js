@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { styleText } from 'node:util'
 
 const connectDB = async () => {
   if (!process.env.MONGO_DB_URL) {
@@ -7,9 +8,9 @@ const connectDB = async () => {
 
   try {
     await mongoose.connect(process.env.MONGO_DB_URL)
-    console.log('Connected to DB')
+    console.log(styleText('green', 'Connected to DB'))
   } catch (error) {
-    console.log(error)
+    console.log(styleText('red', error))
     process.exit(1)
   }
 }

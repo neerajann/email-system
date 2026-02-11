@@ -1,4 +1,5 @@
 import IORedis from 'ioredis'
+import { styleText } from 'node:util'
 
 const REDIS_PORT = process.env.REDIS_PORT || 6379
 
@@ -13,17 +14,17 @@ const createRedisClient = () => {
     port: REDIS_PORT,
     retryStrategy(times) {
       if (times > 10) {
-        console.log('Unable to connect to redis')
+        console.log(styleText('red', 'Unable to connect to redis'))
         return null
       }
       return 500
     },
   })
   redis.on('connect', () => {
-    console.log('Redis connected')
+    console.log(styleText('green', 'Redis connected'))
   })
   redis.on('error', (error) => {
-    console.log('Redis error', error.message)
+    console.log(styleText('red', `Redis error ${error.message}`))
   })
   return redis
 }
