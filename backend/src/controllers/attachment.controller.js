@@ -121,12 +121,12 @@ const downloadAttachment = async (req, reply) => {
   if (q === 'view') {
     reply.header(
       'Content-Disposition',
-      `inline; filename=${attachment.originalName}`,
+      `inline; filename=${encodeURIComponent(attachment.originalName)}`,
     )
   } else {
     reply.header(
       'Content-Disposition',
-      `attachment; filename=${attachment.originalName}`,
+      `attachment; filename=${encodeURIComponent(attachment.originalName)}`,
     )
   }
 

@@ -3,7 +3,7 @@ import { Mailbox, RecipientHistory } from '@email-system/core/models'
 import notifyUser from '@email-system/core/messaging'
 import { createOutboundEmailQueue } from '@email-system/core/queues'
 
-const outboundEmailQueue = createOutboundEmailQueue(redis)
+const outboundEmailQueue = await createOutboundEmailQueue(redis)
 const updateSenderMailbox = async ({
   userId,
   threadId,

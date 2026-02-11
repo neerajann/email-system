@@ -6,7 +6,7 @@ import cors from '@fastify/cors'
 import cookieParser from '@fastify/cookie'
 import ajvErrors from 'ajv-errors'
 import fastifyMultipart from '@fastify/multipart'
-
+import { styleText } from 'node:util'
 const PORT = process.env.PORT || 3000
 
 const fastify = Fastify({
@@ -72,6 +72,6 @@ fastify.listen(
     if (err) {
       console.log(err)
     }
-    console.log(`Backend server listening on port ${PORT}`)
+    console.log(styleText('green', `Backend server listening on port ${PORT}`))
   },
 )
