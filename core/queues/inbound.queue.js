@@ -8,7 +8,7 @@ const createInboundEmailQueue = async (connection) => {
 
   try {
     await inboundEmailQueue.waitUntilReady()
-    return connection
+    return inboundEmailQueue
   } catch (err) {
     throw new Error("Couldn't connect to redis server")
   }
