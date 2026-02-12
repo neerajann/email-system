@@ -10,7 +10,7 @@ import connectDB from '@email-system/core/config'
 import { createOutboundEmailQueue } from '@email-system/core/queues'
 
 const redis = createRedisClient()
-const outboundEmailQueue = createOutboundEmailQueue(redis)
+const outboundEmailQueue = await createOutboundEmailQueue(redis)
 await connectDB()
 
 const outboundEmailWorker = new Worker(

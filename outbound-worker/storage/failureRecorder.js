@@ -79,10 +79,17 @@ const failureRecorder = async ({
           })
           const subject = 'Mail Delivery Failed: Address Not Found'
           pushFailureEntry(subject, html)
-          await RecipientHistory.findOneAndDelete({
-            ownerUserId: sender.id,
-            emailAddress: recipient,
-          })
+          await RecipientHistory.findByIdAndUpdate(
+            {
+              ownerUserId: sender.id,
+              emailAddress: recipient,
+            },
+            {
+              $inc: {
+                sentCount: -3,
+              },
+            },
+          )
         }),
       )
     }
