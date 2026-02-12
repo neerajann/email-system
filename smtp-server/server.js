@@ -9,7 +9,7 @@ import { createInboundEmailQueue } from '@email-system/core/queues'
 import { createRedisClient } from '@email-system/core/redis'
 
 const redis = createRedisClient()
-const inboundEmailQueue = createInboundEmailQueue(redis)
+const inboundEmailQueue = await createInboundEmailQueue(redis)
 await connectDB()
 
 const PORT = process.env.PORT || 25
@@ -94,6 +94,17 @@ const server = new SMTPServer({
   },
 
   async onData(stream, session, cb) {
+    console.log(
+      'Sessionn id',
+      session.id,
+      'Received new mail:',
+      session.remoteAddress,
+      'Mail from',
+      session.envelope.mailFrom.address,
+      'Mail to',
+      session.envelope.rcptTo,
+    )
+
     session.msgCount = (session.msgCount || 0) + 1
 
     if (session.msgCount > MAX_MSG_PER_CONN) {
@@ -108,7 +119,12 @@ const server = new SMTPServer({
           sender: session.envelope.mailFrom.address,
         })
 
-        if (result?.dmarc?.status?.result === 'pass') {
+        const spfPass = result?.spf?.status?.result === 'pass'
+        const dkimPass = result?.dkim?.results?.some(
+          (r) => r.status?.result === 'pass',
+        )
+
+        if (spfPass || dkimPass) {
           const parsedMail = await simpleParser(raw)
           addToInboundQueue(session.envelope, parsedMail)
           return cb()
@@ -141,7 +157,8 @@ const server = new SMTPServer({
         )
       } else {
         const parsedMail = await simpleParser(raw)
-        addToInboundQueue(session.envelope, parsedMail)
+        await addToInboundQueue(session.envelope, parsedMail)
+        console.log('Session id:', session.id, 'Mail added to queue')
         raw = null
         return cb()
       }
