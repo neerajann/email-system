@@ -12,19 +12,23 @@ const redis = createRedisClient()
 const inboundEmailQueue = await createInboundEmailQueue(redis)
 await connectDB()
 
+// Customizable constants via env
 const PORT = process.env.PORT || 25
 const MAX_CONN_PER_MIN = Number(process.env.MAX_CONN_PER_MIN ?? 3)
 const MAX_RCPT_COUNT = Number(process.env.MAX_RCPT_COUNT ?? 30)
 const MAX_MSG_PER_CONN = Number(process.env.MAX_MSG_PER_CONN ?? 50)
-const MAX_DMRAC_FAILURE = Number(process.env.MAX_DMRAC_FAILURE ?? 5)
+const MAX_MAIL_AUTH_FAILS = Number(process.env.MAX_MAIL_AUTH_FAILS ?? 5)
 
+// Create a server
 const server = new SMTPServer({
   allowInsecureAuth: true,
   authOptional: true,
-  size: 17 * 1024 * 1024,
+  size: 17 * 1024 * 1024, // Maximum size of a mail 17MB
   banner: 'Welcome to ' + process.env.DOMAIN_NAME,
 
+  // Runs when someone tries to connect to the server
   async onConnect(session, cb) {
+    // If specified secure and no PTR record exist for the connecting ip reject the connection
     if (
       process.env.SECURE === 'true' &&
       session.clientHostname.startsWith('[') &&
@@ -37,11 +41,13 @@ const server = new SMTPServer({
       )
     }
 
+    // Check grey list from redis
     const isGreyListed = await redis.get(`greylist:${session.remoteAddress}`)
     if (isGreyListed) {
       return cb(new Error('421 Temporary failure, try again later'))
     }
 
+    // Only allows limited number of connection from same ip per minute to prevent against connection flooding
     const key = `smtp:conn:${session.remoteAddress}`
     const count = await redis.incr(key)
     if (count === 1) {
@@ -50,15 +56,19 @@ const server = new SMTPServer({
     if (count > MAX_CONN_PER_MIN) {
       return cb(new Error('421 Too many connections, try later'))
     }
+    // If all checks pass accept connection
     cb()
   },
 
+  // Handles MAIL FROM command
   onMailFrom(address, session, cb) {
+    // Reject if not a valid email pattern
     if (!emailPattern.test(address.address)) {
       return cb(
         new Error('553 5.1.7 Sender address rejected: invalid address syntax'),
       )
     }
+    // Reject if it is from local domain as smtp submission for the local domain is only handled via backend
     if (domainEmailPattern.test(address.address)) {
       return cb(
         new Error(
@@ -66,19 +76,25 @@ const server = new SMTPServer({
         ),
       )
     }
+
+    // Normal case accept the Mail from
     cb()
   },
 
+  // Handles MAIL FROM command
   async onRcptTo(address, session, cb) {
+    // Limt excessive RCPT TO commands to prevent against SMTP enumeration
     session.rcptCount = (session.rcptCount || 0) + 1
     if (session.rcptCount > MAX_RCPT_COUNT) {
       return cb(new Error('452 Too many recipients'))
     }
 
+    // Reject recipients that doesnot belong to the domain
     if (!domainEmailPattern.test(address.address)) {
       return cb(new Error('550 Doesnot belong to this domain'))
     }
 
+    // Check if user exist in the database
     const user = await User.findOne(
       {
         emailAddress: address.address,
@@ -89,11 +105,12 @@ const server = new SMTPServer({
     if (!user) {
       return cb(new Error('550 User doesnot exist'))
     }
-
+    // Accept RCPT if all conditions pass
     cb()
   },
 
   async onData(stream, session, cb) {
+    // Log to console for debugging
     console.log(
       'Sessionn id',
       session.id,
@@ -105,15 +122,18 @@ const server = new SMTPServer({
       session.envelope.rcptTo,
     )
 
+    // Connection-level message rate limiting to reduce spam and resource abuse
     session.msgCount = (session.msgCount || 0) + 1
 
     if (session.msgCount > MAX_MSG_PER_CONN) {
       return cb(new Error('452 Too many messages'))
     }
+
     try {
       let raw = await readStream(stream)
 
       if (process.env.SECURE === 'true') {
+        // Perfrom email security checks
         const result = await authenticate(raw, {
           ip: session.remoteAddress,
           sender: session.envelope.mailFrom.address,
@@ -124,8 +144,10 @@ const server = new SMTPServer({
           (r) => r.status?.result === 'pass',
         )
 
+        // Accept if at least one checks pass
         if (spfPass || dkimPass) {
           const parsedMail = await simpleParser(raw)
+          //Add to inbound queue
           addToInboundQueue(session.envelope, parsedMail)
           return cb()
         }
@@ -133,7 +155,8 @@ const server = new SMTPServer({
         const key = `dmarc:failures:ip:${session.remoteAddress}`
         const count = await redis.incr(key)
         if (count === 1) await redis.expire(key, 10 * 60)
-        if (count > MAX_DMRAC_FAILURE) {
+        // Add to grey list after multiple failed security checks
+        if (count > MAX_MAIL_AUTH_FAILS) {
           await redis.set(
             `greylist:${session.remoteAddress}`,
             true,
@@ -143,6 +166,7 @@ const server = new SMTPServer({
           return cb(new Error('421 Temporary failure, try again later'))
         }
 
+        // Notify the sender server about what went wrong
         const domain = result?.dmarc?.domain ?? result?.spf?.domain
         if (domain)
           return cb(
@@ -155,7 +179,9 @@ const server = new SMTPServer({
             '550 5.7.1 Authentication required: DMARC validation failed or missing',
           ),
         )
-      } else {
+      }
+      // Accept if not specified secure in env
+      else {
         const parsedMail = await simpleParser(raw)
         await addToInboundQueue(session.envelope, parsedMail)
         console.log('Session id:', session.id, 'Mail added to queue')
@@ -169,6 +195,7 @@ const server = new SMTPServer({
   },
 })
 
+// Converts stream to buffer
 const readStream = async (stream) => {
   const chunks = []
   for await (const chunk of stream) {
@@ -177,6 +204,7 @@ const readStream = async (stream) => {
   return Buffer.concat(chunks)
 }
 
+// Adds to incoming mail queue
 const addToInboundQueue = async (envelope, parsedMail) => {
   await inboundEmailQueue.add(
     'inboundEmailQeue',
@@ -202,4 +230,5 @@ server.on('error', (error) => {
   console.log(error)
 })
 
+//Listen on specified port
 server.listen(PORT, () => console.log(`SMTP server listening on port ${PORT}`))
