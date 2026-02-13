@@ -10,12 +10,15 @@ import connectDB from '@email-system/core/config'
 import { createOutboundEmailQueue } from '@email-system/core/queues'
 
 const redis = createRedisClient()
+// Create outbound email queue (This will be used for retires)
 const outboundEmailQueue = await createOutboundEmailQueue(redis)
 await connectDB()
 
+// Create a new worker for outbound email queue
 const outboundEmailWorker = new Worker(
   'outboundEmailQueue',
   async (job) => {
+    // Job from backend as well as when retried
     const {
       threadId,
       emailId,
@@ -28,17 +31,18 @@ const outboundEmailWorker = new Worker(
       messageId,
       inReplyTo,
       references,
-      attachmentsRecords: cachedAttachments,
+      attachmentsRecords: cachedAttachments, // Rename it to cached attachment
       retryCount = 1,
       failureRecords = [],
     } = job.data
 
-    let retriable = []
-    let externalBounced = []
-    let localBounced = []
+    let retriable = [] // Recipients that failed but can be retried for delivering
+    let externalBounced = [] // External bounce recipients (the rejected recipients)
+    let localBounced = [] // Local domain bounce recipients
     let externalResult = { bounced: [], retriable: [] }
-    let attachmentsRecords = cachedAttachments
+    let attachmentsRecords = cachedAttachments // Cached attachments (Attachment record fetched from earlier retries)
 
+    // Reattempt the failed external delivery (Retry job)
     if (failureRecords.length) {
       ;({ bounced: externalBounced, retriable } = await smtpRelay({
         messageId,
@@ -52,9 +56,13 @@ const outboundEmailWorker = new Worker(
         inReplyTo,
         references,
       }))
-    } else {
+    }
+    // When its a fresh new job not retry attempt
+    else {
+      // Fetch attachments record from the database using attachment id
       attachmentsRecords = await loadAttachmentMetadata(attachments)
 
+      // Seperate local domain recipients and external recipients
       const localRecipients = recipients.filter((r) =>
         domainEmailPattern.test(r),
       )
@@ -63,21 +71,22 @@ const outboundEmailWorker = new Worker(
         (r) => !domainEmailPattern.test(r),
       )
 
+      // Asynchronously attempt to deliver local mails and external mails
       const results = await Promise.all([
-        localRecipients.length
+        localRecipients.length // If local recipients exist, call local delivery agent
           ? localDeliveryAgent({
               threadId,
               emailId,
-              recipients: localRecipients,
+              recipients: localRecipients, // Only local recipients are passed
               sender,
-              redis,
+              redis, // Shared redis connection (Will to used to notify the backend about a new mail arrival for a user)
             })
           : [],
-        externalRecipients.length
+        externalRecipients.length // If external recipents exist, call external mail delivery agent
           ? smtpRelay({
               messageId,
               sender,
-              recipients: externalRecipients,
+              recipients: externalRecipients, // Only external recipients are passed
               headerTo,
               subject,
               body,
@@ -88,13 +97,15 @@ const outboundEmailWorker = new Worker(
           : { bounced: [], retriable: [] },
       ])
 
-      localBounced = results[0]
-      externalResult = results[1]
+      localBounced = results[0] // Local delivery result containing array of recipients that were bounced
+      externalResult = results[1] // External delivery result; includes bounced (rejected) recipients and retriable failures
       ;({ bounced: externalBounced, retriable } = externalResult)
     }
 
+    // Merge bounced recipients from external and local delivery
     const bouncedMails = [...localBounced, ...externalBounced]
 
+    // Call failure recorder if there exist bounced mails
     if (bouncedMails.length) {
       await failureRecorder({
         sender,
@@ -107,19 +118,21 @@ const outboundEmailWorker = new Worker(
       })
     }
 
+    // Add to queue again if the delivery can be retried
     if (retriable.length && retryCount < 3) {
       await outboundEmailQueue.add(
         'outboundEmailQueue',
         {
           ...job.data,
-          retryCount: retryCount + 1,
-          attachmentsRecords,
-          failureRecords: retriable,
+          retryCount: retryCount + 1, // Increment retry count
+          attachmentsRecords, // Earlier fetched record from db to prevent fetching again
+          failureRecords: retriable, // Failed recipients
         },
-        { delay: 1 * 20 * 1000 },
+        { delay: 1 * 20 * 1000 }, // Delay between each retry
       )
     }
 
+    // If still cannot be delivered after 3 attempts, call failure recorder with type of DELIVERY
     if (retriable.length && retryCount >= 3) {
       await failureRecorder({
         sender,
@@ -134,7 +147,7 @@ const outboundEmailWorker = new Worker(
   },
   {
     connection: redis,
-    concurrency: 10,
+    concurrency: 10, // Number of concurrent jobs this worker can process
     attempts: 1,
   },
 )

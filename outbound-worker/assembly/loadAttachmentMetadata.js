@@ -7,7 +7,7 @@ const loadAttachmentMetadata = async (attachments) => {
     },
     {
       $set: {
-        status: 'attached',
+        status: 'attached', // Update the status of attachment to attached so it can no longer be deleted
       },
     },
   )

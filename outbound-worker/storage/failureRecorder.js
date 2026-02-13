@@ -25,12 +25,16 @@ const failureRecorder = async ({
   const allMessageIds = []
 
   const pushFailureEntry = (subject, html) => {
+    // Generate a messageId
     const systemMessageId = `<system-${crypto.randomUUID()}@${
       process.env.DOMAIN_NAME
     }>`
     allMessageIds.push(systemMessageId)
 
+    // Generate a text version of the html
     const text = htmlToText(html)
+
+    // Push to failure entries array
     failureEntries.push({
       threadId: threadId,
       messageId: systemMessageId,
@@ -54,25 +58,38 @@ const failureRecorder = async ({
       references: [parentMessageId],
     })
   }
-
+  // Delivery Failure mail
   if (type === 'DELIVERY') {
     for (const entry of bouncedRecipients) {
       await Promise.all(
         entry.emails.map(async (recipient) => {
+          // Generate delivery failure email
           const html = generateDeliveryFailureHtml(recipient)
           const subject = 'Delivery Delayed: Message Could Not Be Delivered'
+
           pushFailureEntry(subject, html)
-          await RecipientHistory.findOneAndDelete({
-            ownerUserId: sender.id,
-            emailAddress: recipient,
-          })
+
+          await RecipientHistory.findByIdAndUpdate(
+            {
+              ownerUserId: sender.id,
+              emailAddress: recipient,
+            },
+            {
+              $inc: {
+                sentCount: -3, // Decrement the sentCount in recipient history (this is used to rank recipients that match the search term)
+              },
+            },
+          )
         }),
       )
     }
-  } else if (type === 'BOUNCE') {
+  }
+  // Failure mails of type bounce
+  else if (type === 'BOUNCE') {
     for (const entry of bouncedRecipients) {
       await Promise.all(
         entry.addresses.map(async (recipient) => {
+          // Generate bounce email in html format
           const html = generateBounceHtml({
             recipient,
             errorMessage: entry.errorMessage,
@@ -86,7 +103,7 @@ const failureRecorder = async ({
             },
             {
               $inc: {
-                sentCount: -3,
+                sentCount: -3, // Decrement the sentCount in recipient history (this is used to rank recipients that match the search term)
               },
             },
           )
@@ -95,9 +112,11 @@ const failureRecorder = async ({
     }
   }
 
+  // Insert all failure mails into Email collection
   const createdEmails = await Email.insertMany(failureEntries)
   const createdEmailsId = createdEmails.map((e) => e._id)
 
+  // Update the sender mailbox to include the failure emails
   const mailboxRecord = await Mailbox.findOneAndUpdate(
     {
       userId: new mongoose.Types.ObjectId(sender.id),
@@ -121,6 +140,7 @@ const failureRecorder = async ({
     { upsert: true, new: true },
   )
 
+  // Update thread to include mailer-daemon@inboxify.com in senders
   const thread = await Thread.findByIdAndUpdate(
     threadId,
     {
@@ -134,8 +154,10 @@ const failureRecorder = async ({
     { new: true },
   )
 
+  // Only send the last(latest) failed mail in notification
   const lastFailedEmail = createdEmails[createdEmails.length - 1]
 
+  // Notify the sender if the mail is not in trash
   if (!mailboxRecord.isDeleted) {
     const notifications = [
       {
