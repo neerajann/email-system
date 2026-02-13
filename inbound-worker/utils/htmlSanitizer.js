@@ -1,5 +1,6 @@
 import sanitizeHtml from 'sanitize-html'
 
+// Allowed tags, attributes, styles and schemes
 const SANITIZE_CONFIG = {
   allowedTags: [
     'h1',
@@ -49,6 +50,7 @@ const SANITIZE_CONFIG = {
   },
 }
 
+// Sanitizes the html to prevent XSS
 const htmlSanitizer = (html) => {
   return sanitizeHtml(html, SANITIZE_CONFIG)
 }

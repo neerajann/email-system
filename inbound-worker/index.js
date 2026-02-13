@@ -10,18 +10,21 @@ await connectDB()
 
 const inboundEmailWorker = new Worker(
   'inboundEmailQueue',
+  // Job is added to queue by SMTP server
   async (job) => {
     const { envelope, mail } = job.data
     if (!mail) return
+    // If mail contains inReplyTo or references then its a reply mail so call
     if (mail.inReplyTo || mail.references?.length) {
       await processIncomingReply({ mail, envelope, redis })
     } else {
+      // If not its a new mail
       await processNewIncomingMail({ mail, envelope, redis })
     }
   },
   {
     connection: redis,
-    concurrency: 5,
+    concurrency: 5, // Number of concurrent jobs this worker can process
     attempts: 1,
   },
 )

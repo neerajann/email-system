@@ -15,6 +15,7 @@ const processIncomingReply = async ({ mail, envelope, redis }) => {
   const { threadId, parentReferences, parentMessageId } =
     await resolveThreadContext(mail)
 
+  // If threadId is null, then it's not a valid reply so process it as a new incoming  mail
   if (!threadId) return processNewIncomingMail({ mail, envelope, redis })
 
   const recipientsAddress = envelope.rcptTo.map((r) => r.address)
@@ -31,26 +32,32 @@ const processIncomingReply = async ({ mail, envelope, redis }) => {
       emailAddress: 1,
     },
   )
+  // Additional checks to make sure that user exist
   if (!localUsers.length) return
 
+  // If mail contains attachments call uploadAttachments; this will return back array of id's of uploaded attachments
   const attachments = mail.attachments.length
     ? await uploadAttachment(mail.attachments)
     : []
 
+  //If messageId is missing in received mail, generate one
   const messageId =
     mail?.messageId ?? `<${crypto.randomUUID()}@${process.env.DOMAIN_NAME}>`
 
+  // Create a map of recipients email address to their name
   const emailAddressToName = Object.fromEntries(
     localUsers.map((u) => [u.emailAddress, u.name]),
   )
 
+  // Updated value of recipents for the mail
   const recipients = mail.to.value.map((p) => ({
     address: p.address,
     name: emailAddressToName[p.address] ?? '',
   }))
 
-  const sanitizedHtml = htmlSanitizer(mail.html)
+  const sanitizedHtml = htmlSanitizer(mail.html) // Sanitize to remove dangerous scripts,prevent XSS
 
+  // Create a new email to Email collection
   const email = await Email.create({
     threadId,
     from: {
@@ -66,11 +73,12 @@ const processIncomingReply = async ({ mail, envelope, redis }) => {
     messageId,
     attachments,
     inReplyTo: parentMessageId,
-    references: [...parentReferences, parentMessageId],
+    references: [...parentReferences, parentMessageId], // Contains all the message id's in a given thread id ordered from oldest to latest
   })
 
   const userIds = localUsers.map((l) => l._id)
 
+  // Update or create Mailbox to include the new email
   await Mailbox.updateMany(
     {
       userId: {
@@ -88,18 +96,21 @@ const processIncomingReply = async ({ mail, envelope, redis }) => {
         subject: email.subject,
       },
     },
-    { upsert: true, new: true },
+    { upsert: true },
   )
 
+  // Fetch the updated/created mailboxes to notify users
   const updatedMailboxes = await Mailbox.find({
     userId: { $in: userIds },
     threadId,
   })
 
+  // Update the senders list  in thread (This is used in UI to display who have sent mail till now)
   const senderMapkey = email.from.address.replace(/\./g, '_')
   const thread = await Thread.findByIdAndUpdate(
     threadId,
     {
+      // This makes sure that each sender is inserted only once
       $set: {
         [`senders.${senderMapkey}`]: {
           name: email.from.name,
@@ -112,6 +123,7 @@ const processIncomingReply = async ({ mail, envelope, redis }) => {
     },
   )
 
+  // Update the recipient history to include the sender(Used for recipents suggestion while composing a mail)
   await RecipientHistory.bulkWrite(
     localUsers.map((user) => ({
       updateOne: {
@@ -129,10 +141,11 @@ const processIncomingReply = async ({ mail, envelope, redis }) => {
     })),
   )
 
+  // Notify the backend about new mail arrival for a user
   const notifications = updatedMailboxes.flatMap((result) => {
-    if (result.isDeleted) return []
+    if (result.isDeleted) return [] // If mail is in trash, don't notify
     return {
-      userId: result.userId,
+      userId: String(result.userId),
       newMail: {
         mailboxId: result._id,
         from: thread.senders,
