@@ -61,6 +61,8 @@ services:
     depends_on:
       - redis
       - mongodb
+    volumes:
+      - app-data:/app/data/
     restart: on-failure:5
 
   inbound-worker:
