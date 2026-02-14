@@ -19,7 +19,7 @@ const useRecipientsInput = ({ setRecipients, recipientsRef }) => {
         const { data } = await api.get(
           `/mail/recipients/suggestions?q=${input}`,
           {
-            signal: controller.signal,
+            signal: controller.signal, // Abort signal
           },
         )
         if (data.length) {
@@ -28,7 +28,7 @@ const useRecipientsInput = ({ setRecipients, recipientsRef }) => {
       } catch (error) {
         if (error.name === 'CanceledError') return
       }
-    }, 250)
+    }, 250) // Wait 250ms before sending request (deboucing)
 
     if (emailPattern.test(input)) {
       setSuggestions([
@@ -47,14 +47,16 @@ const useRecipientsInput = ({ setRecipients, recipientsRef }) => {
 
   const handleChange = (value) => {
     const parts = value.split(',').map((p) => p.trim())
-    let current = parts.pop()
+    let current = parts.pop() // Last part is still being typed
     const valid = parts.filter((p) => emailPattern.test(p))
 
+    // Add valid emails, using Set to prevent duplicates
     if (valid.length > 0) {
       recipientsRef.current.textContent = ''
       setRecipients((prev) => Array.from(new Set([...prev, ...valid])))
     }
 
+    // If user typed comma but email was invalid, keep it in input for correction
     if (parts.length >= 1 && valid.length === 0) {
       setInput(parts[0])
     } else {

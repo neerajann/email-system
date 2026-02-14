@@ -12,6 +12,7 @@ const UploadedAttachmentList = ({ attachment, remove }) => {
         {attachment.fileName}
         <span className='ml-2 '>({filesize(attachment.size)})</span>
       </div>
+      {/* Shows progress bar for upload */}
       {attachment.progress != 100 && (
         <div className='flex-1 h-1.5 bg-muted rounded flex items-center'>
           <div

@@ -11,6 +11,7 @@ const useQuotedText = ({ mails, mail }) => {
   )
   const quotedText = []
 
+  // Recursively build chain of past reply history
   const buildChain = (mail) => {
     if (!mail?.inReplyTo) return
     const parent = messageIdMap.get(mail.inReplyTo)

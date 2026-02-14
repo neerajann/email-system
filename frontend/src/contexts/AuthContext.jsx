@@ -12,7 +12,7 @@ const AuthProvider = ({ children }) => {
       try {
         const [{ data }] = await Promise.all([
           api.get('/auth/me'),
-          new Promise((r) => setTimeout(r, 300)),
+          new Promise((r) => setTimeout(r, 300)), // This is to show the initial  loading animation
         ])
         setUser(data?.user?.emailAddress ?? null)
       } catch (e) {

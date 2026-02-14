@@ -18,11 +18,12 @@ const handleFiles = async ({
     uploadErrorRef.current.textContent = 'You can only upload upto 10 files'
     return
   }
-
+  // Calculate the size of earlier uploaded attachments
   const exisitingSize = email.attachments.reduce(
     (acc, att) => acc + att.size,
     0,
   )
+  // Size of new attachments to upload
   const newFileSize = files.reduce((acc, file) => acc + file.size, 0)
   if (exisitingSize + newFileSize > MAX_TOTAL_SIZE) {
     uploadErrorRef.current.textContent = 'Total attachments cannot exceed 10 MB'
@@ -39,6 +40,7 @@ const uploadFiles = async ({
   setAttachmentsInfo,
   email,
 }) => {
+  // Generate a temporary id
   const filesWithId = files.map((file) => ({ file, id: uuidv4() }))
 
   setAttachmentsInfo((prev) => [
@@ -52,21 +54,22 @@ const uploadFiles = async ({
     })),
   ])
 
+  // Upload all files asynchronously
   await Promise.all(
     filesWithId.map(async ({ file, id }) => {
-      const controller = new AbortController()
-      controllersRef.current[id] = controller
+      const controller = new AbortController() // To cancel upload in the middle of upload
+      controllersRef.current[id] = controller // Store the abort controller with id as key
 
       const form = new FormData()
       form.append('attachments', file)
 
       try {
         const result = await api.post('/mail/attachment', form, {
-          signal: controller.signal,
+          signal: controller.signal, // Abort signal
           headers: { 'Content-Type': 'multipart/form-data' },
           onUploadProgress: (event) => {
             if (!event.total) return
-            const percent = Math.round((event.loaded * 100) / event.total)
+            const percent = Math.round((event.loaded * 100) / event.total) // Calculate the upload progress
             setAttachmentsInfo((prev) =>
               prev.map((att) =>
                 att.id === id ? { ...att, progress: percent } : att,
@@ -79,20 +82,20 @@ const uploadFiles = async ({
           setAttachmentsInfo((prev) =>
             prev.map((att) =>
               att.id === id
-                ? { ...att, uploaded: true, id: result.data[0] }
+                ? { ...att, uploaded: true, id: result.data[0] } // Replace temproary id with id from backend
                 : att,
             ),
           )
-          result.data.forEach((attachId) => email.attachments.push(attachId))
+          result.data.forEach((attachId) => email.attachments.push(attachId)) // Push it to actual email
         }
       } catch (err) {
         if (err.name === 'CanceledError') {
-          console.log(`Upload cancelled: ${file.name}`)
+          // Do nothing; the upload was cancelled by user
         } else {
           console.error(err)
         }
       } finally {
-        delete controllersRef.current[id]
+        delete controllersRef.current[id] // Delte the abort controller after the upload is complete
       }
     }),
   )
@@ -108,11 +111,13 @@ const removeAttachment = ({
   const attachment = attachmentsInfo.find((i) => i.id === id)
   if (!attachment) return
 
+  // If abort controller exist i.e upload not completed, cancel the upload
   if (controllersRef.current[id]) {
     controllersRef.current[id].abort()
     delete controllersRef.current[id]
   }
 
+  // Mark as removed rather than filtering out - cancelMail needs this flag to avoid re-deleting
   setAttachmentsInfo((prev) =>
     prev.map((att) => {
       if (att.id === id) {
@@ -125,6 +130,7 @@ const removeAttachment = ({
     }),
   )
 
+  // If attachment has been uploaded already, delete it from backend
   if (attachment.uploaded) {
     api
       .delete('/mail/attachment', {

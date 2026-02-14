@@ -20,6 +20,7 @@ const useThreadActions = ({ mails, id, location }) => {
       data,
     })
 
+    // Closes the thread view
     if (
       data?.isDeleted ||
       (data?.isStarred && location.state.from === '/starred') ||
@@ -32,7 +33,7 @@ const useThreadActions = ({ mails, id, location }) => {
   const deleteForever = async (mailboxId) => {
     await api.delete(`/mail/${mailboxId}`)
     queryClient.invalidateQueries(['mailboxes', 'trash'])
-    navigate('..', { relative: 'path' })
+    navigate('..', { relative: 'path' }) // Closes the thread view
   }
   return { patchMail, deleteForever }
 }

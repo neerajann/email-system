@@ -9,7 +9,7 @@ const highlightText = (text = '', query = '') => {
     'gi',
   )
   const parts = snippet.split(regex)
-
+  // Highlights the query string
   return parts.map((part, i) =>
     regex.test(part) ? (
       <span key={i} className='bg-[#FFEB3B] text-black'>

@@ -7,7 +7,7 @@ const ThemeProvider = ({ children }) => {
     if (localStorage.getItem('dark-mode')) {
       return localStorage.getItem('dark-mode') === 'true' ? true : false
     }
-    return window.matchMedia('(prefers-color-scheme:dark)').matches
+    return window.matchMedia('(prefers-color-scheme:dark)').matches // Fallback to the user's OS-level preference if no theme is stored in localStorage
   })
 
   useEffect(() => {

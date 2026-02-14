@@ -45,6 +45,7 @@ const RecipientsInput = ({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
+              // If enter is pressed and the email address is valid, add it to recipients array
               e.preventDefault()
               const r = input.replace(/\n/g, '')
               if (emailPattern.test(r)) {

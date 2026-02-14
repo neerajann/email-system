@@ -6,10 +6,11 @@ const useBulkSelection = () => {
   const toggle = useCallback((id) => {
     setSelected((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      next.has(id) ? next.delete(id) : next.add(id) // Toggle the selection
       return next
     })
   }, [])
+
   const clear = () => setSelected(new Set([]))
   const selectAll = (ids) => setSelected(new Set(ids))
   return {

@@ -65,17 +65,14 @@ const Login = () => {
 
         <form method='post' className='space-y-5'>
           <div>
-            <label
-              htmlFor='emailAddress'
-              className='block  font-medium text-base md:text-sm  mb-3'
-            >
+            <label className='block  font-medium text-base md:text-sm  mb-3'>
               Email address
             </label>
 
             <div className='relative  mt-3'>
               <input
                 type='email'
-                name='emailAddress'
+                autoComplete='off'
                 placeholder='Enter your username'
                 className='text-base md:text-sm w-full bg-input text-foreground border border-border rounded-md p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
                 onChange={(e) =>
@@ -95,16 +92,12 @@ const Login = () => {
           )}
 
           <div>
-            <label
-              htmlFor='password'
-              className='block font-medium text-base md:text-sm '
-            >
+            <label className='block font-medium text-base md:text-sm '>
               Password
             </label>
             <div className='relative mt-3'>
               <input
                 type={showPassword ? 'text' : 'password'}
-                name='password'
                 placeholder='*************'
                 className='text-base md:text-sm w-full h-10 bg-input text-foreground border border-border rounded-md  p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
                 onChange={(e) => (formData.current.password = e.target.value)}

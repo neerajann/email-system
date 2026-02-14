@@ -9,6 +9,7 @@ const useInfiniteScroll = ({
 
   const setRef = useCallback(
     (node) => {
+      // Cleanup previous observer when ref changes
       if (observerRef.current) {
         observerRef.current.disconnect()
       }
@@ -16,12 +17,13 @@ const useInfiniteScroll = ({
       if (node) {
         const observer = new IntersectionObserver(
           ([entry]) => {
+            // Fetch next page when observer becomes visible and more data is available
             if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
               fetchNextPage()
             }
           },
           {
-            rootMargin: '200px',
+            rootMargin: '200px', // Trigger 200px before element is visible
             root: null,
             threshold: 0,
           },

@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 const useMailboxQuery = ({ queryKey, fetchFunction }) => {
+  // Always refetch the search and inbox
   const shouldAlwaysRefetch =
     queryKey[0] === 'search' ||
     (queryKey[0] === 'mailboxes' && queryKey[1] === 'inbox')

@@ -67,15 +67,12 @@ const Register = () => {
         </div>
         <form method='post'>
           <div>
-            <label
-              htmlFor='name'
-              className='font-medium block text-base md:text-sm '
-            >
+            <label className='font-medium block text-base md:text-sm '>
               Name
             </label>
             <input
               type='text'
-              name='name'
+              autoComplete='off'
               placeholder='Enter your name'
               className='text-base md:text-sm w-full bg-input text-foreground border border-border rounded-md mt-3 p-2 pl-3  shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
               onChange={(e) => (formData.current.name = e.target.value)}
@@ -88,16 +85,13 @@ const Register = () => {
           </div>
 
           <div>
-            <label
-              htmlFor='emailAddress'
-              className='font-medium block text-base md:text-sm  mt-5'
-            >
+            <label className='font-medium block text-base md:text-sm  mt-5'>
               Email address
             </label>
             <div className='relative  mt-3'>
               <input
                 type='email'
-                name='emailAddress'
+                autoComplete='off'
                 placeholder='Create an username'
                 className='text-base md:text-sm w-full bg-input text-foreground border border-border rounded-md p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
                 onChange={(e) =>
@@ -116,16 +110,12 @@ const Register = () => {
             )}
           </div>
           <div>
-            <label
-              htmlFor='password'
-              className='font-medium block text-base md:text-sm  mt-5'
-            >
+            <label className='font-medium block text-base md:text-sm  mt-5'>
               Password
             </label>
             <div className='relative mt-3'>
               <input
                 type={showPassword ? 'text' : 'password'}
-                name='password'
                 placeholder='*************'
                 className='text-base md:text-sm w-full bg-input text-foreground border border-border rounded-md  p-2 pl-3 shadow-xs placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/50'
                 onChange={(e) => (formData.current.password = e.target.value)}
