@@ -1,6 +1,7 @@
 import { Attachment, User } from '@email-system/core/models'
 import mongoose from 'mongoose'
 
+// Gets userinfo from DB
 const validateUser = async (senderId, senderAddress) => {
   const userInfo = await User.findOne(
     {
@@ -18,6 +19,7 @@ const validateUser = async (senderId, senderAddress) => {
   return userInfo
 }
 
+// Check if the attachment ids provided are valid attachments
 const validateAttachments = async (attachments) => {
   const parsedAttachments = attachments?.map(
     (id) => new mongoose.Types.ObjectId(id),

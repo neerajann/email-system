@@ -11,7 +11,7 @@ const patchMail = async ({ userId, mailboxIds, data }) => {
       },
     },
     {
-      $set: data,
+      $set: data, // Update to new data sent by frontend
     },
   )
 
@@ -19,10 +19,11 @@ const patchMail = async ({ userId, mailboxIds, data }) => {
   return true
 }
 
+// Delete the user mailbox
 const deleteMail = async ({ userId, mailboxId }) => {
-  const result = await Mailbox.deleteMany({
-    userId: new mongoose.Types.ObjectId(userId),
+  const result = await Mailbox.deleteOne({
     _id: new mongoose.Types.ObjectId(mailboxId),
+    userId: new mongoose.Types.ObjectId(userId),
   })
   if (result.deletedCount === 0) throw new Error('EMAIL_NOT_FOUND')
   return true

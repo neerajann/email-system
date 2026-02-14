@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import { Email, Mailbox } from '@email-system/core/models'
 
+// Fetch a list of mails for a user with optional filters and cursor-based pagination
 const getMails = async ({
   userId,
   label,
@@ -10,6 +11,7 @@ const getMails = async ({
   cursorId,
   limit = 20,
 }) => {
+  // Build base match query
   const match = {
     userId: new mongoose.Types.ObjectId(userId),
     isDeleted: false,
@@ -24,6 +26,7 @@ const getMails = async ({
   if (starred === true) {
     match.isStarred = true
   }
+  // Apply cursor pagination if provided
   if (cursorDate && cursorId) {
     match.$or = [
       {
@@ -35,7 +38,7 @@ const getMails = async ({
       },
     ]
   }
-
+  // Aggregate mails
   const mails = await Mailbox.aggregate([
     {
       $match: match,
@@ -46,7 +49,8 @@ const getMails = async ({
         _id: -1,
       },
     },
-    { $limit: limit + 1 },
+    { $limit: limit + 1 }, // fetch one extra to check for "hasMore"
+
     {
       $addFields: {
         lastEmailId: { $arrayElemAt: ['$emailIds', -1] },
@@ -96,6 +100,7 @@ const getMails = async ({
 
   const last = sliced[sliced.length - 1]
 
+  // Send back mail list along with nextCursor
   return {
     mails: sliced,
     nextCursor: hasMore
@@ -104,6 +109,7 @@ const getMails = async ({
   }
 }
 
+// Fetch a single mailbox mail with full email and attachments
 const getMail = async (userId, id) => {
   const result = await Mailbox.aggregate([
     {
@@ -171,11 +177,13 @@ const getMail = async (userId, id) => {
   }
 }
 
+// Search emails for a user with text search, cursor-based pagination, and relevance sorting
 const searchMail = async ({ query, userId, cursor, limit = 20 }) => {
   const mailboxMatch = {
     'mailbox.userId': new mongoose.Types.ObjectId(userId),
   }
 
+  // Apply cursor pagination if provided
   if (cursor) {
     const [mailboxId, receivedAt] = cursor.split('_')
     mailboxMatch.$or = [
@@ -187,6 +195,7 @@ const searchMail = async ({ query, userId, cursor, limit = 20 }) => {
     ]
   }
 
+  // Aggreation pipeline
   const result = await Email.aggregate([
     {
       $match: {
@@ -228,7 +237,7 @@ const searchMail = async ({ query, userId, cursor, limit = 20 }) => {
       },
     },
     { $unwind: '$thread' },
-    { $sort: { score: -1 } },
+    { $sort: { score: -1 } }, //Sort based on score
     {
       $group: {
         _id: '$thread._id',
@@ -252,7 +261,7 @@ const searchMail = async ({ query, userId, cursor, limit = 20 }) => {
         mailboxId: -1,
       },
     },
-    { $limit: limit + 1 },
+    { $limit: limit + 1 }, // Fetch one extra to check if more results exist
     {
       $project: {
         _id: 0,
@@ -276,6 +285,7 @@ const searchMail = async ({ query, userId, cursor, limit = 20 }) => {
   const sliced = hasMore ? result.slice(0, limit) : result
   const last = sliced[sliced.length - 1]
 
+  // Send back mail list along with nextCursor
   return {
     mails: sliced,
     cursor: last ? `${last.mailboxId}_${last.receivedAt.toISOString()}` : null,

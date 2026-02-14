@@ -13,7 +13,6 @@ import {
   updateRecipientHistory,
   updateSenderMailbox,
 } from './mailboxManagement.service.js'
-
 const deliverMail = async ({
   senderId,
   senderAddress,
@@ -39,8 +38,8 @@ const deliverMail = async ({
     let thread
     let email
 
+    // If emailid is present, it's a reply mail
     if (emailId) {
-      //handle reply mail
       const result = await handleReply({
         emailId,
         senderAddress,
@@ -54,13 +53,13 @@ const deliverMail = async ({
       thread = result.thread
       email = result.email
     } else {
-      //create a new thread and a new email
+      // Else it's a new mail, so create a new thread for it
       thread = await createThread({
         senderAddress,
         senderName: userInfo.name,
         recipients,
       })
-
+      // Create a new email in Email collection
       email = await createEmail({
         threadId: thread._id,
         senderAddress,
@@ -74,20 +73,20 @@ const deliverMail = async ({
       })
     }
 
-    //update the sender mailbox to contain the created email
-    const senderInRecipent = recipients.includes(senderAddress)
+    const senderInRecipent = recipients.includes(senderAddress) // Check if the sender's address is also included in the recipient list
+    // Update the sender mailbox to contain the created email
     const mailbox = await updateSenderMailbox({
       userId: userInfo._id,
       threadId: thread._id,
       emailId: email._id,
       subject: email.subject,
-      senderInRecipent,
+      senderInRecipent, // This will be used to determine the label (if sender is in recipient as well, it will should be in both inbox,sent)
     })
 
-    // add recipients to history for auto suggestion for recipients
+    // Add recipients to history for auto suggestion for recipients
     await updateRecipientHistory(userInfo._id, recipients)
 
-    //notify the user if the was also in recipients
+    // Notify the user about new mail if the sender was also in recipients
     if (senderInRecipent) {
       await sendNotfication({
         senderId,
@@ -97,8 +96,12 @@ const deliverMail = async ({
       })
     }
 
-    //filter out the recipients to not contain the recipent
+    // Exclude the sender's address from the recipient list.
+    // If the sender included themselves, it's handled earlier while creating the mailbox for the sender
+    // Prevent duplicate mailbox entries and avoid unnecessary delivery queue processing.
     const externalRecipients = recipients.filter((r) => r != senderAddress)
+    // After adding the mail to queue the backend completed its task of handling the mail
+    // So frontend sees immediate response that mail was sent
     if (externalRecipients.length > 0) {
       await queueOutboundEmail({
         email,
