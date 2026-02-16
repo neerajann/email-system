@@ -29,7 +29,7 @@ const attachmentSchema = new mongoose.Schema(
       default: 'temporary',
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 )
 
 const Attachment = mongoose.model('Attachment', attachmentSchema)

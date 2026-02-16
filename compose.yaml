@@ -31,7 +31,7 @@ services:
       args:
         VITE_DOMAIN_NAME: ${VITE_DOMAIN_NAME}
     env_file:
-      - .env
+      - ./frontend/.env
     ports:
       - 80:80
     depends_on:

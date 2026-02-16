@@ -67,12 +67,12 @@ The system follows a **distributed, event-driven architecture** with asynchronou
          |                |    │ • Notify   │   | • Retry             │
          |   Store        |    └────────────┘   └────┬────┬──┬────────┘
          └────────────────|──────────────────────────┘    │  | Deliver
-                          |                               │  |    ┌──────────────┐
-                 Enqueue  |    ┌────────────┐             |  │    |   External   │
-                 inbound  |    | SMTP Server│  Resolve MX |  └───►│     SMTP     │
-                          |    │ • Port 25  │             │       │   Servers    │
-                          └────│ • Validate │             │       └──────┬───────┘
-                               │ • Greylist │             │              │
+                          |                               │  |    ┌───────────────┐
+                 Enqueue  |    ┌────────────┐  Resolve MX |  │    |    Remote     │
+                 inbound  |    | SMTP Server│             |  └───►| Mail Transfer │
+                          |    │ • Port 25  │             │       │  Agent(MTA)   │
+                          └────│ • Validate │Inbound Mail │       └─┬────┬────────┘
+                               │ • Greylist |◄────────────|─────────┘    │
                                └──────┬─────┘             │              │
                                       │                   │              │
                                ┌──────▼───────────────────▼──────────────▼─┐
@@ -87,11 +87,11 @@ The system follows a **distributed, event-driven architecture** with asynchronou
 
 **Incoming Email (External Domain):**
 
-1. External SMTP → Custom SMTP Server (Port 25)
+1. Remote MTA → Custom SMTP Server (Port 25)
 2. SMTP checks if the IP is greylisted, validates email security (SPF, DKIM, DMARC via DNS Server)
 3. SMTP adds email to **Inbound Queue** (BullMQ)
 4. Inbound Worker picks job: processes attachments, detects threads, saves to MongoDB
-5. Inbound Worker publishes event via **Redis Pub/Sub**
+5. Inbound Worker publishes new mail arrival event via **Redis Pub/Sub**
 6. Backend receives event and pushes **SSE notification** to recipient's browser
 
 **Outgoing Email (External Domain):**
@@ -104,7 +104,7 @@ The system follows a **distributed, event-driven architecture** with asynchronou
 6. Worker sends email via Nodemailer to recipent's SMTP server.
 7. On failure: retries up to 3 times, generates bounce email if permanently failed
 8. Worker publishes delivery failure event via Redis Pub/Sub
-9. Backend receives event and sends delivery failure mail to sender via SSE
+9. Backend receives event and sends delivery failure mail to frontend via SSE
 
 **Email within your domain(Different Users):**
 
