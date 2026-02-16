@@ -62,7 +62,7 @@ const ComposeMail = () => {
             </button>
           </Tooltip>
         </div>
-        <div className='flex-1 overflow-y-auto space-y-4 px-4 md:px-6 py-4'>
+        <div className='flex-1 space-y-4 px-4 md:px-6 py-4'>
           {/* recipients */}
 
           <RecipientsInput
