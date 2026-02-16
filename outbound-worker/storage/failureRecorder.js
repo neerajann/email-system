@@ -161,7 +161,7 @@ const failureRecorder = async ({
   if (!mailboxRecord.isDeleted) {
     const notifications = [
       {
-        userId: sender.id,
+        userId: String(sender.id),
         newMail: {
           mailboxId: mailboxRecord._id,
           from: thread.senders,

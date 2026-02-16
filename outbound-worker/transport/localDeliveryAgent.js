@@ -23,11 +23,10 @@ const localDeliveryAgent = async ({
     { _id: 1, emailAddress: 1, name: 1 },
   )
 
-  // Create a map of recipient email addresses to their names
-  const emailToNameMap = existingUsers.reduce((acc, user) => {
-    acc[user.emailAddress] = user.name
-    return acc
-  }, {})
+  // Create a map of recipients email address to their name
+  const emailToNameMap = Object.fromEntries(
+    existingUsers.map((u) => [u.emailAddress, u.name]),
+  )
 
   // Find the email that the sender sent (The same email is shared across all local recipients)
   const email = await Email.findById(emailId)
@@ -116,7 +115,7 @@ const localDeliveryAgent = async ({
     const notifications = mailboxEntries.flatMap((result) => {
       if (result.isDeleted) return [] // If mail is in trash for a user, don't notify
       return {
-        userId: result.userId,
+        userId: String(result.userId),
         newMail: {
           mailboxId: result._id,
           from: thread.senders,
