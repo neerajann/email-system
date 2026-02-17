@@ -125,14 +125,20 @@ const ThreadHeader = ({
         ) : (
           <div className='flex flex-col gap-2'>
             {/* when header showing in detail */}
-            {mail.to.map((to) => (
-              <div key={to.address} className='flex gap-2 px-1'>
-                <span className='font-medium'>{to.name ?? to.address}</span>
-                {to.name && (
-                  <span className='text-muted-foreground'>{to.address}</span>
-                )}
-              </div>
-            ))}
+            {mail.to.map((to) => {
+              const hasName = to.name?.trim() // checks for non-empty name
+
+              return (
+                <div key={to.address} className='flex gap-2 px-1'>
+                  <span className='font-medium'>
+                    {hasName ? to.name : to.address}
+                  </span>
+                  {hasName && (
+                    <span className='text-muted-foreground'>{to.address}</span>
+                  )}
+                </div>
+              )
+            })}
 
             <span
               className='inline-block text-muted-foreground hover:bg-input rounded p-1 w-fit cursor-pointer'
