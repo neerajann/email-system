@@ -69,7 +69,7 @@ const failureRecorder = async ({
 
           pushFailureEntry(subject, html)
 
-          await RecipientHistory.findByIdAndUpdate(
+          await RecipientHistory.findOneAndUpdate(
             {
               ownerUserId: sender.id,
               emailAddress: recipient,
@@ -96,7 +96,7 @@ const failureRecorder = async ({
           })
           const subject = 'Mail Delivery Failed: Address Not Found'
           pushFailureEntry(subject, html)
-          await RecipientHistory.findByIdAndUpdate(
+          await RecipientHistory.findOneAndUpdate(
             {
               ownerUserId: sender.id,
               emailAddress: recipient,
