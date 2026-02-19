@@ -75,15 +75,15 @@ const ThreadItem = ({ mail, defaultExpanded, mails }) => {
           {defaultExpanded && (
             <div className='mt-8 flex items-center gap-4 text-sm'>
               <button
-                className='flex items-center gap-3 border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'
+                className='flex items-center gap-3 border border-border py-2 px-2 sm:px-4 rounded hover:bg-input/50 cursor-pointer'
                 onClick={() => setShowReply({ reply: true })}
               >
                 <LuReply size={16} />
-                Reply
+                <span className='hidden sm:inline-block'>Reply</span>
               </button>
               {mail.to.length > 1 && (
                 <button
-                  className='flex items-center gap-3  border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'
+                  className='flex items-center gap-3  border border-border py-2 px-2 sm:px-4  rounded hover:bg-input/50 cursor-pointer'
                   onClick={() => setShowReply({ replyAll: true })}
                 >
                   <LuReplyAll size={16} />
@@ -91,7 +91,7 @@ const ThreadItem = ({ mail, defaultExpanded, mails }) => {
                 </button>
               )}
               <button
-                className='flex items-center gap-3  border border-border py-2 px-4 rounded hover:bg-input/50 cursor-pointer'
+                className='flex items-center gap-3  border border-border py-2 px-2 sm:px-4 rounded hover:bg-input/50 cursor-pointer'
                 onClick={() => setShowForward(true)}
               >
                 <LuForward size={16} />

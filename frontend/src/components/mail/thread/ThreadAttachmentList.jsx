@@ -21,11 +21,15 @@ const ThreadAttachmentList = ({ mail }) => {
                   href={viewUrl}
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='border border-border py-2 px-4 bg-input flex items-center gap-6 rounded w-fit min-w-0'
+                  className='border border-border py-2 px-4 bg-input flex items-center gap-6 rounded max-w-sm min-w-0'
                 >
-                  <div>
-                    <span className='truncate'>{attachment.fileName}</span>
-                    <span className='ml-2'>({filesize(attachment.size)})</span>
+                  <div className='flex items-center gap-1 min-w-0 flex-1'>
+                    <span className='truncate block min-w-0'>
+                      {attachment.fileName}
+                    </span>
+                    <span className='ml-1.5 shrink-0 text-xs text-muted-foreground'>
+                      ({filesize(attachment.size)})
+                    </span>
                   </div>
                   <Tooltip message={'Download attachment'}>
                     <button
